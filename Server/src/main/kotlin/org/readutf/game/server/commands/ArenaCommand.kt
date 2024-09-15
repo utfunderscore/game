@@ -1,18 +1,30 @@
 package org.readutf.game.server.commands
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import net.hollowcube.schem.SchematicReader
+import net.minestom.server.MinecraftServer
+import net.minestom.server.coordinate.Pos
+import net.minestom.server.entity.GameMode
 import org.readutf.game.engine.arena.ArenaManager
+import org.readutf.game.engine.arena.store.schematic.polar.FilePolarStore
+import org.readutf.game.engine.arena.store.schematic.schem.FileSchematicStore
 import revxrsal.commands.annotation.Command
 import revxrsal.commands.annotation.Subcommand
 import revxrsal.commands.command.CommandActor
 import java.io.File
 import java.io.FileInputStream
+import kotlin.system.measureTimeMillis
+import kotlin.time.measureTimedValue
 
 @Command("arena")
 class ArenaCommand(
     private val workDir: File,
     private val arenaManager: ArenaManager,
 ) {
+    private val logger = KotlinLogging.logger { }
     private val schematicFolder = File(workDir, "schematics")
 
     init {
@@ -42,8 +54,105 @@ class ArenaCommand(
                 SchematicReader().read(input)
             }
 
-        val template = arenaManager.createArena(name, schematic, gameType).onFailure { throw Exception(it) }
+        val (template, time) =
+            measureTimedValue {
+                runBlocking { arenaManager.createArena(name, schematic, gameType).onFailure { throw Exception(it) } }
+            }
 
-        actor.reply("&aSaved template (points: ${template.position.size})")
+        actor.reply("&aSaved template (points: ${template.position.size}) in ${time.inWholeMilliseconds}ms")
+    }
+
+    @Subcommand("view")
+    fun view(
+        actor: CommandActor,
+        arena: String,
+    ) {
+        val player = MinecraftServer.getConnectionManager().onlinePlayers.first()
+
+        val (arena, time) =
+            measureTimedValue {
+                runBlocking {
+                    arenaManager.loadArena(arena).onFailure { throw Exception(it) }
+                }
+            }
+
+        player.setGameMode(GameMode.CREATIVE)
+
+        player.setInstance(arena.instance, Pos(0.0, 100.0, 0.0))
+
+        logger.info { "Loaded arena in ${time.inWholeMilliseconds}ms" }
+
+        actor.reply("&aLoaded arena in ${time.inWholeMilliseconds}ms")
+    }
+
+    @Subcommand("benchmark")
+    fun benchmark() {
+        val schematicName = "yingyang"
+
+        val schematicFile = File(schematicFolder, "$schematicName.schem")
+        if (!schematicFile.exists()) {
+            println("Schematic $schematicName does not exist")
+            return
+        }
+
+        val schematic =
+            FileInputStream(schematicFile).use { input ->
+                SchematicReader().read(input)
+            }
+
+        val baseDir = File(System.getProperty("user.dir"))
+        val polarStore = FilePolarStore(baseDir)
+        val rawStore = FileSchematicStore(baseDir)
+
+        val time1 =
+            measureTimeMillis {
+                runBlocking {
+                    for (i in 0 until 100) {
+                        launch {
+                            logger.info { "Loading polar $i" }
+                            polarStore.load("benchmark-$i")
+                        }
+                    }
+                }
+            }
+
+        val time2 =
+            measureTimeMillis {
+                runBlocking {
+                    for (i in 0 until 100) {
+                        async {
+                            logger.info { "Loading raw $i (${Thread.currentThread().name})" }
+                            rawStore.load("benchmark-$i")
+                        }
+                    }
+                }
+            }
+
+        val time3 =
+            measureTimeMillis {
+                runBlocking {
+                    for (i in 0 until 100) {
+                        async {
+                            logger.info { "Saving polar $i (${Thread.currentThread().name})" }
+                            polarStore.save("benchmark-$i", schematic)
+                        }
+                    }
+                }
+            }
+
+        val time4 =
+            measureTimeMillis {
+                runBlocking {
+                    for (i in 0 until 100) {
+                        async {
+                            logger.info { "Saving raw $i" }
+                            rawStore.save("benchmark-$i", schematic)
+                        }
+                    }
+                }
+            }
+
+        logger.info { "Load = Polar: $time1, Raw: $time2" }
+        logger.info { "Save = Polar: $time3, Raw: $time4" }
     }
 }

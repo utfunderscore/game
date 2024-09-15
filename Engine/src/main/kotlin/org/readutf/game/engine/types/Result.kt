@@ -20,6 +20,8 @@ data class Result<T>(
         return success(mapper(getValue()))
     }
 
+    fun <U> mapError(): Result<U> = failure(getError())
+
     inline fun onFailure(block: (String) -> Unit): T {
         if (isFailure) {
             block(getError())
@@ -37,6 +39,11 @@ data class Result<T>(
         fun <T> success(value: T): Result<T> = Result(value, null)
 
         fun <T> failure(error: String): Result<T> = Result(null, error)
+
+        fun <T> fromInternal(result: kotlin.Result<T>): Result<T> {
+            if (result.isFailure) return failure(result.exceptionOrNull()?.message ?: "null")
+            return success(result.getOrNull()!!)
+        }
 
         fun empty() = success(Unit)
     }

@@ -6,7 +6,7 @@ import org.readutf.game.engine.types.Position
 import java.io.File
 
 class TestPositionRequirements {
-    val gameSettingsManager = GameSettingsManager(File(""))
+    private val gameSettingsManager = GameSettingsManager(File(""))
 
     @Test
     fun generatePositionRequirements() {

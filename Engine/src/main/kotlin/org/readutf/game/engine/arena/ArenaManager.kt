@@ -4,22 +4,61 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import net.hollowcube.schem.Schematic
 import net.kyori.adventure.nbt.CompoundBinaryTag
 import net.kyori.adventure.nbt.StringBinaryTag
-import org.readutf.game.engine.arena.store.ArenaTemplateStore
+import org.readutf.game.engine.arena.store.schematic.ArenaSchematicStore
+import org.readutf.game.engine.arena.store.template.ArenaTemplateStore
 import org.readutf.game.engine.game.settings.GameSettingsManager
 import org.readutf.game.engine.types.Position
 import org.readutf.game.engine.types.Result
+import java.util.*
 
 class ArenaManager(
     private val gameSettingsManager: GameSettingsManager,
     private val templateStore: ArenaTemplateStore,
+    private val schematicStore: ArenaSchematicStore,
 ) {
     private val logger = KotlinLogging.logger {}
 
-    fun createArena(
+    suspend fun createArena(
         arenaName: String,
         schematic: Schematic,
         vararg gameTypes: String,
     ): Result<ArenaTemplate> {
+        val positions = extractMarkerPositions(schematic)
+
+        for (gameType in gameTypes) {
+            gameSettingsManager.validatePositionRequirements(gameType, positions).onFailure { failureReason ->
+                return Result.failure(failureReason)
+            }
+        }
+        logger.info { "Created arena $arenaName with positions $positions" }
+
+        val template = ArenaTemplate(arenaName, positions, Position.parse(schematic.size), listOf(*gameTypes))
+
+        val templateSaveResult = templateStore.save(template)
+        if (templateSaveResult.isFailure) return Result.failure(templateSaveResult.getError())
+
+        schematicStore.save(arenaName, schematic).onFailure { failureReason ->
+            return Result.failure(failureReason)
+        }
+
+        return Result.success(template)
+    }
+
+    suspend fun loadArena(arenaName: String): Result<Arena> {
+        val templateResult =
+            templateStore.load(arenaName).onFailure {
+                return Result.failure(it)
+            }
+
+        val schematicInstance =
+            schematicStore.load(arenaName).onFailure { failureReason ->
+                return Result.failure(failureReason)
+            }
+
+        return Result.success(Arena(UUID.randomUUID(), schematicInstance, templateResult))
+    }
+
+    private fun extractMarkerPositions(schematic: Schematic): Map<String, Position> {
         val positions = mutableMapOf<String, Position>()
 
         schematic.blockEntities.filter { it.value.id == "minecraft:sign" }.forEach { (key, signEntity) ->
@@ -57,18 +96,7 @@ class ArenaManager(
                 )
         }
 
-        for (gameType in gameTypes) {
-            gameSettingsManager.validatePositionRequirements(gameType, positions).onFailure { failureReason ->
-                return Result.failure(failureReason)
-            }
-        }
-        logger.info { "Created arena $arenaName with positions $positions" }
-
-        val template = ArenaTemplate(arenaName, positions, Position.parse(schematic.size), listOf(*gameTypes))
-
-        val templateSaveResult = templateStore.saveArenaTemplate(template)
-        if (templateSaveResult.isFailure) return Result.failure(templateSaveResult.getError())
-        return Result.success(template)
+        return positions
     }
 
     private fun extractMarkerLines(compoundBinaryTag: CompoundBinaryTag): List<String> =

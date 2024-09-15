@@ -2,7 +2,8 @@ package org.readutf.game.server
 
 import net.minestom.server.MinecraftServer
 import org.readutf.game.engine.arena.ArenaManager
-import org.readutf.game.engine.arena.store.impl.FileTemplateStore
+import org.readutf.game.engine.arena.store.schematic.polar.FilePolarStore
+import org.readutf.game.engine.arena.store.template.impl.FileTemplateStore
 import org.readutf.game.engine.game.settings.GameSettingsManager
 import org.readutf.game.server.commands.ArenaCommand
 import org.readutf.game.server.commands.GamemodeCommand
@@ -16,7 +17,8 @@ class GameServer {
     private val worldManager = WorldManager()
     private val gameSettingsManager = GameSettingsManager(workDir)
     private val templateStore = FileTemplateStore(workDir)
-    private val arenaManager = ArenaManager(gameSettingsManager, templateStore)
+    private val schematicStore = FilePolarStore(workDir)
+    private val arenaManager = ArenaManager(gameSettingsManager, templateStore, schematicStore)
 
     private val commandManager = ConsoleCommandHandler.create()
 

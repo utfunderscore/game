@@ -1,7 +1,8 @@
 package org.readutf.game.engine.game.settings
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jsonMapper
+import com.fasterxml.jackson.module.kotlin.kotlinModule
 import org.readutf.game.engine.game.settings.location.PositionSettings
 import org.readutf.game.engine.game.settings.location.PositionType
 import org.readutf.game.engine.game.settings.location.PositionTypeData
@@ -22,7 +23,10 @@ class GameSettingsManager(
     private val defaultGameData = mutableMapOf<String, Any>()
     private val positionRequirements = mutableMapOf<String, List<PositionTypeData>>()
 
-    private val objectMapper = ObjectMapper()
+    private val objectMapper =
+        jsonMapper {
+            addModule(kotlinModule())
+        }
 
     init {
         if (!settingsFolder.exists()) {
@@ -100,7 +104,7 @@ class GameSettingsManager(
         }
     }
 
-    private fun generatePositionRequirements(settingsClass: KClass<out PositionSettings>): Result<List<PositionTypeData>> {
+    fun generatePositionRequirements(settingsClass: KClass<out PositionSettings>): Result<List<PositionTypeData>> {
         if (!settingsClass.isData) return Result.failure("Settings class is not a data class")
 
         val positionRequirements = mutableListOf<PositionTypeData>()
