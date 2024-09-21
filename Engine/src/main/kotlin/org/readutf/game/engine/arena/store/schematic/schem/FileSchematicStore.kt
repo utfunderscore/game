@@ -18,16 +18,16 @@ class FileSchematicStore(
             containerFile.writeBytes(data)
             Result.empty()
         } catch (e: Throwable) {
-            Result.failure(e.message ?: "null")
+            Result.failure("Failed to save schematic file: ${e.message}")
         }
 
     override fun loadData(arenaId: String): Result<ByteArray> {
         val containerFile = getContainerFile(arenaId)
-        if (!containerFile.exists()) return Result.failure("Could not find container file.")
+        if (!containerFile.exists()) return Result.failure("Container file is missing.")
         return try {
             Result.success(containerFile.readBytes())
         } catch (e: Throwable) {
-            Result.failure(e.message ?: "null")
+            Result.failure("(Schem) Could not read container file.")
         }
     }
 

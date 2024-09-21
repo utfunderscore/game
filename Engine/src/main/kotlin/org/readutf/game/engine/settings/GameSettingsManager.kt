@@ -1,13 +1,13 @@
-package org.readutf.game.engine.game.settings
+package org.readutf.game.engine.settings
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
-import org.readutf.game.engine.game.settings.location.PositionSettings
-import org.readutf.game.engine.game.settings.location.PositionType
-import org.readutf.game.engine.game.settings.location.PositionTypeData
-import org.readutf.game.engine.game.settings.test.DualGamePositions
-import org.readutf.game.engine.game.settings.test.DualGameSettings
+import org.readutf.game.engine.settings.location.PositionSettings
+import org.readutf.game.engine.settings.location.PositionType
+import org.readutf.game.engine.settings.location.PositionTypeData
+import org.readutf.game.engine.settings.test.DualGamePositions
+import org.readutf.game.engine.settings.test.DualGameSettings
 import org.readutf.game.engine.types.Position
 import org.readutf.game.engine.types.Result
 import java.io.File
@@ -67,6 +67,45 @@ class GameSettingsManager(
         }
 
         return Result.success(Unit)
+    }
+
+    fun <T : PositionSettings> loadPositionSettings(
+        positions: Map<String, Position>,
+        positionSettingsType: KClass<out T>,
+    ): Result<T> {
+        if (!positionSettingsType.isData) return Result.failure("Position Settings class is not a data class")
+        val constructor = positionSettingsType.primaryConstructor ?: return Result.failure("Could not find a constructor")
+
+        if (constructor.parameters.any {
+                it.findAnnotation<PositionType>() == null
+            }
+        ) {
+            return Result.failure("All parameters must be annotated with @PositionType")
+        }
+
+        val parameters = mutableListOf<Position>()
+
+        for (parameter in constructor.parameters) {
+            val positionType =
+                parameter.findAnnotation<PositionType>()
+                    ?: return Result.failure("Parameter ${parameter.name} does not have a PositionType annotation")
+            val position =
+                when {
+                    positionType.name.isNotEmpty() -> positions[positionType.name]
+                    positionType.startsWith.isNotEmpty() ->
+                        positions.entries
+                            .firstOrNull {
+                                it.key.startsWith(
+                                    positionType.startsWith,
+                                )
+                            }?.value
+                    positionType.endsWith.isNotEmpty() -> positions.entries.firstOrNull { it.key.endsWith(positionType.endsWith) }?.value
+                    else -> return Result.failure("PositionType annotation must have a name, startsWith, or endsWith value")
+                } ?: return Result.failure("Could not find a position for parameter ${parameter.name}")
+            parameters.add(position)
+        }
+
+        return Result.success(constructor.call(*parameters.toTypedArray()))
     }
 
     fun validatePositionRequirements(

@@ -5,9 +5,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import net.hollowcube.schem.SchematicReader
-import net.minestom.server.MinecraftServer
-import net.minestom.server.coordinate.Pos
-import net.minestom.server.entity.GameMode
 import org.readutf.game.engine.arena.ArenaManager
 import org.readutf.game.engine.arena.store.schematic.polar.FilePolarStore
 import org.readutf.game.engine.arena.store.schematic.schem.FileSchematicStore
@@ -59,30 +56,7 @@ class ArenaCommand(
                 runBlocking { arenaManager.createArena(name, schematic, gameType).onFailure { throw Exception(it) } }
             }
 
-        actor.reply("&aSaved template (points: ${template.position.size}) in ${time.inWholeMilliseconds}ms")
-    }
-
-    @Subcommand("view")
-    fun view(
-        actor: CommandActor,
-        arena: String,
-    ) {
-        val player = MinecraftServer.getConnectionManager().onlinePlayers.first()
-
-        val (arena, time) =
-            measureTimedValue {
-                runBlocking {
-                    arenaManager.loadArena(arena).onFailure { throw Exception(it) }
-                }
-            }
-
-        player.setGameMode(GameMode.CREATIVE)
-
-        player.setInstance(arena.instance, Pos(0.0, 100.0, 0.0))
-
-        logger.info { "Loaded arena in ${time.inWholeMilliseconds}ms" }
-
-        actor.reply("&aLoaded arena in ${time.inWholeMilliseconds}ms")
+        actor.reply("&aSaved template (points: ${template.positions.size}) in ${time.inWholeMilliseconds}ms")
     }
 
     @Subcommand("benchmark")

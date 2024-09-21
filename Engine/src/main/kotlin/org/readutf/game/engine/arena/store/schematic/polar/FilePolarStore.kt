@@ -17,7 +17,7 @@ class FilePolarStore(
             containerFile.writeBytes(data)
             Result.empty()
         } catch (e: Throwable) {
-            Result.failure(e.message ?: "null")
+            Result.failure("Failed to read polar file: ${e.message}")
         }
 
     override fun loadData(arenaId: String): Result<ByteArray> {
@@ -26,7 +26,7 @@ class FilePolarStore(
         return try {
             Result.success(containerFile.readBytes())
         } catch (e: Throwable) {
-            Result.failure(e.message ?: "null")
+            Result.failure("(Polar) Could not read container file.")
         }
     }
 

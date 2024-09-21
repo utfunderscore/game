@@ -1,12 +1,16 @@
 package org.readutf.game.server
 
 import net.minestom.server.MinecraftServer
+import net.minestom.server.entity.Player
+import net.minestom.server.event.instance.AddEntityToInstanceEvent
 import org.readutf.game.engine.arena.ArenaManager
 import org.readutf.game.engine.arena.store.schematic.polar.FilePolarStore
 import org.readutf.game.engine.arena.store.template.impl.FileTemplateStore
-import org.readutf.game.engine.game.settings.GameSettingsManager
+import org.readutf.game.engine.settings.GameSettingsManager
+import org.readutf.game.engine.utils.addListener
 import org.readutf.game.server.commands.ArenaCommand
 import org.readutf.game.server.commands.GamemodeCommand
+import org.readutf.game.server.game.DevelopmentGame
 import org.readutf.game.server.world.WorldManager
 import revxrsal.commands.cli.ConsoleCommandHandler
 import java.io.File
@@ -34,6 +38,21 @@ class GameServer {
         Thread {
             commandManager.pollInput()
         }.start()
+
+        MinecraftServer.getGlobalEventHandler().addListener<AddEntityToInstanceEvent> { e ->
+            if (e.instance != worldManager.instanceContainer) return@addListener
+
+            MinecraftServer.getSchedulerManager().scheduleNextTick {
+                val entity = e.entity
+                if (entity !is Player) return@scheduleNextTick
+
+                try {
+                    DevelopmentGame.createDevelopmentGame(entity, arenaManager)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
+        }
 
         server.start("0.0.0.0", 25565)
     }

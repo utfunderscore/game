@@ -1,7 +1,7 @@
-package org.readutf.game.engine.game.settings
+package org.readutf.game.engine.settings
 
 import org.junit.jupiter.api.Test
-import org.readutf.game.engine.game.settings.location.PositionSettings
+import org.readutf.game.engine.settings.location.PositionSettings
 import org.readutf.game.engine.types.Position
 import java.io.File
 

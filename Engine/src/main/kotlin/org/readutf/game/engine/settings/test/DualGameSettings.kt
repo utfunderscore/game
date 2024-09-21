@@ -1,4 +1,4 @@
-package org.readutf.game.engine.game.settings.test
+package org.readutf.game.engine.settings.test
 
 import net.minestom.server.world.Difficulty
 import java.util.concurrent.TimeUnit

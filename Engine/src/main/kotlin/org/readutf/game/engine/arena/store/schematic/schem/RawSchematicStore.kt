@@ -1,6 +1,5 @@
 package org.readutf.game.engine.arena.store.schematic.schem
 
-import kotlinx.coroutines.future.await
 import net.hollowcube.schem.Rotation
 import net.hollowcube.schem.Schematic
 import net.hollowcube.schem.SchematicReader
@@ -16,7 +15,7 @@ import java.io.ByteArrayInputStream
 import java.util.concurrent.CompletableFuture
 
 abstract class RawSchematicStore : ArenaSchematicStore {
-    override suspend fun save(
+    override fun save(
         arenaId: String,
         schematic: Schematic,
     ): Result<Unit> {
@@ -24,19 +23,19 @@ abstract class RawSchematicStore : ArenaSchematicStore {
             try {
                 SchematicWriter().write(schematic)
             } catch (e: Exception) {
-                return Result.failure(e.message ?: "Failed to write schematic")
+                return Result.failure("Failed to write schematic to store")
             }
 
         return saveData(arenaId, data)
     }
 
-    override suspend fun load(arenaId: String): Result<Instance> {
+    override fun load(arenaId: String): Result<Instance> {
         val data = loadData(arenaId).onFailure { return Result.failure(it) }
         val schematic =
             try {
                 SchematicReader().read(ByteArrayInputStream(data))
             } catch (e: Exception) {
-                return Result.failure(e.message ?: "Failed to read schematic")
+                return Result.failure("Failed to read schematic from store")
             }
 
         val instance = MinecraftServer.getInstanceManager().createInstanceContainer()
@@ -54,12 +53,12 @@ abstract class RawSchematicStore : ArenaSchematicStore {
         CompletableFuture
             .allOf(
                 *chunks.toTypedArray(),
-            ).await()
+            ).join()
 
         schematic.build(Rotation.NONE, true).applyUnsafe(instance, 0, 0, 0) {
             pasteFuture.complete(Unit)
         }
-        pasteFuture.await()
+        pasteFuture.join()
 //
 //        LightingChunk.relight(instance, instance.chunks)
 

@@ -1,4 +1,4 @@
-package org.readutf.game.engine.game.settings.location
+package org.readutf.game.engine.settings.location
 
 annotation class PositionType(
     val name: String = "",

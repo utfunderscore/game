@@ -1,7 +1,6 @@
 package org.readutf.game.engine.arena.store.schematic.polar
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import kotlinx.coroutines.future.await
 import net.hollowcube.polar.PolarLoader
 import net.hollowcube.polar.PolarReader
 import net.hollowcube.polar.PolarWorld
@@ -12,7 +11,9 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.instance.Chunk
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
+import net.minestom.server.instance.LightingChunk
 import net.minestom.server.utils.chunk.ChunkUtils
+import org.jetbrains.annotations.Blocking
 import org.readutf.game.engine.arena.store.schematic.ArenaSchematicStore
 import org.readutf.game.engine.types.Result
 import java.util.concurrent.CompletableFuture
@@ -22,7 +23,8 @@ import kotlin.time.measureTimedValue
 abstract class PolarSchematicStore : ArenaSchematicStore {
     private val logger = KotlinLogging.logger { }
 
-    override suspend fun save(
+    @Blocking
+    override fun save(
         arenaId: String,
         schematic: Schematic,
     ): Result<Unit> {
@@ -32,15 +34,18 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
         loadChunksForPaste(container)
 
         logger.info { "Pasting schematic..." }
-        pasteSchematic(container, schematic)
+        pasteSchematic(container, schematic).join()
 
         val timeToSaveWorld =
             measureTimeMillis {
                 val polarLoader = PolarLoader(PolarWorld())
                 container.chunkLoader = polarLoader
 
+                logger.info { "Relighting chunks..." }
+                LightingChunk.relight(container, container.chunks)
+
                 logger.info { "Saving chunks to storage..." }
-                container.saveChunksToStorage().await()
+                container.saveChunksToStorage().join()
 
                 val data = PolarWriter.write(polarLoader.world())
 
@@ -50,12 +55,18 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
                 }
             }
 
+//        MinecraftServer
+//            .getConnectionManager()
+//            .onlinePlayers
+//            .first()
+//            .setInstance(container)
+
         logger.info { "Generated & Saved world in $timeToSaveWorld ms" }
 
         return Result.success(Unit)
     }
 
-    override suspend fun load(arenaId: String): Result<Instance> {
+    override fun load(arenaId: String): Result<Instance> {
         val (data, time) =
             measureTimedValue {
                 loadData(arenaId).onFailure {
@@ -76,6 +87,7 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
 
         val polarLoader = PolarLoader(world)
 
+        container.setChunkSupplier(::LightingChunk)
         container.chunkLoader = polarLoader
 
         return Result.success(container)
@@ -88,28 +100,32 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
 
     protected abstract fun loadData(arenaId: String): Result<ByteArray>
 
-    private suspend fun loadChunksForPaste(container: InstanceContainer) {
+    @Blocking
+    private fun loadChunksForPaste(container: InstanceContainer) {
         val taken =
             measureTimeMillis {
+                container.setChunkSupplier(::LightingChunk)
+
                 val tasks = mutableListOf<CompletableFuture<Chunk>>()
-                println("thread: ${Thread.currentThread().name}")
                 ChunkUtils.forChunksInRange(0, 0, 16) { x, z -> tasks.add(container.loadChunk(x, z)) }
-                CompletableFuture.allOf(*tasks.toTypedArray()).await()
+                CompletableFuture.allOf(*tasks.toTypedArray()).join()
             }
         logger.info { "Loaded chunks in $taken ms" }
     }
 
-    private suspend fun pasteSchematic(
+    @Blocking
+    private fun pasteSchematic(
         instance: Instance,
         schematic: Schematic,
-    ) {
+    ): CompletableFuture<Unit> {
+        val future = CompletableFuture<Unit>()
+
         val taken =
             measureTimeMillis {
-                CompletableFuture<Unit>()
-                println("thread: ${Thread.currentThread().name}")
-
-                schematic.build(Rotation.NONE) { it }.apply(instance, 0, 0, 0) {}
+                schematic.build(Rotation.NONE) { it }.apply(instance, 0, 0, 0) { future.complete(Unit) }
             }
         logger.info { "Pasted schematic in $taken ms" }
+
+        return future
     }
 }

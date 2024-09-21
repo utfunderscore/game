@@ -9,7 +9,7 @@ interface ArenaSchematicStore {
      * Store a copy of the temporary instance used to
      * contain the pre-pasted schematic
      */
-    suspend fun save(
+    fun save(
         arenaId: String,
         schematic: Schematic,
     ): Result<Unit>
@@ -17,5 +17,5 @@ interface ArenaSchematicStore {
     /**
      * Load a unique copy of the arena's schematic as an instance
      */
-    suspend fun load(arenaId: String): Result<Instance>
+    fun load(arenaId: String): Result<Instance>
 }

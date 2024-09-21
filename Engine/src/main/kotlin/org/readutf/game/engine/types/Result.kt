@@ -1,5 +1,7 @@
 package org.readutf.game.engine.types
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+
 data class Result<T>(
     private val value: T?,
     private val error: String?,
@@ -36,9 +38,17 @@ data class Result<T>(
         get() = error != null
 
     companion object {
+        private val logger = KotlinLogging.logger { }
+
         fun <T> success(value: T): Result<T> = Result(value, null)
 
-        fun <T> failure(error: String): Result<T> = Result(null, error)
+        fun <T> failure(error: String): Result<T> {
+            val trace = Thread.currentThread().stackTrace[2]
+            logger.debug { "Result failure @ ${trace.className}:${trace.lineNumber}" }
+            logger.debug { "  - $error" }
+
+            return Result(null, error)
+        }
 
         fun <T> fromInternal(result: kotlin.Result<T>): Result<T> {
             if (result.isFailure) return failure(result.exceptionOrNull()?.message ?: "null")

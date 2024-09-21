@@ -11,7 +11,7 @@ import org.readutf.game.engine.utils.pos
 import java.util.concurrent.CompletableFuture
 
 class WorldManager {
-    private val instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer()
+    val instanceContainer = MinecraftServer.getInstanceManager().createInstanceContainer()
 
     init {
 

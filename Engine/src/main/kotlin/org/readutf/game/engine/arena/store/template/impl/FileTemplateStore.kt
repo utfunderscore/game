@@ -35,7 +35,8 @@ class FileTemplateStore(
         return try {
             Result.success(objectMapper.readValue(arenaFile, object : TypeReference<ArenaTemplate>() {}))
         } catch (e: Throwable) {
-            Result.failure(e.message ?: "null")
+            logger.error(e) { }
+            Result.failure("Could not read template file.")
         }
     }
 

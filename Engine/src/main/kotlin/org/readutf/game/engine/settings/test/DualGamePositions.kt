@@ -1,7 +1,7 @@
-package org.readutf.game.engine.game.settings.test
+package org.readutf.game.engine.settings.test
 
-import org.readutf.game.engine.game.settings.location.PositionSettings
-import org.readutf.game.engine.game.settings.location.PositionType
+import org.readutf.game.engine.settings.location.PositionSettings
+import org.readutf.game.engine.settings.location.PositionType
 import org.readutf.game.engine.types.Position
 
 data class DualGamePositions(

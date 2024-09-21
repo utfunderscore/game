@@ -6,10 +6,12 @@ import net.kyori.adventure.nbt.CompoundBinaryTag
 import net.kyori.adventure.nbt.StringBinaryTag
 import org.readutf.game.engine.arena.store.schematic.ArenaSchematicStore
 import org.readutf.game.engine.arena.store.template.ArenaTemplateStore
-import org.readutf.game.engine.game.settings.GameSettingsManager
+import org.readutf.game.engine.settings.GameSettingsManager
+import org.readutf.game.engine.settings.location.PositionSettings
 import org.readutf.game.engine.types.Position
 import org.readutf.game.engine.types.Result
 import java.util.*
+import kotlin.reflect.KClass
 
 class ArenaManager(
     private val gameSettingsManager: GameSettingsManager,
@@ -18,7 +20,7 @@ class ArenaManager(
 ) {
     private val logger = KotlinLogging.logger {}
 
-    suspend fun createArena(
+    fun createArena(
         arenaName: String,
         schematic: Schematic,
         vararg gameTypes: String,
@@ -44,18 +46,28 @@ class ArenaManager(
         return Result.success(template)
     }
 
-    suspend fun loadArena(arenaName: String): Result<Arena> {
-        val templateResult =
+    fun <T : PositionSettings> loadArena(
+        arenaName: String,
+        kClass: KClass<T>,
+    ): Result<Arena<T>> {
+        val template: ArenaTemplate =
             templateStore.load(arenaName).onFailure {
                 return Result.failure(it)
             }
 
-        val schematicInstance =
-            schematicStore.load(arenaName).onFailure { failureReason ->
-                return Result.failure(failureReason)
-            }
+        val schematicInstance = schematicStore.load(arenaName).onFailure { return Result.failure(it) }
 
-        return Result.success(Arena(UUID.randomUUID(), schematicInstance, templateResult))
+        val positionSettings =
+            gameSettingsManager.loadPositionSettings(template.positions, kClass).onFailure { return Result.failure(it) }
+
+        return Result.success(
+            Arena(
+                arenaId = UUID.randomUUID(),
+                instance = schematicInstance,
+                positionSettings = positionSettings,
+                positions = template.positions,
+            ) {},
+        )
     }
 
     private fun extractMarkerPositions(schematic: Schematic): Map<String, Position> {

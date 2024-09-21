@@ -11,7 +11,7 @@ dependencies {
 
     compileOnly("net.minestom:minestom-snapshots:b0bad7e180")
 
-    api("dev.hollowcube:schem:1.3.1")
+    api("dev.hollowcube:schem:dev")
 
     api("io.github.oshai:kotlin-logging-jvm:5.1.4")
 
