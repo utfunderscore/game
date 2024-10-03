@@ -1,10 +1,11 @@
 package org.readutf.game.engine.arena
 
-import org.readutf.game.engine.types.Position
+import net.minestom.server.coordinate.Vec
+import org.readutf.game.engine.arena.marker.Marker
 
 data class ArenaTemplate(
     val name: String,
-    val positions: Map<String, Position>,
-    val max: Position,
+    val positions: Map<String, Marker>,
+    val size: Vec,
     val supportedGames: List<String>,
 )

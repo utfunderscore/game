@@ -12,8 +12,10 @@ import net.minestom.server.instance.Chunk
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
+import net.minestom.server.instance.block.Block
 import net.minestom.server.utils.chunk.ChunkUtils
 import org.jetbrains.annotations.Blocking
+import org.readutf.game.engine.arena.marker.Marker
 import org.readutf.game.engine.arena.store.schematic.ArenaSchematicStore
 import org.readutf.game.engine.types.Result
 import java.util.concurrent.CompletableFuture
@@ -21,12 +23,13 @@ import kotlin.system.measureTimeMillis
 import kotlin.time.measureTimedValue
 
 abstract class PolarSchematicStore : ArenaSchematicStore {
-    private val logger = KotlinLogging.logger { }
+    val logger = KotlinLogging.logger { }
 
     @Blocking
     override fun save(
         arenaId: String,
         schematic: Schematic,
+        markerPositions: List<Marker>,
     ): Result<Unit> {
         val container = MinecraftServer.getInstanceManager().createInstanceContainer()
 
@@ -34,7 +37,11 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
         loadChunksForPaste(container)
 
         logger.info { "Pasting schematic..." }
-        pasteSchematic(container, schematic).join()
+        pasteSchematic(container, schematic, markerPositions).join()
+
+//        markerPositions.forEach {
+//            container.setBlock(it.originalPosition, Block.AIR)
+//        }
 
         val timeToSaveWorld =
             measureTimeMillis {
@@ -50,9 +57,7 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
                 val data = PolarWriter.write(polarLoader.world())
 
                 logger.info { "Saving data to storage..." }
-                saveData(arenaId, data).onFailure {
-                    return Result.failure(it)
-                }
+                saveData(arenaId, data).mapError { return it }
             }
 
 //        MinecraftServer
@@ -69,9 +74,7 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
     override fun load(arenaId: String): Result<Instance> {
         val (data, time) =
             measureTimedValue {
-                loadData(arenaId).onFailure {
-                    return Result.failure(it)
-                }
+                loadData(arenaId).mapError { return it }
             }
 
         logger.info { "Read arena data in ${time.inWholeMilliseconds}" }
@@ -117,12 +120,20 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
     private fun pasteSchematic(
         instance: Instance,
         schematic: Schematic,
+        markerPositions: List<Marker>,
     ): CompletableFuture<Unit> {
         val future = CompletableFuture<Unit>()
 
         val taken =
             measureTimeMillis {
-                schematic.build(Rotation.NONE) { it }.apply(instance, 0, 0, 0) { future.complete(Unit) }
+                schematic
+                    .build(Rotation.NONE) { point, block ->
+                        if (markerPositions.any { it.originalPosition == point }) {
+                            return@build Block.AIR
+                        }
+
+                        return@build block
+                    }.apply(instance, 0, 0, 0) { future.complete(Unit) }
             }
         logger.info { "Pasted schematic in $taken ms" }
 

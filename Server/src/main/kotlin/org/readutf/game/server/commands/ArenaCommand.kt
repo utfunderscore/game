@@ -53,7 +53,7 @@ class ArenaCommand(
 
         val (template, time) =
             measureTimedValue {
-                runBlocking { arenaManager.createArena(name, schematic, gameType).onFailure { throw Exception(it) } }
+                runBlocking { arenaManager.createArena(name, schematic, gameType).onFailure { throw Exception(it.getError()) } }
             }
 
         actor.reply("&aSaved template (points: ${template.positions.size}) in ${time.inWholeMilliseconds}ms")
@@ -108,7 +108,7 @@ class ArenaCommand(
                     for (i in 0 until 100) {
                         async {
                             logger.info { "Saving polar $i (${Thread.currentThread().name})" }
-                            polarStore.save("benchmark-$i", schematic)
+                            polarStore.save("benchmark-$i", schematic, emptyList())
                         }
                     }
                 }
@@ -120,7 +120,7 @@ class ArenaCommand(
                     for (i in 0 until 100) {
                         async {
                             logger.info { "Saving raw $i" }
-                            rawStore.save("benchmark-$i", schematic)
+                            rawStore.save("benchmark-$i", schematic, emptyList())
                         }
                     }
                 }

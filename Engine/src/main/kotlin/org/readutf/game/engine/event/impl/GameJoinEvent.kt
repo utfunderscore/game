@@ -1,14 +1,16 @@
 package org.readutf.game.engine.event.impl
 
+import net.minestom.server.entity.Player
 import org.readutf.game.engine.Game
 import org.readutf.game.engine.event.Cancellable
 import org.readutf.game.engine.event.GameEvent
 
-class GameTeamAddEvent(
+class GameJoinEvent(
     game: Game<*>,
+    val player: Player,
 ) : GameEvent(game),
     Cancellable {
-    private var cancelled: Boolean = false
+    private var cancelled = false
 
     override fun isCancelled(): Boolean = cancelled
 

@@ -12,7 +12,7 @@ subprojects {
     repositories {
         mavenLocal()
         maven {
-            url = URI("https://reposilite.readutf.org/releases")
+            url = URI("https://repo.readutf.org/releases/")
         }
     }
 }

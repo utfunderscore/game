@@ -1,14 +1,16 @@
 package org.readutf.game.engine.settings
 
+import com.fasterxml.jackson.core.StreamReadFeature
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
+import net.minestom.server.coordinate.Vec
+import org.readutf.game.engine.arena.marker.Marker
 import org.readutf.game.engine.settings.location.PositionSettings
 import org.readutf.game.engine.settings.location.PositionType
 import org.readutf.game.engine.settings.location.PositionTypeData
 import org.readutf.game.engine.settings.test.DualGamePositions
 import org.readutf.game.engine.settings.test.DualGameSettings
-import org.readutf.game.engine.types.Position
 import org.readutf.game.engine.types.Result
 import java.io.File
 import kotlin.reflect.KClass
@@ -26,6 +28,7 @@ class GameSettingsManager(
     private val objectMapper =
         jsonMapper {
             addModule(kotlinModule())
+            enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
         }
 
     init {
@@ -45,9 +48,8 @@ class GameSettingsManager(
         positionSettings: KClass<out PositionSettings>,
     ): Result<Unit> {
         defaultGameData[gameName] = gameDataDefaults
-        val generatePositionRequirements = generatePositionRequirements(positionSettings)
-        if (generatePositionRequirements.isFailure) return Result.failure(generatePositionRequirements.getError())
-        positionRequirements[gameName] = generatePositionRequirements.getValue()
+        val requirements = generatePositionRequirements(positionSettings).mapError { return it }
+        positionRequirements[gameName] = requirements
 
         val gameSettingsFolder =
             File(settingsFolder, gameName).apply {
@@ -63,14 +65,14 @@ class GameSettingsManager(
         // Save position requirements to position-requirements.json
 
         File(gameSettingsFolder, "position-requirements.json").apply {
-            if (!exists()) objectMapper.writeValue(this, generatePositionRequirements.getValue())
+            if (!exists()) objectMapper.writeValue(this, requirements)
         }
 
         return Result.success(Unit)
     }
 
     fun <T : PositionSettings> loadPositionSettings(
-        positions: Map<String, Position>,
+        positions: Map<String, Marker>,
         positionSettingsType: KClass<out T>,
     ): Result<T> {
         if (!positionSettingsType.isData) return Result.failure("Position Settings class is not a data class")
@@ -83,7 +85,7 @@ class GameSettingsManager(
             return Result.failure("All parameters must be annotated with @PositionType")
         }
 
-        val parameters = mutableListOf<Position>()
+        val parameters = mutableListOf<Vec>()
 
         for (parameter in constructor.parameters) {
             val positionType =
@@ -102,7 +104,7 @@ class GameSettingsManager(
                     positionType.endsWith.isNotEmpty() -> positions.entries.firstOrNull { it.key.endsWith(positionType.endsWith) }?.value
                     else -> return Result.failure("PositionType annotation must have a name, startsWith, or endsWith value")
                 } ?: return Result.failure("Could not find a position for parameter ${parameter.name}")
-            parameters.add(position)
+            parameters.add(position.position)
         }
 
         return Result.success(constructor.call(*parameters.toTypedArray()))
@@ -110,9 +112,9 @@ class GameSettingsManager(
 
     fun validatePositionRequirements(
         gameName: String,
-        positions: Map<String, Position>,
+        positions: Map<String, Marker>,
     ): Result<Unit> {
-        val requirements = getPositionRequirements(gameName).onFailure { return Result.failure(it) }
+        val requirements = getPositionRequirements(gameName).mapError { return it }
 
         for (requirement in requirements) {
             when {

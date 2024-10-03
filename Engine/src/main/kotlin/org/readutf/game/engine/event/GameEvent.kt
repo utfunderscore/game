@@ -5,6 +5,4 @@ import org.readutf.game.engine.Game
 
 open class GameEvent(
     val game: Game<*>,
-) : Event {
-    var cancelled = false
-}
+) : Event

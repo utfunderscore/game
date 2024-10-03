@@ -16,6 +16,11 @@ import org.readutf.game.engine.utils.addListener
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
 
+/**
+ * Sits on top of the Minestom event system and allows for events
+ * to be assigned to a given active game instance. Adapters for each event type
+ * can be registered, including generic ones for abstract events like `PlayerEvent`.
+ */
 object GameEventManager {
     private val logger = KotlinLogging.logger { }
 
@@ -66,6 +71,15 @@ object GameEventManager {
                 .getOrPut(kClass) { mutableListOf() } // EventType listeners
 
         listeners.add(listener)
+    }
+
+    fun unregisterEvent(
+        game: Game<*>,
+        kClass: KClass<out Event>,
+        listener: GameListener,
+    ) {
+        val listeners = registeredListeners[game]?.get(kClass) ?: return
+        listeners.remove(listener)
     }
 
     private fun findAdapter(event: Event): EventAdapter? {

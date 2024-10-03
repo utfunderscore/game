@@ -1,5 +1,6 @@
 package org.readutf.game.engine.arena.store.schematic.schem
 
+import io.github.oshai.kotlinlogging.KotlinLogging
 import net.hollowcube.schem.Rotation
 import net.hollowcube.schem.Schematic
 import net.hollowcube.schem.SchematicReader
@@ -9,20 +10,25 @@ import net.minestom.server.instance.Chunk
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.LightingChunk
 import net.minestom.server.utils.chunk.ChunkUtils
+import org.readutf.game.engine.arena.marker.Marker
 import org.readutf.game.engine.arena.store.schematic.ArenaSchematicStore
 import org.readutf.game.engine.types.Result
 import java.io.ByteArrayInputStream
 import java.util.concurrent.CompletableFuture
 
 abstract class RawSchematicStore : ArenaSchematicStore {
+    private val logger = KotlinLogging.logger { }
+
     override fun save(
         arenaId: String,
         schematic: Schematic,
+        markerPositions: List<Marker>,
     ): Result<Unit> {
         val data =
             try {
                 SchematicWriter().write(schematic)
             } catch (e: Exception) {
+                logger.error(e) { }
                 return Result.failure("Failed to write schematic to store")
             }
 
@@ -30,11 +36,12 @@ abstract class RawSchematicStore : ArenaSchematicStore {
     }
 
     override fun load(arenaId: String): Result<Instance> {
-        val data = loadData(arenaId).onFailure { return Result.failure(it) }
+        val data = loadData(arenaId).mapError { return it }
         val schematic =
             try {
                 SchematicReader().read(ByteArrayInputStream(data))
             } catch (e: Exception) {
+                logger.error(e) { }
                 return Result.failure("Failed to read schematic from store")
             }
 

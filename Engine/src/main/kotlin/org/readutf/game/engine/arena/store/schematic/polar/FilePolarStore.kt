@@ -17,6 +17,7 @@ class FilePolarStore(
             containerFile.writeBytes(data)
             Result.empty()
         } catch (e: Throwable) {
+            logger.error(e) { }
             Result.failure("Failed to read polar file: ${e.message}")
         }
 
@@ -26,6 +27,7 @@ class FilePolarStore(
         return try {
             Result.success(containerFile.readBytes())
         } catch (e: Throwable) {
+            logger.error(e) { }
             Result.failure("(Polar) Could not read container file.")
         }
     }

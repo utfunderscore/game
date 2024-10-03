@@ -1,9 +1,8 @@
 package org.readutf.game.engine.arena.store.template.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.jsonMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.readutf.game.engine.Game
 import org.readutf.game.engine.arena.ArenaTemplate
 import org.readutf.game.engine.arena.store.template.ArenaTemplateStore
 import org.readutf.game.engine.arena.utils.ArenaFolder
@@ -13,10 +12,6 @@ import java.io.File
 class FileTemplateStore(
     private val workDir: File,
 ) : ArenaTemplateStore {
-    private val objectMapper =
-        jsonMapper {
-            addModule(kotlinModule())
-        }
     private val logger = KotlinLogging.logger { }
 
     override fun save(arenaTemplate: ArenaTemplate): Result<Unit> {
@@ -25,7 +20,7 @@ class FileTemplateStore(
         if (!templateFile.exists()) templateFile.createNewFile()
         if (templateFile.isDirectory) return Result.failure("Arena file is a directory")
 
-        objectMapper.writeValue(templateFile, arenaTemplate)
+        Game.objectMapper.writeValue(templateFile, arenaTemplate)
         return Result.empty()
     }
 
@@ -33,7 +28,7 @@ class FileTemplateStore(
         val arenaFile = getTemplateFile(name)
         if (!arenaFile.exists()) return Result.failure("Could not find template file.")
         return try {
-            Result.success(objectMapper.readValue(arenaFile, object : TypeReference<ArenaTemplate>() {}))
+            Result.success(Game.objectMapper.readValue(arenaFile, object : TypeReference<ArenaTemplate>() {}))
         } catch (e: Throwable) {
             logger.error(e) { }
             Result.failure("Could not read template file.")

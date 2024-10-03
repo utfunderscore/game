@@ -4,11 +4,13 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import net.hollowcube.schem.Schematic
 import net.kyori.adventure.nbt.CompoundBinaryTag
 import net.kyori.adventure.nbt.StringBinaryTag
+import net.minestom.server.MinecraftServer
+import net.minestom.server.coordinate.Vec
+import org.readutf.game.engine.arena.marker.Marker
 import org.readutf.game.engine.arena.store.schematic.ArenaSchematicStore
 import org.readutf.game.engine.arena.store.template.ArenaTemplateStore
 import org.readutf.game.engine.settings.GameSettingsManager
 import org.readutf.game.engine.settings.location.PositionSettings
-import org.readutf.game.engine.types.Position
 import org.readutf.game.engine.types.Result
 import java.util.*
 import kotlin.reflect.KClass
@@ -28,20 +30,15 @@ class ArenaManager(
         val positions = extractMarkerPositions(schematic)
 
         for (gameType in gameTypes) {
-            gameSettingsManager.validatePositionRequirements(gameType, positions).onFailure { failureReason ->
-                return Result.failure(failureReason)
-            }
+            gameSettingsManager.validatePositionRequirements(gameType, positions).mapError { return it }
         }
         logger.info { "Created arena $arenaName with positions $positions" }
 
-        val template = ArenaTemplate(arenaName, positions, Position.parse(schematic.size), listOf(*gameTypes))
+        val template = ArenaTemplate(arenaName, positions, Vec.fromPoint(schematic.size), listOf(*gameTypes))
 
-        val templateSaveResult = templateStore.save(template)
-        if (templateSaveResult.isFailure) return Result.failure(templateSaveResult.getError())
+        templateStore.save(template).mapError { return it }
 
-        schematicStore.save(arenaName, schematic).onFailure { failureReason ->
-            return Result.failure(failureReason)
-        }
+        schematicStore.save(arenaName, schematic, template.positions.values.toList()).mapError { return it }
 
         return Result.success(template)
     }
@@ -51,14 +48,12 @@ class ArenaManager(
         kClass: KClass<T>,
     ): Result<Arena<T>> {
         val template: ArenaTemplate =
-            templateStore.load(arenaName).onFailure {
-                return Result.failure(it)
-            }
+            templateStore.load(arenaName).mapError { return it }
 
-        val schematicInstance = schematicStore.load(arenaName).onFailure { return Result.failure(it) }
+        val schematicInstance = schematicStore.load(arenaName).mapError { return it }
 
         val positionSettings =
-            gameSettingsManager.loadPositionSettings(template.positions, kClass).onFailure { return Result.failure(it) }
+            gameSettingsManager.loadPositionSettings(template.positions, kClass).mapError { return it }
 
         return Result.success(
             Arena(
@@ -66,18 +61,20 @@ class ArenaManager(
                 instance = schematicInstance,
                 positionSettings = positionSettings,
                 positions = template.positions,
-            ) {},
+            ) { arena ->
+                MinecraftServer.getInstanceManager().unregisterInstance(arena.instance)
+            },
         )
     }
 
-    private fun extractMarkerPositions(schematic: Schematic): Map<String, Position> {
-        val positions = mutableMapOf<String, Position>()
+    private fun extractMarkerPositions(schematic: Schematic): Map<String, Marker> {
+        val positions = mutableMapOf<String, Marker>()
 
         schematic.blockEntities.filter { it.value.id == "minecraft:sign" }.forEach { (key, signEntity) ->
             val markerLines = extractMarkerLines(signEntity.trimmedTag)
 
             if (!markerLines.getOrNull(0).equals("#marker", true)) {
-                logger.info { "Sign at $key does not start with #marker" }
+                logger.debug { "Sign at $key does not start with #marker" }
                 return@forEach
             }
             logger.info { "Found marker at $key" }
@@ -98,13 +95,17 @@ class ArenaManager(
                 return@forEach
             }
 
-            val originalPosition = Position.parse(signEntity.point)
+            val originalPosition = Vec.fromPoint(signEntity.point)
 
             positions[markerName] =
-                Position(
-                    originalPosition.x + offset[0],
-                    originalPosition.y + offset[1],
-                    originalPosition.z + offset[2],
+                Marker(
+                    Vec(
+                        originalPosition.x + offset[0].toDouble(),
+                        originalPosition.y + offset[1].toDouble(),
+                        originalPosition.z + offset[2].toDouble(),
+                    ),
+                    originalPosition,
+                    markerLines = arrayOf(markerLines[0], markerLines[1], markerLines[2], markerLines[3]),
                 )
         }
 

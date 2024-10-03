@@ -5,10 +5,37 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 data class Result<T>(
     private val value: T?,
     private val error: String?,
+    private val causedBy: Result<*>? = null,
 ) {
+    private val calledFrom: StackTraceElement = Thread.currentThread().stackTrace[4]
+
     fun getValue() = value!!
 
     fun getError() = error!!
+
+    fun getErrorOrNull() = error
+
+    fun throwIfFailed(): T {
+        if (isFailure) {
+            throw IllegalStateException("Result failed: $error")
+        }
+        return getValue()
+    }
+
+    fun debug(context: () -> Unit) =
+        apply {
+            var previous: Result<*> = this
+
+            val trace = mutableListOf<Result<*>>()
+            while (true) {
+                trace.add(previous)
+                previous = previous.causedBy ?: break
+            }
+            for (result in trace.reversed()) {
+                KotlinLogging.logger(context)
+                logger.debug { " ↪ ${result.calledFrom.className}:${result.calledFrom.lineNumber} - ${result.error}" }
+            }
+        }
 
     fun getOrNull(): T? {
         if (isSuccess) {
@@ -22,11 +49,17 @@ data class Result<T>(
         return success(mapper(getValue()))
     }
 
-    fun <U> mapError(): Result<U> = failure(getError())
-
-    inline fun onFailure(block: (String) -> Unit): T {
+    inline fun <U> mapError(supplier: (Result<U>) -> Unit): T {
         if (isFailure) {
-            block(getError())
+            debug { }
+            supplier(failure(getError(), this))
+        }
+        return getValue()
+    }
+
+    inline fun onFailure(block: (Result<T>) -> Unit): T {
+        if (isFailure) {
+            block(this)
         }
         return this.getValue()
     }
@@ -42,13 +75,10 @@ data class Result<T>(
 
         fun <T> success(value: T): Result<T> = Result(value, null)
 
-        fun <T> failure(error: String): Result<T> {
-            val trace = Thread.currentThread().stackTrace[2]
-            logger.debug { "Result failure @ ${trace.className}:${trace.lineNumber}" }
-            logger.debug { "  - $error" }
-
-            return Result(null, error)
-        }
+        fun <T> failure(
+            error: String,
+            causedBy: Result<*>? = null,
+        ): Result<T> = Result(null, error, causedBy)
 
         fun <T> fromInternal(result: kotlin.Result<T>): Result<T> {
             if (result.isFailure) return failure(result.exceptionOrNull()?.message ?: "null")
@@ -60,3 +90,7 @@ data class Result<T>(
 }
 
 fun <T> Exception.toResult(): Result<T> = Result.failure(this.message ?: "Unknown error")
+
+fun <T> T.toSuccess(): Result<T> = Result.success(this)
+
+fun <T> String.toFailure(): Result<T> = Result.failure(this)
