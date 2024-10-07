@@ -1,12 +1,14 @@
 package org.readutf.game.server.game.dual.stages
 
+import org.readutf.game.engine.Game
 import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.types.Result
 
-class FightingStage(
-    game: DualGame,
-) : Stage(game) {
-    override fun onStart(previousStage: Stage?): Result<Unit> {
+open class FightingStage(
+    game: Game<*>,
+    previousStage: Stage?,
+) : Stage(game, previousStage) {
+    override fun onStart(): Result<Unit> {
         game.getOnlinePlayers().forEach {
             game.spawnPlayer(it).mapError { error -> return error }
         }

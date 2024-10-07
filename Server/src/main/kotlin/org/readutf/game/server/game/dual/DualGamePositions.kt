@@ -1,4 +1,4 @@
-package org.readutf.game.server.engine.dual
+package org.readutf.game.server.game.dual
 
 import net.minestom.server.coordinate.Vec
 import org.readutf.game.engine.settings.location.PositionData

@@ -3,6 +3,6 @@
 package org.readutf.game.server.game.dual.utils
 
 import org.readutf.game.engine.arena.Arena
-import org.readutf.game.server.engine.dual.DualGamePositions
+import org.readutf.game.server.game.dual.DualGamePositions
 
 typealias DualArena = Arena<out DualGamePositions>

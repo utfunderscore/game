@@ -1,7 +1,8 @@
 package org.readutf.game.server.game
 
 import org.readutf.game.engine.Game
+import org.readutf.game.engine.types.Result
 
-interface GameCreator<T : Game<*>> {
-    fun create(game: T)
+fun interface GameCreator<T : Game<*>> {
+    fun create(): Result<T>
 }

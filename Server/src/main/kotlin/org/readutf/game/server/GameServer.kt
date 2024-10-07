@@ -11,9 +11,12 @@ import org.readutf.game.engine.debug.commands.GameDumpCommand
 import org.readutf.game.engine.settings.GameSettingsManager
 import org.readutf.game.engine.settings.PositionSettingsManager
 import org.readutf.game.engine.settings.store.impl.YamlSettingsStore
+import org.readutf.game.server.commands.GameCommand
 import org.readutf.game.server.commands.GamemodeCommand
-import org.readutf.game.server.engine.dual.DualGamePositions
-import org.readutf.game.server.engine.dual.DualGameSettings
+import org.readutf.game.server.commands.complter.GameCompleterFactory
+import org.readutf.game.server.game.GameTypeManager
+import org.readutf.game.server.game.dual.DualGamePositions
+import org.readutf.game.server.game.dual.stages.AwaitingPlayersSettings
 import org.readutf.game.server.world.WorldManager
 import revxrsal.commands.minestom.MinestomLamp
 import java.io.File
@@ -32,20 +35,12 @@ class GameServer {
     private val schematicStore = FilePolarStore(workDir)
     private val positionSettingsManager = PositionSettingsManager()
     private val arenaManager = ArenaManager(positionSettingsManager, templateStore, schematicStore)
-    private val commandManager = MinestomLamp.builder().build()
+    private val gameTypeManager = GameTypeManager(arenaManager)
 
     init {
         positionSettingsManager.registerRequirements("dual", DualGamePositions::class)
-        gameSettingsManager.setDefaultSettings("dual", DualGameSettings())
+        gameSettingsManager.setDefaultSettings("dual", AwaitingPlayersSettings())
     }
-
-    private val arena by lazy {
-        arenaManager.loadArena("thebridge", DualGamePositions::class).onFailure { throw Exception(it.getErrorOrNull()) }
-    }
-
-    val dualSettings by lazy { gameSettingsManager.getGameSettings<DualGameSettings>("dual") }
-
-    val game by lazy { DualGame(arena, dualSettings) }
 
     init {
         listOf(
@@ -59,7 +54,17 @@ class GameServer {
         val modernVanilla: CombatFeatureSet = CombatFeatures.modernVanilla()
         MinecraftServer.getGlobalEventHandler().addChild(modernVanilla.createNode())
 
-        commandManager.register(GameDumpCommand())
+        val commandManager =
+            MinestomLamp
+                .builder()
+                .suggestionProviders {
+                    it.addProviderFactory(GameCompleterFactory())
+                }.build()
+
+        commandManager
+            .register(GameDumpCommand())
+
+        commandManager.register(GameCommand(gameTypeManager))
 
         server.start("0.0.0.0", 25566)
     }
