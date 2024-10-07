@@ -10,10 +10,11 @@ import kotlin.reflect.KClass
 
 abstract class Stage(
     open val game: Game<*>,
+    val previousStage: Stage?,
 ) {
     val registeredListeners = LinkedHashMap<KClass<out Event>, MutableList<GameListener>>()
 
-    open fun onStart(previousStage: Stage?): Result<Unit> = Result.empty()
+    open fun onStart(): Result<Unit> = Result.empty()
 
     open fun onFinish(): Result<Unit> = Result.empty()
 

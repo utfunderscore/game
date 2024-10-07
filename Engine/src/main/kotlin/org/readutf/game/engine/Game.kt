@@ -33,7 +33,7 @@ import kotlin.reflect.KClass
 
 open class Game<ARENA : Arena<*>> {
     private val logger = KotlinLogging.logger { }
-    val gameId: UUID = UUID.randomUUID()
+    val gameId: String = GameManager.generateGameId()
 
     // Required game settings / features
     private var stageCreators: ArrayDeque<StageCreator<ARENA>> = ArrayDeque()
@@ -71,7 +71,7 @@ open class Game<ARENA : Arena<*>> {
 
     fun start(): Result<Unit> {
         logger.info { "Starting game" }
-        GameManager.activeGames.add(this)
+        GameManager.activeGames.put(gameId, this)
         if (gameState != GameState.STARTUP) {
             return Result.failure("Game is not in startup state")
         }
@@ -81,7 +81,7 @@ open class Game<ARENA : Arena<*>> {
 
         if (respawnHandler == null) return Result.failure("No spawning handler has been defined.")
         getOnlinePlayers().forEach(::spawnPlayer)
-        currentStage?.onStart(null)
+        currentStage?.onStart()
         gameState = GameState.ACTIVE
         return Result.success(Unit)
     }
@@ -98,9 +98,10 @@ open class Game<ARENA : Arena<*>> {
         val previous = currentStage
 
         val nextStageCreator = stageCreators.removeFirstOrNull() ?: return Result.failure("No more stages to start")
-        val nextStage = nextStageCreator.create(this).mapError { return it }
+        val nextStage = nextStageCreator.create(this, previous).mapError { return it }
 
         val listeners = scan(nextStage).mapError { return it }
+        logger.info { "Scan result for ${nextStage::class.simpleName} is $listeners" }
         listeners.forEach {
             GameEventManager.registerListener(
                 this,
@@ -110,7 +111,7 @@ open class Game<ARENA : Arena<*>> {
         }
 
         currentStage = nextStage
-        nextStage.onStart(previous).mapError { return it }
+        nextStage.onStart().mapError { return it }
 
         return Result.success(currentStage!!)
     }
@@ -164,11 +165,11 @@ open class Game<ARENA : Arena<*>> {
 
         val spawnHandling = respawnHandler ?: return Result.failure("No spawning handler has been declared.")
 
-        val respawnResult = spawnHandling.getRespawnLocation(player)
+        val respawnResult = spawnHandling.getRespawnLocation(player).mapError { return it }
 
         val event = GameEventManager.callEvent(GameRespawnEvent(this, player, respawnResult), this)
 
-        val (position, instance, _) = event.respawnPositionResult.mapError { return it }
+        val (position, instance, _) = event.respawnPositionResult
 
         if (player.instance != instance) {
             player.setInstance(instance, position)
