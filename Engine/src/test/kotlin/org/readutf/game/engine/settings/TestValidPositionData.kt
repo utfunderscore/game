@@ -3,45 +3,43 @@ package org.readutf.game.engine.settings
 import net.minestom.server.coordinate.Vec
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.readutf.game.engine.settings.location.PositionSettings
 import org.readutf.game.engine.settings.location.PositionType
-import java.nio.file.Files
 
-class TestPositionRequirements {
+class TestValidPositionData {
     @Test
     fun generateValidPositionRequirements() {
-        val result = gameSettingsManager.generatePositionRequirements(PositionRequirements::class)
+        val result = gameSettingsManager.registerRequirements("valid", ValidPositionData::class)
         Assertions.assertEquals(true, result.isSuccess)
     }
 
     @Test
     fun generateInvalidPositionRequirements() {
-        val result = gameSettingsManager.generatePositionRequirements(MissingPositionRequirements::class)
+        val result = gameSettingsManager.registerRequirements("missingPosition", MissingPositionData::class)
         Assertions.assertEquals(true, result.isFailure)
     }
 
     @Test
     fun generateInvalidTypePositionRequirements() {
-        val result = gameSettingsManager.generatePositionRequirements(InvalidTypePositionRequirements::class)
+        val result = gameSettingsManager.registerRequirements("invalidPositions", InvalidTypePositionData::class)
         Assertions.assertEquals(true, result.isFailure)
     }
 
-    data class PositionRequirements(
+    data class ValidPositionData(
         @PositionType("testPosition") val testPosition: Vec,
         @PositionType("testListPositions") val listPositions: List<Vec>,
-    ) : PositionSettings
+    ) : org.readutf.game.engine.settings.location.PositionData
 
-    data class MissingPositionRequirements(
+    data class MissingPositionData(
         val testPosition: Vec,
         val listPositions: List<Vec>,
-    ) : PositionSettings
+    ) : org.readutf.game.engine.settings.location.PositionData
 
-    data class InvalidTypePositionRequirements(
+    data class InvalidTypePositionData(
         val testPosition: Vec,
         val listPositions: String,
-    ) : PositionSettings
+    ) : org.readutf.game.engine.settings.location.PositionData
 
     companion object {
-        @JvmStatic val gameSettingsManager = GameSettingsManager(Files.createTempDirectory("game-settings").toFile())
+        @JvmStatic val gameSettingsManager = PositionSettingsManager()
     }
 }

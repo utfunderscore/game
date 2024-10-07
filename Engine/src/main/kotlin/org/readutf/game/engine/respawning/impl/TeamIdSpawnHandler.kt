@@ -5,6 +5,7 @@ import net.minestom.server.entity.Player
 import org.readutf.game.engine.Game
 import org.readutf.game.engine.respawning.RespawnHandler
 import org.readutf.game.engine.respawning.RespawnPosition
+import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.types.Result
 
 class TeamIdSpawnHandler(
@@ -31,4 +32,8 @@ class TeamIdSpawnHandler(
 
 fun Game<*>.registerTeamIdSpawnHandler(positionPrefix: String) {
     respawnHandler = TeamIdSpawnHandler(this, positionPrefix)
+}
+
+fun Stage.registerTeamIdSpawnHandler(positionPrefix: String) {
+    game.respawnHandler = TeamIdSpawnHandler(game, positionPrefix)
 }

@@ -9,14 +9,14 @@ import net.minestom.server.coordinate.Vec
 import org.readutf.game.engine.arena.marker.Marker
 import org.readutf.game.engine.arena.store.schematic.ArenaSchematicStore
 import org.readutf.game.engine.arena.store.template.ArenaTemplateStore
-import org.readutf.game.engine.settings.GameSettingsManager
-import org.readutf.game.engine.settings.location.PositionSettings
+import org.readutf.game.engine.settings.PositionSettingsManager
+import org.readutf.game.engine.settings.location.PositionData
 import org.readutf.game.engine.types.Result
-import java.util.*
+import java.util.UUID
 import kotlin.reflect.KClass
 
 class ArenaManager(
-    private val gameSettingsManager: GameSettingsManager,
+    private val positionSettingsManager: PositionSettingsManager,
     private val templateStore: ArenaTemplateStore,
     private val schematicStore: ArenaSchematicStore,
 ) {
@@ -30,7 +30,7 @@ class ArenaManager(
         val positions = extractMarkerPositions(schematic)
 
         for (gameType in gameTypes) {
-            gameSettingsManager.validatePositionRequirements(gameType, positions).mapError { return it }
+            positionSettingsManager.validatePositionRequirements(gameType, positions).mapError { return it }
         }
         logger.info { "Created arena $arenaName with positions $positions" }
 
@@ -43,7 +43,7 @@ class ArenaManager(
         return Result.success(template)
     }
 
-    fun <T : PositionSettings> loadArena(
+    fun <T : PositionData> loadArena(
         arenaName: String,
         kClass: KClass<T>,
     ): Result<Arena<T>> {
@@ -53,7 +53,7 @@ class ArenaManager(
         val schematicInstance = schematicStore.load(arenaName).mapError { return it }
 
         val positionSettings =
-            gameSettingsManager.loadPositionSettings(template.positions, kClass).mapError { return it }
+            positionSettingsManager.loadPositionData(template.positions, kClass).mapError { return it }
 
         return Result.success(
             Arena(
@@ -74,9 +74,10 @@ class ArenaManager(
             val markerLines = extractMarkerLines(signEntity.trimmedTag)
 
             if (!markerLines.getOrNull(0).equals("#marker", true)) {
-                logger.debug { "Sign at $key does not start with #marker" }
+                logger.debug { "Sign at $key does not start with #marker lines: $markerLines" }
                 return@forEach
             }
+
             logger.info { "Found marker at $key" }
 
             val markerName = markerLines[1]
@@ -88,7 +89,7 @@ class ArenaManager(
             if (markerLines[2].isNotEmpty()) {
                 println("'${markerLines[2]}'")
                 logger.info { "Marker at $key does has an offset" }
-                offset = markerLines[2].split(",").mapNotNull { runCatching { it.toInt() }.getOrNull() }
+                offset = markerLines[2].split(",", "-", " ").mapNotNull { runCatching { it.toInt() }.getOrNull() }
             }
             if (offset.size != 3) {
                 logger.info { "Marker at $key does not have a valid offset" }

@@ -1,22 +1,39 @@
 package org.readutf.game.engine.schedular
 
+import com.google.gson.annotations.Expose
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.minestom.server.MinecraftServer
+import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
 import org.readutf.game.engine.Game
 import org.readutf.game.engine.stage.Stage
 
 class GameScheduler(
-    game: Game<*>,
+    val game: Game<*>,
 ) {
     private val logger = KotlinLogging.logger { }
 
-    private val globalTasks = mutableSetOf<GameTask>()
-    private val stageTasks = mutableMapOf<Stage, MutableSet<GameTask>>() // Stage -> Tasks
+    @Expose private val globalTasks = mutableSetOf<GameTask>()
+
+    @Expose private val stageTasks = mutableMapOf<Stage, MutableSet<GameTask>>()
+
+    private var task: Task? = null
 
     init {
         logger.info { "Starting scheduler" }
+    }
 
+    fun schedule(
+        stage: Stage,
+        gameTask: GameTask,
+    ) {
+        if (task == null) task = startTask()
+
+        logger.info { "Scheduling task `${gameTask::class.simpleName}` for stage `${stage::class.simpleName}`" }
+        stageTasks.computeIfAbsent(stage) { mutableSetOf() }.add(gameTask)
+    }
+
+    fun startTask() =
         MinecraftServer.getSchedulerManager().scheduleTask({
             globalTasks.forEach(::tickTask)
 
@@ -24,7 +41,6 @@ class GameScheduler(
 
             stageTasks[game.currentStage]?.forEach(::tickTask)
         }, TaskSchedule.tick(1), TaskSchedule.tick(1))
-    }
 
     private fun tickTask(task: GameTask) {
         if (task is RepeatingGameTask) {
@@ -124,13 +140,5 @@ class GameScheduler(
     fun schedule(gameTask: GameTask) {
         logger.info { "Scheduling task $gameTask" }
         globalTasks.add(gameTask)
-    }
-
-    fun schedule(
-        stage: Stage,
-        gameTask: GameTask,
-    ) {
-        logger.info { "Scheduling task `${gameTask::class.simpleName}` for stage `${stage::class.simpleName}`" }
-        stageTasks.computeIfAbsent(stage) { mutableSetOf() }.add(gameTask)
     }
 }

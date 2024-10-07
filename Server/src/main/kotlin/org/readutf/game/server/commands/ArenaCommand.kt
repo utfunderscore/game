@@ -21,7 +21,7 @@ class ArenaCommand(
     private val workDir: File,
     private val arenaManager: ArenaManager,
 ) {
-    private val logger = KotlinLogging.logger { }
+    @Transient private val logger = KotlinLogging.logger { }
     private val schematicFolder = File(workDir, "schematics")
 
     init {
@@ -53,7 +53,7 @@ class ArenaCommand(
 
         val (template, time) =
             measureTimedValue {
-                runBlocking { arenaManager.createArena(name, schematic, gameType).onFailure { throw Exception(it.getError()) } }
+                arenaManager.createArena(name, schematic, gameType).onFailure { throw Exception(it.getError()) }
             }
 
         actor.reply("&aSaved template (points: ${template.positions.size}) in ${time.inWholeMilliseconds}ms")

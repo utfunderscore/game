@@ -20,7 +20,7 @@ class FileTemplateStore(
         if (!templateFile.exists()) templateFile.createNewFile()
         if (templateFile.isDirectory) return Result.failure("Arena file is a directory")
 
-        Game.objectMapper.writeValue(templateFile, arenaTemplate)
+        Game.objectMapper.writerWithDefaultPrettyPrinter().writeValue(templateFile, arenaTemplate)
         return Result.empty()
     }
 

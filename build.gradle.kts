@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.net.URI
 
 plugins {
@@ -11,14 +12,32 @@ subprojects {
 
     repositories {
         mavenLocal()
-        maven {
-            url = URI("https://repo.readutf.org/releases/")
-        }
+        maven { url = uri("https://repo.readutf.org/releases") }
+        maven { url = uri("https://www.jitpack.io") }
+    }
+}
+
+repositories {
+    mavenLocal()
+    maven {
+        url = URI("https://repo.readutf.org/releases/")
     }
 }
 
 dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
+}
+
+tasks.withType<JavaCompile> {
+    // Preserve parameter names in the bytecode
+    options.compilerArgs.add("-parameters")
+}
+
+// optional: if you're using Kotlin
+tasks.withType<KotlinJvmCompile> {
+    compilerOptions {
+        javaParameters = true
+    }
 }
 
 tasks.test {

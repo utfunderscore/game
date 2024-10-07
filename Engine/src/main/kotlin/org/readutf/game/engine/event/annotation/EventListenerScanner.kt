@@ -8,6 +8,7 @@ import kotlin.reflect.KClass
 import kotlin.reflect.full.declaredFunctions
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.isSubclassOf
+import kotlin.reflect.jvm.jvmErasure
 
 /**
  * Scans the given object for methods annotated with `@EventListener` that have a single
@@ -17,8 +18,8 @@ import kotlin.reflect.full.isSubclassOf
  * @param any The object to scan for annotated methods.
  * @return A `Result` containing a list of `GameListener` instances.
  */
-fun scan(any: Any): Result<List<GameListener>> {
-    val listeners = mutableListOf<GameListener>()
+fun scan(any: Any): Result<Map<KClass<*>, GameListener>> {
+    val listeners = mutableMapOf<KClass<*>, GameListener>()
     val clazz = any::class
 
     clazz.declaredFunctions
@@ -29,11 +30,7 @@ fun scan(any: Any): Result<List<GameListener>> {
                     .type.classifier
                     ?.let { it is KClass<*> && it.isSubclassOf(Event::class) } == true
         }.forEach { function ->
-            listeners.add(
-                GameListener {
-                    function.call(any, it)
-                },
-            )
+            listeners[function.parameters[1].type.jvmErasure] = GameListener { event -> function.call(any, event) }
         }
 
     return listeners.toSuccess()

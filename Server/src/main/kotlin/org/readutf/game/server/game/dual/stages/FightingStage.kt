@@ -1,8 +1,7 @@
-package org.readutf.game.server.game.dual.stage.awaitingplayers
+package org.readutf.game.server.game.dual.stages
 
 import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.types.Result
-import org.readutf.game.server.game.dual.DualGame
 
 class FightingStage(
     game: DualGame,

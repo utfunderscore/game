@@ -4,16 +4,21 @@ import com.fasterxml.jackson.core.StreamReadFeature
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
+import com.google.gson.annotations.Expose
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
+import net.minestom.server.event.Event
 import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.GameEvent
 import org.readutf.game.engine.event.GameEventManager
-import org.readutf.game.engine.event.impl.GameTeamAddEvent
+import org.readutf.game.engine.event.annotation.scan
+import org.readutf.game.engine.event.impl.GameJoinEvent
+import org.readutf.game.engine.event.impl.GameLeaveEvent
+import org.readutf.game.engine.event.impl.GameRespawnEvent
 import org.readutf.game.engine.respawning.RespawnHandler
 import org.readutf.game.engine.schedular.GameScheduler
 import org.readutf.game.engine.stage.Stage
@@ -23,44 +28,50 @@ import org.readutf.game.engine.types.Result
 import org.readutf.game.engine.utils.VectorDeserializer
 import org.readutf.game.engine.utils.VectorSerializer
 import java.util.UUID
+import java.util.function.Predicate
+import kotlin.reflect.KClass
 
 open class Game<ARENA : Arena<*>> {
     private val logger = KotlinLogging.logger { }
-    private val gameId = UUID.randomUUID()
+    val gameId: UUID = UUID.randomUUID()
 
     // Required game settings / features
     private var stageCreators: ArrayDeque<StageCreator<ARENA>> = ArrayDeque()
-    val scheduler by lazy { GameScheduler(this) }
+
+    @Expose
+    val scheduler = GameScheduler(this)
+
+    @Expose
     var currentStage: Stage? = null
+
+    @Expose
     var respawnHandler: RespawnHandler? = null
+
+    @Expose
     var arena: ARENA? = null
         private set
-    private var teams: MutableSet<GameTeam> = mutableSetOf()
-    private var gameState: GameState = GameState.STARTUP
+
+    private var teams = mutableMapOf<String, GameTeam>()
+
+    @Expose
+    var gameState: GameState = GameState.STARTUP
 
     /**
      * Adds players to a team, invokes the GameTeamAddEvent,
      * and teleports them to their spawn
      */
-    fun addTeam(team: GameTeam): Result<Unit> {
-        logger.info { "Adding team $team to game ($gameId)" }
+    fun registerTeam(teamName: String): Result<Unit> {
+        logger.info { "Adding team $teamName to game ($gameId)" }
+        if (teams.containsKey(teamName)) return Result.failure("Team already exists")
 
-        teams.add(team)
+        teams[teamName] = GameTeam(teamName, mutableListOf())
 
-        if (callEvent(GameTeamAddEvent(this)).isCancelled()) {
-            return Result.failure("GameTeamAddEvent was cancelled")
-        }
-
-        if (gameState == GameState.ACTIVE) {
-            team.getOnlinePlayers().forEach { player ->
-                spawnPlayer(player).mapError { return it }
-            }
-        }
         return Result.empty()
     }
 
     fun start(): Result<Unit> {
         logger.info { "Starting game" }
+        GameManager.activeGames.add(this)
         if (gameState != GameState.STARTUP) {
             return Result.failure("Game is not in startup state")
         }
@@ -88,6 +99,15 @@ open class Game<ARENA : Arena<*>> {
 
         val nextStageCreator = stageCreators.removeFirstOrNull() ?: return Result.failure("No more stages to start")
         val nextStage = nextStageCreator.create(this).mapError { return it }
+
+        val listeners = scan(nextStage).mapError { return it }
+        listeners.forEach {
+            GameEventManager.registerListener(
+                this,
+                it.key as KClass<out Event>,
+                it.value,
+            )
+        }
 
         currentStage = nextStage
         nextStage.onStart(previous).mapError { return it }
@@ -144,10 +164,11 @@ open class Game<ARENA : Arena<*>> {
 
         val spawnHandling = respawnHandler ?: return Result.failure("No spawning handler has been declared.")
 
-        val (position, instance, _) =
-            spawnHandling
-                .getRespawnLocation(player)
-                .mapError { return it }
+        val respawnResult = spawnHandling.getRespawnLocation(player)
+
+        val event = GameEventManager.callEvent(GameRespawnEvent(this, player, respawnResult), this)
+
+        val (position, instance, _) = event.respawnPositionResult.mapError { return it }
 
         if (player.instance != instance) {
             player.setInstance(instance, position)
@@ -158,16 +179,65 @@ open class Game<ARENA : Arena<*>> {
         return Result.success(Unit)
     }
 
-    fun getPlayers(): List<UUID> = teams.flatMap { it.players }
+    fun getPlayers(): List<UUID> = teams.values.flatMap { it.players }
 
     fun getOnlinePlayers(): List<Player> =
         getPlayers().mapNotNull {
             MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(it)
         }
 
-    fun getTeam(playerId: UUID): GameTeam? = teams.find { it.players.contains(playerId) }
+    fun addPlayer(
+        player: Player,
+        team: GameTeam,
+    ): Result<Unit> {
+        logger.info { "Adding player $player to team ${team.gameName}" }
 
-    fun getTeamId(team: GameTeam): Int = teams.indexOf(team)
+        GameManager.playerToGame[player.uuid] = this
+        GameEventManager.callEvent(GameJoinEvent(this, player), this)
+
+        team.players.add(player.uuid)
+
+        spawnPlayer(player).onFailure { return it }
+
+        return Result.empty()
+    }
+
+    fun addPlayer(
+        player: Player,
+        teamName: String,
+    ): Result<Unit> {
+        val team = teams[teamName] ?: return Result.failure("Team $teamName does not exist")
+        return addPlayer(player, team)
+    }
+
+    fun addPlayer(
+        player: Player,
+        predicate: Predicate<GameTeam>,
+    ): Result<Unit> {
+        val team =
+            teams.values.firstOrNull { predicate.test(it) }
+                ?: throw IllegalArgumentException("No team found for predicate")
+
+        return addPlayer(player, team)
+    }
+
+    fun removePlayer(player: Player): Result<Unit> {
+        logger.info { "Removing player $player" }
+
+        val team = getTeam(player.uuid) ?: return Result.failure("Player is not in a team")
+
+        team.players.remove(player.uuid)
+
+        GameEventManager.callEvent(GameLeaveEvent(this, player), this)
+
+        return Result.empty()
+    }
+
+    fun getTeam(playerId: UUID): GameTeam? = teams.values.find { it.players.contains(playerId) }
+
+    fun getTeam(teamName: String) = teams[teamName]
+
+    fun getTeams(): List<GameTeam> = teams.values.toList()
 
     fun getArena(): Result<ARENA> = arena?.let { Result.success(it) } ?: Result.failure("No arena is active")
 
@@ -176,6 +246,8 @@ open class Game<ARENA : Arena<*>> {
             onlinePlayer.sendMessage(component)
         }
     }
+
+    fun getTeamId(team: GameTeam): Int = teams.values.indexOf(team)
 
     companion object {
         internal val objectMapper =

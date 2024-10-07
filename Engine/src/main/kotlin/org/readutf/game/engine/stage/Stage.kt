@@ -8,7 +8,7 @@ import org.readutf.game.engine.event.listener.TypedGameListener
 import org.readutf.game.engine.types.Result
 import kotlin.reflect.KClass
 
-open class Stage(
+abstract class Stage(
     open val game: Game<*>,
 ) {
     val registeredListeners = LinkedHashMap<KClass<out Event>, MutableList<GameListener>>()
@@ -25,7 +25,7 @@ open class Stage(
             .getOrPut(type) { mutableListOf() }
             .add(gameListener)
 
-        GameEventManager.registerEvent(game, type, gameListener)
+        GameEventManager.registerListener(game, type, gameListener)
     }
 
     inline fun <reified T : Event> registerListener(gameListener: TypedGameListener<T>) {
@@ -33,7 +33,7 @@ open class Stage(
             .getOrPut(T::class) { mutableListOf() }
             .add(gameListener)
 
-        GameEventManager.registerEvent(game, T::class, gameListener)
+        GameEventManager.registerListener(game, T::class, gameListener)
     }
 
     fun endStage() = game.startNextStage()
