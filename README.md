@@ -13,9 +13,9 @@ Markers must follow the following format:
 <offset>
 ```
 Where `<name>` is the name of the marker, and `<offset>` is the offset from the sign block.
-**Note**
-Offsets are optional, but can be used to fine-tune the position of the marker, 
-or define a position that does not have a valid block to place the sign on. 
+> [!NOTE]\
+> Offsets are optional, but can be used to fine-tune the position of the marker, 
+> or define a position that does not have a valid block to place the sign on. 
 
 ### Defining position requirements
 The following is an example of a [PositionData](Engine/src/main/kotlin/org/readutf/game/engine/settings/location/PositionData.kt) class taken
