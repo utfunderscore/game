@@ -25,9 +25,9 @@ from a relevant test.
  * Data class representing an imaginary game mode's position requirements
  */
 class ValidPositionData(
-    @Position("testPosition") val testPosition: Vec,
-    @Position(startsWith = "testListPositions") val startWith: List<Vec>,
-    @Position(endsWith = "endsWithPosition") val endsWith: Vec,
+    @Position("testPosition") val testPosition: Marker,
+    @Position(startsWith = "testListPositions") val startWith: List<Marker>,
+    @Position(endsWith = "endsWithPosition") val endsWith: Marker,
     val subClassPosition: SubPositionData
 ) : PositionData
 
@@ -35,7 +35,7 @@ class ValidPositionData(
  * A subclass of [ValidPositionData] with nested position data
  */
 class SubPositionData(
-    @Position("subClassPosition") val innerClass: Vec
+    @Position("subClassPosition") val innerClass: Marker
 ) : PositionData
 ```
 This class defines a set of positions that are required for our imaginary gamemode to function.
