@@ -64,6 +64,13 @@ data class Result<T>(
         return this.getValue()
     }
 
+    fun getOrThrow(): T {
+        if (isFailure) {
+            throw IllegalStateException(error)
+        }
+        return getValue()
+    }
+
     val isSuccess: Boolean
         get() = value != null
 

@@ -1,4 +1,4 @@
-package org.readutf.game.engine.defaults
+package org.readutf.game.engine.features
 
 import net.minestom.server.event.player.PlayerDisconnectEvent
 import org.readutf.game.engine.stage.Stage

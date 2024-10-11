@@ -3,8 +3,10 @@ package org.readutf.game.engine.stage
 import net.minestom.server.event.Event
 import org.readutf.game.engine.Game
 import org.readutf.game.engine.event.GameEventManager
+import org.readutf.game.engine.event.annotation.scan
 import org.readutf.game.engine.event.listener.GameListener
 import org.readutf.game.engine.event.listener.TypedGameListener
+import org.readutf.game.engine.schedular.GameTask
 import org.readutf.game.engine.types.Result
 import kotlin.reflect.KClass
 
@@ -35,6 +37,18 @@ abstract class Stage(
             .add(gameListener)
 
         GameEventManager.registerListener(game, T::class, gameListener)
+    }
+
+    fun registerAll(any: Any) {
+        val scan = scan(any).getOrThrow()
+
+        scan.forEach { (type, listener) ->
+            registerListener(listener, type as KClass<out Event>)
+        }
+    }
+
+    fun schedule(gameTask: GameTask) {
+        game.scheduler.schedule(this, gameTask)
     }
 
     fun endStage() = game.startNextStage()

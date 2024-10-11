@@ -29,8 +29,15 @@ class GameScheduler(
     ) {
         if (task == null) task = startTask()
 
+        gameTask.startTime = System.currentTimeMillis()
+
         logger.info { "Scheduling task `${gameTask::class.simpleName}` for stage `${stage::class.simpleName}`" }
-        stageTasks.computeIfAbsent(stage) { mutableSetOf() }.add(gameTask)
+        stageTasks.getOrPut(stage) { mutableSetOf() }.add(gameTask)
+    }
+
+    fun cancelTask(gameTask: GameTask) {
+        globalTasks.remove(gameTask)
+        stageTasks.values.forEach { it.remove(gameTask) }
     }
 
     fun startTask() =
@@ -52,6 +59,8 @@ class GameScheduler(
                 task.tick()
                 globalTasks.remove(task)
             }
+        } else {
+            task.tick()
         }
     }
 

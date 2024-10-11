@@ -1,7 +1,7 @@
 package org.readutf.game.engine.schedular
 
 abstract class GameTask(
-    val startTime: Long = System.currentTimeMillis(),
+    var startTime: Long = System.currentTimeMillis(),
 ) {
     abstract fun tick()
 }

@@ -17,3 +17,21 @@ inline fun <reified T : Event> EventNode<Event>.addListener(listener: Consumer<T
 private val legacySerializer = LegacyComponentSerializer.legacy('&')
 
 fun String.toComponent() = legacySerializer.deserialize(this)
+
+inline fun <T> List<T>.distinctBySimilar(isSimilar: (T, T) -> Boolean): List<T> {
+    val result = mutableListOf<T>()
+    for (item in this) {
+        if (result.none { isSimilar(it, item) }) {
+            result.add(item)
+        }
+    }
+    return result
+}
+
+fun <T> merge(vararg lists: List<T>): List<T> {
+    val result = mutableListOf<T>()
+    for (list in lists) {
+        result += list
+    }
+    return result
+}
