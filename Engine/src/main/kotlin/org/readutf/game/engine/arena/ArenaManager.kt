@@ -5,6 +5,7 @@ import net.hollowcube.schem.Schematic
 import net.kyori.adventure.nbt.CompoundBinaryTag
 import net.kyori.adventure.nbt.StringBinaryTag
 import net.minestom.server.MinecraftServer
+import net.minestom.server.coordinate.BlockVec
 import net.minestom.server.coordinate.Vec
 import org.readutf.game.engine.arena.marker.Marker
 import org.readutf.game.engine.arena.store.schematic.ArenaSchematicStore
@@ -60,6 +61,7 @@ class ArenaManager(
                 arenaId = UUID.randomUUID(),
                 instance = schematicInstance,
                 positionSettings = positionSettings,
+                size = BlockVec(template.size),
                 positions = template.positions,
             ) { arena ->
                 MinecraftServer.getInstanceManager().unregisterInstance(arena.instance)
