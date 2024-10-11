@@ -1,4 +1,4 @@
-package org.readutf.game.server.game.dual.impl
+package org.readutf.game.server.game.impl
 
 import org.readutf.game.server.game.dual.stages.AwaitingPlayersSettings
 

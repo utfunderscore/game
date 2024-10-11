@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
     kotlin("jvm")
+    id("com.gradleup.shadow") version "8.3.3"
 }
 
 group = "com.readutf.game"

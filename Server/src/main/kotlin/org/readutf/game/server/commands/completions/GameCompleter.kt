@@ -1,4 +1,4 @@
-package org.readutf.game.server.commands.complter
+package org.readutf.game.server.commands.completions
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.VALUE_PARAMETER)

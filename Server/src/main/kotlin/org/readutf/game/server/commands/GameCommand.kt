@@ -3,7 +3,8 @@ package org.readutf.game.server.commands
 import net.minestom.server.entity.Player
 import org.readutf.game.engine.GameManager
 import org.readutf.game.engine.utils.toComponent
-import org.readutf.game.server.commands.complter.GameCompleter
+import org.readutf.game.server.commands.completions.GameCompleter
+import org.readutf.game.server.commands.completions.GameTypeCompleter
 import org.readutf.game.server.game.GameTypeManager
 import revxrsal.commands.annotation.Command
 import revxrsal.commands.annotation.Named
@@ -14,7 +15,7 @@ class GameCommand(
     @Command("game start")
     fun startGame(
         player: Player,
-        type: String,
+        @GameTypeCompleter type: String,
     ) {
         val creator =
             gameTypeManager.getCreator(type) ?: let {
@@ -39,8 +40,8 @@ class GameCommand(
     @Command("game add <gameid> <target>")
     fun addPlayer(
         player: Player,
-        target: Player,
         @Named("gameid") @GameCompleter gameId: String,
+        target: Player,
     ) {
         val game =
             GameManager.getGameById(gameId) ?: let {
@@ -48,7 +49,7 @@ class GameCommand(
                 return
             }
 
-        if (game.getPlayers().contains(player.uuid)) {
+        if (game.getPlayers().contains(target.uuid)) {
             player.sendMessage("&cYou are already in the game".toComponent())
             return
         }
@@ -61,7 +62,6 @@ class GameCommand(
 
         game.addPlayer(target, result).onFailure {
             player.sendMessage("&cFailed to add player: ${it.getError()}".toComponent())
-            return
         }
 
         player.sendMessage("&aPlayer added to game".toComponent())

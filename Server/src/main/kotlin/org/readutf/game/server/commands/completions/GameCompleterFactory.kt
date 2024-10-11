@@ -1,4 +1,4 @@
-package org.readutf.game.server.commands.complter
+package org.readutf.game.server.commands.completions
 
 import org.readutf.game.engine.GameManager
 import revxrsal.commands.Lamp

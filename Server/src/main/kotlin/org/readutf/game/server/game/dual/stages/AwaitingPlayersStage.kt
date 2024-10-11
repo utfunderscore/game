@@ -1,10 +1,10 @@
 package org.readutf.game.server.game.dual.stages
 
 import org.readutf.game.engine.Game
-import org.readutf.game.engine.defaults.disableDamage
-import org.readutf.game.engine.defaults.disableFoodLoss
 import org.readutf.game.engine.event.annotation.EventListener
 import org.readutf.game.engine.event.impl.GameJoinEvent
+import org.readutf.game.engine.features.setDamageRule
+import org.readutf.game.engine.features.setFoodLossRule
 import org.readutf.game.engine.respawning.impl.registerTeamIdSpawnHandler
 import org.readutf.game.engine.schedular.RepeatingGameTask
 import org.readutf.game.engine.settings.GameSettings
@@ -24,8 +24,8 @@ class AwaitingPlayersStage(
     init {
         registerTeamIdSpawnHandler("spawn")
         game.scheduler.schedule(this, countDownTask)
-        disableDamage()
-        disableFoodLoss()
+        setDamageRule { false }
+        setFoodLossRule { false }
     }
 
     @EventListener

@@ -1,10 +1,10 @@
 package org.readutf.game.server.game.dual
 
-import net.minestom.server.coordinate.Vec
+import org.readutf.game.engine.arena.marker.Marker
+import org.readutf.game.engine.settings.location.Position
 import org.readutf.game.engine.settings.location.PositionData
-import org.readutf.game.engine.settings.location.PositionType
 
-data class DualGamePositions(
-    @PositionType(name = "spawn:1") val team1Spawn: Vec,
-    @PositionType(name = "spawn:2") val team2Spawn: Vec,
+open class DualGamePositions(
+    @Position(name = "spawn:1") open val team1Spawn: Marker,
+    @Position(name = "spawn:2") open val team2Spawn: Marker,
 ) : PositionData
