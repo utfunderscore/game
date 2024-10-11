@@ -31,6 +31,8 @@ import java.util.UUID
 import java.util.function.Predicate
 import kotlin.reflect.KClass
 
+typealias GenericGame = Game<*>
+
 open class Game<ARENA : Arena<*>> {
     private val logger = KotlinLogging.logger { }
     val gameId: String = GameManager.generateGameId()
