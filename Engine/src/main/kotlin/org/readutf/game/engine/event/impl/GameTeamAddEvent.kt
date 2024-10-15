@@ -1,11 +1,11 @@
 package org.readutf.game.engine.event.impl
 
-import org.readutf.game.engine.Game
+import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.Cancellable
 import org.readutf.game.engine.event.GameEvent
 
 class GameTeamAddEvent(
-    game: Game<*>,
+    game: GenericGame,
 ) : GameEvent(game),
     Cancellable {
     private var cancelled: Boolean = false

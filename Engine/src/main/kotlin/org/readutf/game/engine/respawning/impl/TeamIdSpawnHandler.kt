@@ -2,14 +2,14 @@ package org.readutf.game.engine.respawning.impl
 
 import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
-import org.readutf.game.engine.Game
+import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.respawning.RespawnHandler
 import org.readutf.game.engine.respawning.RespawnPosition
 import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.types.Result
 
 class TeamIdSpawnHandler(
-    val game: Game<*>,
+    val game: GenericGame,
     private val positionPrefix: String,
 ) : RespawnHandler {
     override fun getRespawnLocation(player: Player): Result<RespawnPosition> {
@@ -30,7 +30,7 @@ class TeamIdSpawnHandler(
     }
 }
 
-fun Game<*>.registerTeamIdSpawnHandler(positionPrefix: String) {
+fun GenericGame.registerTeamIdSpawnHandler(positionPrefix: String) {
     respawnHandler = TeamIdSpawnHandler(this, positionPrefix)
 }
 

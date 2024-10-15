@@ -5,7 +5,7 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.event.Event
 import net.minestom.server.event.entity.EntityDamageEvent
 import net.minestom.server.event.trait.EntityEvent
-import org.readutf.game.engine.Game
+import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.adapter.EventAdapter
 import org.readutf.game.engine.event.adapter.impl.EntityEventAdapter
 import org.readutf.game.engine.event.adapter.impl.GameEventAdapter
@@ -33,7 +33,7 @@ object GameEventManager {
 
     private val registeredTypes = mutableSetOf<KClass<out Event>>()
     private val noAdapters = mutableSetOf<KClass<out Event>>()
-    private val registeredListeners = LinkedHashMap<Game<*>, LinkedHashMap<KClass<out Event>, MutableList<GameListener>>>()
+    private val registeredListeners = LinkedHashMap<GenericGame, LinkedHashMap<KClass<out Event>, MutableList<GameListener>>>()
     private val eventStackTraceEnabled = mutableSetOf<KClass<out Event>>()
 
     init {
@@ -57,7 +57,7 @@ object GameEventManager {
     }
 
     fun registerListener(
-        game: Game<*>,
+        game: GenericGame,
         kClass: KClass<out Event>,
         listener: GameListener,
     ) {
@@ -78,7 +78,7 @@ object GameEventManager {
     }
 
     fun unregisterEvent(
-        game: Game<*>,
+        game: GenericGame,
         kClass: KClass<out Event>,
         listener: GameListener,
     ) {
@@ -97,7 +97,7 @@ object GameEventManager {
 
     fun <T : Event> callEvent(
         event: T,
-        game: Game<*>,
+        game: GenericGame,
     ): T {
         val gameListeners = registeredListeners[game]
         if (gameListeners == null) {

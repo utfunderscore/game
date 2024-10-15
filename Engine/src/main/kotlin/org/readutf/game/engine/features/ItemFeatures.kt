@@ -1,14 +1,14 @@
 package org.readutf.game.engine.features
 
 import net.minestom.server.coordinate.Pos
-import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.ItemEntity
+import net.minestom.server.entity.Player
 import net.minestom.server.event.item.ItemDropEvent
+import net.minestom.server.event.item.PickupItemEvent
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
 import org.readutf.game.engine.stage.Stage
-import kotlin.random.Random
 
 fun Stage.allowDroppingItems() {
     registerListener<ItemDropEvent> {
@@ -31,16 +31,18 @@ fun Stage.dropItemOnBlockBreak(itemFunc: (Block) -> ItemStack?) {
         val item = itemFunc.invoke(it.block)
         if (item == null || item.isAir) return@registerListener
         val itemEntity = ItemEntity(item)
-        itemEntity.setInstance(it.instance, Pos(it.blockPosition.add(0.0, 0.5, 0.0)))
+        itemEntity.setInstance(it.instance, Pos(it.blockPosition.add(0.5, 0.5, 0.5)))
+    }
+}
 
-        val pos = it.blockPosition
+fun Stage.enableItemPickup() {
+    registerListener<PickupItemEvent> {
+        val player = it.entity
+        if (player !is Player) return@registerListener
 
-        val d = 0.125
-        val d1: Double = pos.blockX() + 0.5 + Random.nextDouble(-0.25, 0.25)
-        val d2: Double = pos.blockY() + 0.5 + Random.nextDouble(-0.25, 0.25) - d
-        val d3: Double = pos.blockZ() + 0.5 + Random.nextDouble(-0.25, 0.25)
-
-        itemEntity.velocity = Vec(d1, d2, d3)
+        val item = it.itemEntity.itemStack
+        val inventory = player.inventory
+        val remaining = inventory.addItemStack(item)
     }
 }
 

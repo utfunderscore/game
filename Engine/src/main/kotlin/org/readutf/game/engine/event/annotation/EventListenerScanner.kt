@@ -20,8 +20,9 @@ private val logger = KotlinLogging.logger {}
  * @param toScan The object to scan for annotated methods.
  * @return A `Result` containing a list of `GameListener` instances.
  */
-fun scan(toScan: Any): Result<Map<KClass<*>, GameListener>> {
-    val listeners = mutableMapOf<KClass<*>, GameListener>()
+@Suppress("UNCHECKED_CAST")
+fun scan(toScan: Any): Result<Map<KClass<out Event>, GameListener>> {
+    val listeners = mutableMapOf<KClass<out Event>, GameListener>()
     val clazz = toScan::class
 
     for (function in clazz.functions) {
@@ -42,7 +43,7 @@ fun scan(toScan: Any): Result<Map<KClass<*>, GameListener>> {
         }
 
         logger.debug { "Found event listener: ${function.name}" }
-        listeners[classifier] = GameListener { event -> function.call(toScan, event) }
+        listeners[classifier as KClass<out Event>] = GameListener { event -> function.call(toScan, event) }
     }
 
     return listeners.toSuccess()

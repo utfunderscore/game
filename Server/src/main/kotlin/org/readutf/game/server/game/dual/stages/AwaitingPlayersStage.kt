@@ -1,31 +1,53 @@
 package org.readutf.game.server.game.dual.stages
 
 import org.readutf.game.engine.Game
+import org.readutf.game.engine.GenericGame
+import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.annotation.EventListener
 import org.readutf.game.engine.event.impl.GameJoinEvent
-import org.readutf.game.engine.features.setDamageRule
-import org.readutf.game.engine.features.setFoodLossRule
+import org.readutf.game.engine.features.*
 import org.readutf.game.engine.respawning.impl.registerTeamIdSpawnHandler
 import org.readutf.game.engine.schedular.RepeatingGameTask
 import org.readutf.game.engine.settings.GameSettings
 import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.stage.StageCreator
+import org.readutf.game.engine.team.GameTeam
 import org.readutf.game.engine.types.Result
 import org.readutf.game.engine.utils.toComponent
-import org.readutf.game.server.game.dual.utils.DualArena
+import org.readutf.game.server.game.dual.DualGamePositions
 
 class AwaitingPlayersStage(
-    override val game: Game<out DualArena>,
+    override val game: GenericGame,
     previousStage: Stage?,
     val settings: AwaitingPlayersSettings,
+    val arenaPositions: DualGamePositions,
 ) : Stage(game, previousStage) {
     val countDownTask = CountdownTask(listOf(60, 30, 15, 10, 5, 4, 3, 2, 1))
 
     init {
         registerTeamIdSpawnHandler("spawn")
         game.scheduler.schedule(this, countDownTask)
+        removeOnDisconnect()
         setDamageRule { false }
         setFoodLossRule { false }
+        setBlockBreakRule { _, _ -> false }
+        setBlockPlaceRule { _, _ -> false }
+
+        playerJoinMessage {
+            settings.playerJoinMessage
+                .replace("{player}", it.username)
+                .replace("{players}", game.getOnlinePlayers().count().toString())
+                .replace("{max}", settings.maxPlayers.toString())
+                .toComponent()
+        }
+
+        playerLeaveMessage {
+            settings.playerLeaveMessage
+                .replace("{player}", it.username)
+                .replace("{players}", (game.getOnlinePlayers().count()).toString())
+                .replace("{max}", settings.maxPlayers.toString())
+                .toComponent()
+        }
     }
 
     @EventListener
@@ -81,13 +103,14 @@ class AwaitingPlayersStage(
         }
     }
 
-    class Creator(
+    class Creator<E : Arena<*>, T : GameTeam>(
         val settings: AwaitingPlayersSettings,
-    ) : StageCreator<DualArena> {
+        val dualGamePositions: DualGamePositions,
+    ) : StageCreator<E, T> {
         override fun create(
-            game: Game<DualArena>,
+            game: Game<E, T>,
             previousStage: Stage?,
-        ): Result<Stage> = Result.success(AwaitingPlayersStage(game, previousStage, settings))
+        ): Result<Stage> = Result.success(AwaitingPlayersStage(game, previousStage, settings, dualGamePositions))
     }
 }
 
@@ -97,4 +120,6 @@ class AwaitingPlayersSettings(
     val playersReachedCountdown: Int = 15,
     val gameStartingMessage: String = "&7Game starting in &9{time} seconds",
     val awaitingPlayers: String = "&7Waiting for &9{players} &7more players...",
+    val playerJoinMessage: String = "&9{player} &7has joined the game &b({players}/{max})",
+    val playerLeaveMessage: String = "&9{player} &7has left the game &b({players}/{max})",
 ) : GameSettings()

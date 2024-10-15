@@ -5,11 +5,11 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import net.minestom.server.MinecraftServer
 import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
-import org.readutf.game.engine.Game
+import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.stage.Stage
 
 class GameScheduler(
-    val game: Game<*>,
+    val game: GenericGame,
 ) {
     private val logger = KotlinLogging.logger { }
 

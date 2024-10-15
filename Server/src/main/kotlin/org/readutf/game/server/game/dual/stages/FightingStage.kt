@@ -1,11 +1,11 @@
 package org.readutf.game.server.game.dual.stages
 
-import org.readutf.game.engine.Game
+import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.types.Result
 
 open class FightingStage(
-    game: Game<*>,
+    game: GenericGame,
     previousStage: Stage?,
 ) : Stage(game, previousStage) {
     override fun onStart(): Result<Unit> {

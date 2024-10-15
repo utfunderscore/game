@@ -116,7 +116,17 @@ class PositionSettingsManager {
         gameType: String,
         positions: Map<String, Marker>,
     ): Result<Unit> {
-        TODO()
+        val types = positionTypes[gameType] ?: return Result.failure("No position requirements found for $gameType")
+
+        types.forEach { regex ->
+            val matchingPositions = positions.filter { it.key.matches(regex) }
+
+            if (matchingPositions.isEmpty()) {
+                return Result.failure("No positions found matching $regex")
+            }
+            println("matching $regex + $matchingPositions")
+        }
+        return Result.success(Unit)
     }
 
     private fun getParameterForType(

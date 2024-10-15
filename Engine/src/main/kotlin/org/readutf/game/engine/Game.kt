@@ -11,14 +11,11 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
-import net.minestom.server.event.Event
 import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.GameEvent
 import org.readutf.game.engine.event.GameEventManager
 import org.readutf.game.engine.event.annotation.scan
-import org.readutf.game.engine.event.impl.GameJoinEvent
-import org.readutf.game.engine.event.impl.GameLeaveEvent
-import org.readutf.game.engine.event.impl.GameRespawnEvent
+import org.readutf.game.engine.event.impl.*
 import org.readutf.game.engine.respawning.RespawnHandler
 import org.readutf.game.engine.schedular.GameScheduler
 import org.readutf.game.engine.stage.Stage
@@ -29,16 +26,16 @@ import org.readutf.game.engine.utils.VectorDeserializer
 import org.readutf.game.engine.utils.VectorSerializer
 import java.util.UUID
 import java.util.function.Predicate
-import kotlin.reflect.KClass
+import kotlin.jvm.Throws
 
-typealias GenericGame = Game<*>
+typealias GenericGame = Game<*, *>
 
-open class Game<ARENA : Arena<*>> {
+open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
     private val logger = KotlinLogging.logger { }
     val gameId: String = GameManager.generateGameId()
 
     // Required game settings / features
-    private var stageCreators: ArrayDeque<StageCreator<ARENA>> = ArrayDeque()
+    private var stageCreators: ArrayDeque<StageCreator<ARENA, TEAM>> = ArrayDeque()
 
     @Expose
     val scheduler = GameScheduler(this)
@@ -107,7 +104,7 @@ open class Game<ARENA : Arena<*>> {
         listeners.forEach {
             GameEventManager.registerListener(
                 this,
-                it.key as KClass<out Event>,
+                it.key,
                 it.value,
             )
         }
@@ -119,6 +116,8 @@ open class Game<ARENA : Arena<*>> {
     }
 
     fun end(): Result<Unit> {
+        GameEventManager.callEvent(GameEndEvent(this), this)
+
         if (gameState != GameState.ACTIVE) {
             return Result.failure("GameState is not active")
         }
@@ -128,11 +127,14 @@ open class Game<ARENA : Arena<*>> {
         return Result.empty()
     }
 
-    fun crash(result: Result<*>) {
+    @Throws(Exception::class)
+    fun crash(result: Result<*>?) {
+        GameEventManager.callEvent(GameCrashEvent(this), this)
+
         arena?.free()
 
-        result.debug { }
-        logger.error { "Game $gameId crashed: ${result.getErrorOrNull() ?: "Unknown Reason"}" }
+        result?.debug { }
+        logger.error { "Game $gameId crashed: ${result?.getErrorOrNull() ?: "Unknown Reason"}" }
 
         getOnlinePlayers().forEach { onlinePlayer ->
             onlinePlayer.sendMessage("Game crashed")
@@ -153,7 +155,7 @@ open class Game<ARENA : Arena<*>> {
         }
     }
 
-    fun registerStage(vararg stageCreator: StageCreator<ARENA>) {
+    fun registerStage(vararg stageCreator: StageCreator<ARENA, TEAM>) {
         stageCreators.addAll(stageCreator)
     }
 
@@ -196,9 +198,8 @@ open class Game<ARENA : Arena<*>> {
         logger.info { "Adding player $player to team ${team.gameName}" }
 
         GameManager.playerToGame[player.uuid] = this
-        GameEventManager.callEvent(GameJoinEvent(this, player), this)
-
         team.players.add(player.uuid)
+        GameEventManager.callEvent(GameJoinEvent(this, player), this)
 
         spawnPlayer(player).onFailure { return it }
 
@@ -219,7 +220,7 @@ open class Game<ARENA : Arena<*>> {
     ): Result<Unit> {
         val team =
             teams.values.firstOrNull { predicate.test(it) }
-                ?: throw IllegalArgumentException("No team found for predicate")
+                ?: return Result.failure("No team matches the predicate")
 
         return addPlayer(player, team)
     }

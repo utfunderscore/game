@@ -2,8 +2,8 @@ package org.readutf.game.engine.debug.commands
 
 import com.google.gson.GsonBuilder
 import net.minestom.server.entity.Player
-import org.readutf.game.engine.Game
 import org.readutf.game.engine.GameManager
+import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.utils.toComponent
 import revxrsal.commands.annotation.Command
 import revxrsal.commands.annotation.Optional
@@ -14,7 +14,7 @@ class GameDumpCommand {
         player: Player,
         @Optional gameid: String?,
     ) {
-        val game: Game<*> =
+        val game: GenericGame =
             if (gameid == null) {
                 GameManager.getGameByPlayer(player.uuid)
             } else {

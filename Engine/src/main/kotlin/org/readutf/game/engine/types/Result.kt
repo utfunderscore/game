@@ -60,6 +60,7 @@ data class Result<T>(
     inline fun onFailure(block: (Result<T>) -> Unit): T {
         if (isFailure) {
             block(this)
+            throw IllegalStateException(getErrorOrNull() ?: "Unknown error")
         }
         return this.getValue()
     }

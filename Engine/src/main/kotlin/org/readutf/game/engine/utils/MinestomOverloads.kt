@@ -1,5 +1,7 @@
 package org.readutf.game.engine.utils
 
+import net.kyori.adventure.text.Component
+import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
@@ -35,3 +37,5 @@ fun <T> merge(vararg lists: List<T>): List<T> {
     }
     return result
 }
+
+operator fun TextComponent.plus(heartLine: Component): Component = this.append(heartLine)

@@ -4,12 +4,12 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 object GameManager {
-    val activeGames = mutableMapOf<String, Game<*>>()
-    val playerToGame = mutableMapOf<UUID, Game<*>>()
+    val activeGames = mutableMapOf<String, GenericGame>()
+    val playerToGame = mutableMapOf<UUID, GenericGame>()
 
-    fun getGameByPlayer(playerId: UUID): Game<*>? = playerToGame[playerId]
+    fun getGameByPlayer(playerId: UUID): GenericGame? = playerToGame[playerId]
 
-    fun getGameById(gameId: String): Game<*>? = activeGames[gameId]
+    fun getGameById(gameId: String): GenericGame? = activeGames[gameId]
 
     val tracker = AtomicInteger(1000)
 

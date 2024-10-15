@@ -14,14 +14,21 @@ import org.readutf.game.engine.kit.command.KitCommand
 import org.readutf.game.engine.settings.GameSettingsManager
 import org.readutf.game.engine.settings.PositionSettingsManager
 import org.readutf.game.engine.settings.store.impl.YamlSettingsStore
+import org.readutf.game.server.commands.ArenaCommand
 import org.readutf.game.server.commands.GameCommand
 import org.readutf.game.server.commands.GamemodeCommand
 import org.readutf.game.server.commands.completions.GameCompleterFactory
 import org.readutf.game.server.commands.completions.GameTypeCompleterFactory
+import org.readutf.game.server.dev.AutoGameStarter
+import org.readutf.game.server.dev.TexturePackManager
 import org.readutf.game.server.game.GameTypeManager
 import org.readutf.game.server.game.dual.DualGamePositions
 import org.readutf.game.server.game.dual.stages.AwaitingPlayersSettings
+import org.readutf.game.server.game.impl.TheBridgePositions
 import org.readutf.game.server.world.WorldManager
+import revxrsal.commands.cli.CLILamp
+import revxrsal.commands.cli.ConsoleActor
+import revxrsal.commands.cli.actor.ActorFactory
 import revxrsal.commands.minestom.MinestomLamp
 import java.io.File
 
@@ -44,6 +51,7 @@ class GameServer {
 
     init {
         positionSettingsManager.registerRequirements("dual", DualGamePositions::class)
+        positionSettingsManager.registerRequirements("thebridge", TheBridgePositions::class)
         gameSettingsManager.setDefaultSettings("dual", AwaitingPlayersSettings())
     }
 
@@ -69,12 +77,30 @@ class GameServer {
                     it.addProviderFactory(GameTypeCompleterFactory(gameTypeManager))
                 }.build()
 
+        val arenaCommand = ArenaCommand(workDir, arenaManager)
+
         commandManager.register(
             GameDumpCommand(),
             GameCommand(gameTypeManager),
             KitCommand(kitManager),
         )
 
+        val cliCommandManager = CLILamp.builder<ConsoleActor>().build()
+        cliCommandManager.register(arenaCommand)
+        val consoleActor = ActorFactory.defaultFactory().createForStdIo(cliCommandManager)
+        Thread {
+            while (true) {
+                val line = readlnOrNull()
+                if (line != null) {
+                    cliCommandManager.dispatch(consoleActor, line)
+                }
+            }
+        }.start()
+
         server.start("0.0.0.0", 25566)
+
+        AutoGameStarter(gameTypeManager)
+
+        TexturePackManager
     }
 }

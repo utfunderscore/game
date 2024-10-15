@@ -2,9 +2,10 @@ package org.readutf.game.engine.event.impl
 
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.GameEvent
-import org.readutf.game.engine.stage.Stage
 
-class StageEvent(
-    val stage: Stage,
+/**
+ * Called when a game crashes or is forced to stop.
+ */
+class GameCrashEvent(
     game: GenericGame,
 ) : GameEvent(game)

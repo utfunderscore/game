@@ -2,12 +2,12 @@ package org.readutf.game.engine.features.spectator
 
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
-import org.readutf.game.engine.Game
+import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.Cancellable
 import org.readutf.game.engine.event.GameEvent
 
 class GameSpectateEvent(
-    game: Game<*>,
+    game: GenericGame,
     val player: Player,
     val respawnLocation: Pos,
     var respawnTime: Int,

@@ -27,10 +27,6 @@ object ScoreboardManager {
         boardTracker[player.identity().uuid()] = board
     }
 
-    fun removeScoreboard(player: Player) {
-        sidebarTracker.remove(player.identity().uuid())
-    }
-
     private fun scheduleUpdateTask() {
         logger.info { "Scheduling scoreboard update task" }
 
@@ -38,15 +34,21 @@ object ScoreboardManager {
             {
                 LinkedHashMap(boardTracker).forEach { (uuid, board) ->
                     val player = MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(uuid)
+
                     if (player != null) {
-                        val sidebar = getSidebar(player, board.getTitle(player))
-                        updateScoreboard(
-                            sidebar,
-                            board.getTitle(player),
-                            board.getLines(player).reversed(),
-                        )
+                        try {
+                            val sidebar = getSidebar(player, board.getTitle(player))
+                            updateScoreboard(
+                                sidebar,
+                                board.getTitle(player),
+                                board.getLines(player).reversed(),
+                            )
+                        } catch (e: Exception) {
+                            logger.error(e) { "Failed to update scoreboard for player ${player.username}" }
+                            removeBoard(player)
+                        }
                     } else {
-                        boardTracker.remove(uuid)
+                        removeBoard(uuid)
                     }
                 }
             },
@@ -66,6 +68,13 @@ object ScoreboardManager {
                 return@getOrPut sidebar
             }
         return sidebar
+    }
+
+    fun removeBoard(playerId: UUID): Sidebar? = sidebarTracker.remove(playerId)
+
+    fun removeBoard(player: Player) {
+        val sidebar = removeBoard(player.identity().uuid())
+        sidebar?.removeViewer(player)
     }
 
     fun updateScoreboard(

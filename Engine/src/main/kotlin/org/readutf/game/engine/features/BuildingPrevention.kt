@@ -9,7 +9,7 @@ import java.util.function.BiPredicate
 
 fun Stage.setBlockPlaceRule(biPredicate: BiPredicate<Player, Block>) {
     registerListener<PlayerBlockPlaceEvent> {
-        if (biPredicate.test(it.player, it.block)) {
+        if (!biPredicate.test(it.player, it.block)) {
             it.isCancelled = true
         }
     }

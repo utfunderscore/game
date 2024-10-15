@@ -16,6 +16,18 @@ dependencies {
     implementation("net.minestom:minestom-snapshots:b0bad7e180")
 
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.24.0")
+
+    implementation("io.github.revxrsal:lamp.cli:4.0.0-beta.17")
+
+    implementation("team.unnamed:creative-api:1.7.3")
+
+    // Serializer for Minecraft format (ZIP / Folder)
+    implementation("team.unnamed:creative-serializer-minecraft:1.7.3")
+
+    // Resource Pack server
+    implementation("team.unnamed:creative-server:1.7.3")
+
+    implementation("org.readutf.glyphs:api:1.0.0")
 }
 
 tasks.withType<JavaCompile> {

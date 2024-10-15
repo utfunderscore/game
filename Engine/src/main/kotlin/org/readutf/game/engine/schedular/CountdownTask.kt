@@ -1,10 +1,10 @@
 package org.readutf.game.engine.schedular
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.readutf.game.engine.Game
+import org.readutf.game.engine.GenericGame
 
 abstract class CountdownTask(
-    val game: Game<*>,
+    val game: GenericGame,
     val durationSeconds: Int,
     intervalSeconds: List<Int>,
 ) : GameTask() {

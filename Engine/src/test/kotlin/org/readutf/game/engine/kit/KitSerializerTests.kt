@@ -55,8 +55,6 @@ class KitSerializerTests {
 
         println("in: ${kit.items}")
         println("out: ${deserializedKit.items}")
-        println("in: ${kit.armorItems}")
-        println("out: ${deserializedKit.armorItems}")
 
         assertEquals(kit, deserializedKit)
     }

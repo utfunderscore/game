@@ -1,11 +1,11 @@
 package org.readutf.game.engine.features.spectator
 
 import net.minestom.server.entity.Player
-import org.readutf.game.engine.Game
+import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.schedular.CountdownTask
 
 class SpectatorTask(
-    game: Game<*>,
+    game: GenericGame,
     val player: Player,
     duration: Int,
     val spectatorManager: SpectatorManager,

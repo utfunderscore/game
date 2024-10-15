@@ -1,16 +1,16 @@
 package org.readutf.game.server.game.impl
 
 import org.readutf.game.engine.Game
+import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.kit.KitManager
 import org.readutf.game.engine.types.toSuccess
 import org.readutf.game.server.game.dual.stages.AwaitingPlayersStage
-import org.readutf.game.server.game.dual.utils.DualArena
 
 class TheBridgeGame(
-    arena: DualArena,
+    arena: Arena<TheBridgePositions>,
     settings: TheBridgeSettings,
     kitManager: KitManager,
-) : Game<DualArena>() {
+) : Game<Arena<TheBridgePositions>, TheBridgeTeam>() {
     val kit = kitManager.loadKit("thebridge").getOrThrow()
 
     init {
@@ -21,8 +21,8 @@ class TheBridgeGame(
         registerTeam("blue")
 
         registerStage(
-            AwaitingPlayersStage.Creator(settings.awaitingPlayersSettings),
-            { game, previousStage -> TheBridgeStage(game, previousStage).toSuccess() },
+            AwaitingPlayersStage.Creator(settings.awaitingPlayersSettings, arena.positionSettings.dualGamePositions),
+            { _, previousStage -> TheBridgeStage(this, previousStage).toSuccess() },
         )
     }
 }
