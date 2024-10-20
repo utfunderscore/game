@@ -7,6 +7,8 @@ data class Marker(
     val originalPosition: Vec,
     val markerLines: Array<String> = Array(4) { "" },
 ) {
+    val markerName = markerLines[1]
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
