@@ -88,6 +88,14 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
     fun startNextStage(): Result<Stage> {
         logger.info { "Starting next stage" }
 
+        val nextStageCreator = stageCreators.removeFirstOrNull() ?: return Result.failure("No more stages to start")
+
+        return startNextStage(nextStageCreator)
+    }
+
+    fun startNextStage(nextStageCreator: StageCreator<*, *>): Result<Stage> {
+        val nextStageCreator = nextStageCreator as StageCreator<ARENA, TEAM>
+
         val localCurrentStage = currentStage
         if (localCurrentStage != null) {
             localCurrentStage.unregisterListeners()
