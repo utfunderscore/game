@@ -89,7 +89,6 @@ class ArenaManager(
             }
             var offset: List<Int> = mutableListOf(0, 0, 0)
             if (markerLines[2].isNotEmpty()) {
-                println("'${markerLines[2]}'")
                 logger.info { "Marker at $key does has an offset" }
                 offset = markerLines[2].split(",", "-", " ").mapNotNull { runCatching { it.toInt() }.getOrNull() }
             }
