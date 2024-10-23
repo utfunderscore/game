@@ -5,7 +5,7 @@ import net.minestom.server.entity.Player
 import java.util.UUID
 
 open class GameTeam(
-    val gameName: String,
+    val teamName: String,
     val players: MutableList<UUID>,
 ) {
     fun getOnlinePlayers(): List<Player> = players.mapNotNull { MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(it) }
