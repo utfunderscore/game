@@ -13,18 +13,27 @@ class TheBridgeScoreboard(
 ) : Scoreboard {
     override fun getTitle(player: Player): Component = "&9The Bridge".toComponent()
 
-    override fun getLines(player: Player): List<Component> =
-        listOf(
-            "&7#tb-&7${theBridgeGame.gameId}".toComponent(),
-            "".toComponent(),
-            "&c[R] ".toComponent() + getHeartLine(5, 5),
-            "&9[B] ".toComponent() + getHeartLine(5, 5),
-            " ".repeat(20).toComponent(),
-            "&7Kills ${1}".toComponent(),
-            "&7Goals ${1}".toComponent(),
-            "".toComponent(),
-            "&bexample.com".toComponent(),
-        )
+    override fun getLines(player: Player): List<Component> {
+        val lines = mutableListOf<Component>()
+
+        lines.add("&7#tb-&7${theBridgeGame.gameId}".toComponent())
+        lines.add("".toComponent())
+
+        theBridgeGame.getTeams().map { it as TheBridgeTeam }.forEach { team ->
+            val health = theBridgeGame.getTeamHealth(team)
+            val heartPart = getHeartLine(health, theBridgeGame.settings.numberOfLives)
+
+            lines.add("[${team.teamName.substring(0, 1).uppercase()}] ".toComponent().color(team.textColor) + heartPart)
+        }
+
+        lines.add(" ".repeat(20).toComponent())
+        lines.add("&7Kills &f${0}".toComponent())
+        lines.add("&7Goals &f${theBridgeGame.getGoals(player)}".toComponent())
+        lines.add("".toComponent())
+        lines.add("&bexample.com".toComponent())
+
+        return lines
+    }
 
     fun getHeartLine(
         health: Int,

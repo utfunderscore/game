@@ -38,12 +38,12 @@ class CageManager(
         location: Point,
     ) {
         val team = game.getTeam(player.uuid) ?: return
-        logger.info { "Generating cage for ${player.username} (Team: ${team.gameName})" }
+        logger.info { "Generating cage for ${player.username} (Team: ${team.teamName})" }
 
         players.add(player)
 
         val block =
-            if (team.gameName.equals("blue", true)) {
+            if (team.teamName.equals("blue", true)) {
                 Block.BLUE_STAINED_GLASS
             } else {
                 Block.RED_STAINED_GLASS

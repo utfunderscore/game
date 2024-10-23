@@ -1,12 +1,32 @@
 package org.readutf.game.server.game.impl
 
+import net.minestom.server.coordinate.BlockVec
 import net.minestom.server.entity.Player
 import net.minestom.server.instance.block.Block
-import java.util.function.BiPredicate
+import org.readutf.game.engine.features.BlockRule
+import org.readutf.game.engine.utils.Cuboid
 
-object TheBridgeBuildRule : BiPredicate<Player, Block> {
-    override fun test(
+class TheBridgeBuildRule(
+    val stage: TheBridgeStage,
+    val safeZones: Collection<Cuboid>,
+) : BlockRule {
+    override fun allow(
         player: Player,
         block: Block,
-    ): Boolean = block == Block.RED_TERRACOTTA || block == Block.BLUE_TERRACOTTA
+        blockVec: BlockVec,
+    ): Boolean {
+        if (safeZones.any { it.contains(blockVec) }) {
+            return false
+        }
+
+        if (block != Block.BLUE_TERRACOTTA && block != Block.RED_TERRACOTTA) {
+            return false
+        }
+
+        if (!stage.hasCageDropped) {
+            return false
+        }
+
+        return true
+    }
 }

@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     kotlin("jvm")
     id("com.gradleup.shadow") version "8.3.3"
+    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
 }
 
 group = "com.readutf.game"
@@ -17,7 +18,14 @@ dependencies {
 
     implementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.24.0")
 
+    // Add influxdb for metrics
+    implementation("com.influxdb:influxdb-client-kotlin:6.6.0")
+
     implementation("io.github.revxrsal:lamp.cli:4.0.0-beta.17")
+
+
+
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0")
 
     implementation("team.unnamed:creative-api:1.7.3")
 

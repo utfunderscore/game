@@ -5,6 +5,8 @@ import org.readutf.game.engine.kit.KitManager
 import org.readutf.game.engine.types.Result
 import org.readutf.game.engine.types.toSuccess
 import org.readutf.game.server.game.GameCreator
+import org.readutf.game.server.game.impl.settings.TheBridgePositions
+import org.readutf.game.server.game.impl.settings.TheBridgeSettings
 
 class TheBridgeCreator(
     val arenaManager: ArenaManager,

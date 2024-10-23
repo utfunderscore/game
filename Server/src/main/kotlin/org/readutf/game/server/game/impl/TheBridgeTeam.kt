@@ -6,6 +6,6 @@ import java.util.UUID
 
 class TheBridgeTeam(
     gameName: String,
-    players: MutableList<UUID>,
-    textColor: TextColor,
+    val textColor: TextColor,
+    players: MutableList<UUID> = mutableListOf(),
 ) : GameTeam(gameName, players)

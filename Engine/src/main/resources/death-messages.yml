@@ -1,0 +1,12 @@
+fall:
+  player: "&e{player} &f fell from a high place fighting &e{attacker}"
+  default: "&e{player} &f fell from a high place"
+void:
+  player: "&e{player} &ffell from a high place fighting &e{attacker}"
+  default: "&e{player} &ffell from a high place"
+lava:
+  player: "&e{player} &ffell from a high place fighting &e{attacker}"
+  default: "&e{player} &ffell from a high place"
+default:
+  player: "&e{player} &fwas killed by {attacker}"
+  default: "&e{player} &fdied"

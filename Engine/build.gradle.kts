@@ -8,11 +8,6 @@ plugins {
 group = "com.readutf.game"
 version = "1.0-SNAPSHOT"
 
-repositories {
-    maven { url = uri("https://repo.readutf.org/releases") }
-    maven { url = uri("https://www.jitpack.io") }
-}
-
 dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 

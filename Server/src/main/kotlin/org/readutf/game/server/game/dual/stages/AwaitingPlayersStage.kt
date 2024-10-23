@@ -6,6 +6,8 @@ import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.annotation.EventListener
 import org.readutf.game.engine.event.impl.GameJoinEvent
 import org.readutf.game.engine.features.*
+import org.readutf.game.engine.features.combat.setDamageRule
+import org.readutf.game.engine.features.combat.setFoodLossRule
 import org.readutf.game.engine.respawning.impl.registerTeamIdSpawnHandler
 import org.readutf.game.engine.schedular.RepeatingGameTask
 import org.readutf.game.engine.settings.GameSettings
@@ -30,8 +32,8 @@ class AwaitingPlayersStage(
         removeOnDisconnect()
         setDamageRule { false }
         setFoodLossRule { false }
-        setBlockBreakRule { _, _ -> false }
-        setBlockPlaceRule { _, _ -> false }
+        setBlockBreakRule { _, _, _ -> false }
+        setBlockPlaceRule { _, _, _ -> false }
 
         playerJoinMessage {
             settings.playerJoinMessage

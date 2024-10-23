@@ -22,7 +22,7 @@ class WorldManager {
         instanceContainer.setChunkSupplier(::LightingChunk)
 
         val chunks = mutableListOf<CompletableFuture<Chunk>>()
-        ChunkUtils.forChunksInRange(0, 0, 32) { x, z -> chunks.add(instanceContainer.loadChunk(x, z)) }
+        ChunkUtils.forChunksInRange(0, 0, 8) { x, z -> chunks.add(instanceContainer.loadChunk(x, z)) }
 
         CompletableFuture.runAsync {
             CompletableFuture.allOf(*chunks.toTypedArray()).join()

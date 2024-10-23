@@ -33,11 +33,11 @@ object TexturePackManager {
             Writable.resource(javaClass.classLoader, "textures/heart/full-heart.png"),
         )
 
-    val halfHeartIcon =
-        createChatIcon(
-            "half_heart",
-            Writable.resource(javaClass.classLoader, "textures/heart/half-heart.png"),
-        )
+//    val halfHeartIcon =
+//        createChatIcon(
+//            "half_heart",
+//            Writable.resource(javaClass.classLoader, "textures/heart/half-heart.png"),
+//        )
 
     val emptyHeartIcon =
         createChatIcon(
@@ -53,7 +53,7 @@ object TexturePackManager {
             createChatParts(
                 fullHeartIcon,
                 emptyHeartIcon,
-                halfHeartIcon,
+//                halfHeartIcon,
             )
 
         resources.forEach {
@@ -95,7 +95,6 @@ object TexturePackManager {
                 .path("/")
                 .build()
 
-        println("Starting resource pack server")
 
         server.start()
     }

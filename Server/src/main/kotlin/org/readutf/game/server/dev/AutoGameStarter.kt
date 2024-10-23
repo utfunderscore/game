@@ -22,6 +22,8 @@ class AutoGameStarter(
                 .getSchedulerManager()
                 .scheduleNextTick {
                     if (e.isFirstSpawn) {
+                        e.player.permissionLevel = 4
+
                         val team =
                             game.getTeams().minBy { team ->
                                 team.players.size

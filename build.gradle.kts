@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
-import java.net.URI
 
 plugins {
     kotlin("jvm") version "1.9.22"
@@ -12,16 +11,14 @@ subprojects {
 
     repositories {
         mavenLocal()
-        maven { url = uri("https://repo.readutf.org/releases") }
+        mavenCentral()
         maven { url = uri("https://www.jitpack.io") }
     }
 }
 
 repositories {
     mavenLocal()
-    maven {
-        url = URI("https://repo.readutf.org/releases/")
-    }
+    mavenCentral()
 }
 
 dependencies {

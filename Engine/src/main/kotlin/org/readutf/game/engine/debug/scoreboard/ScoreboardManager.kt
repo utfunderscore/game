@@ -53,7 +53,7 @@ object ScoreboardManager {
                 }
             },
             TaskSchedule.seconds(0),
-            TaskSchedule.seconds(1),
+            TaskSchedule.tick(5),
         )
     }
 
@@ -116,8 +116,7 @@ object ScoreboardManager {
 
             val currentLine = sidebar.getLine(lineId)
 
-            if (currentLine == null || !toLegacy(currentLine.content).equals(toLegacy(lines[i]), false)) {
-                println(sidebar.viewers.map { it.username })
+            if (currentLine == null || currentLine.content != lines[i]) {
                 sidebar.updateLineContent(
                     lineId,
                     lines[i],
