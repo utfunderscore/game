@@ -3,8 +3,11 @@ package org.readutf.game.engine.utils
 import net.kyori.adventure.text.Component
 import net.kyori.adventure.text.TextComponent
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer
+import net.minestom.server.MinecraftServer
+import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import java.util.UUID
 import java.util.function.Consumer
 
 inline fun <reified T : Event> EventNode<Event>.addListener(noinline listener: (T) -> Unit): EventNode<Event> =
@@ -16,9 +19,14 @@ inline fun <reified T : Event> EventNode<Event>.addListener(listener: Consumer<T
     addListener(T::class.java, listener)
 }
 
+
 private val legacySerializer = LegacyComponentSerializer.legacy('&')
 
 fun String.toComponent() = legacySerializer.deserialize(this)
+
+fun UUID?.getPlayer(): Player? {
+    return this?.let { MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(it) }
+}
 
 inline fun <T> List<T>.distinctBySimilar(isSimilar: (T, T) -> Boolean): List<T> {
     val result = mutableListOf<T>()
