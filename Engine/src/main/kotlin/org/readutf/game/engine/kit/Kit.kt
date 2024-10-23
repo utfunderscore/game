@@ -23,4 +23,6 @@ class Kit(
 
         return true
     }
+
+    override fun toString(): String = "Kit(pallet=$pallet, items=$items)"
 }
