@@ -8,8 +8,4 @@ class VictoryStage(
     game: GenericGame,
     previousStage: Stage?,
     winner: GameTeam,
-) : Stage(game, previousStage) {
-
-
-
-}
+) : Stage(game, previousStage)

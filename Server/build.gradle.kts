@@ -23,8 +23,6 @@ dependencies {
 
     implementation("io.github.revxrsal:lamp.cli:4.0.0-beta.17")
 
-
-
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0")
 
     implementation("team.unnamed:creative-api:1.7.3")

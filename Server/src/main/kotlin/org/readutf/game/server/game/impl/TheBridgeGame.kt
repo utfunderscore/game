@@ -41,8 +41,6 @@ class TheBridgeGame(
                     getTeams().map { it as TheBridgeTeam },
                 ).getOrThrow()
 
-
-
         val safeZones =
             arena.positionSettings
                 .getSafezones(

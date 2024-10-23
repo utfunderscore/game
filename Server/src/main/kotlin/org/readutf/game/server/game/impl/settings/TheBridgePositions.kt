@@ -7,7 +7,6 @@ import org.readutf.game.engine.settings.location.PositionData
 import org.readutf.game.engine.types.Result
 import org.readutf.game.engine.utils.Cuboid
 import org.readutf.game.server.game.dual.DualGamePositions
-import org.readutf.game.server.game.impl.TheBridgeGame
 import org.readutf.game.server.game.impl.TheBridgeTeam
 
 class TheBridgePositions(

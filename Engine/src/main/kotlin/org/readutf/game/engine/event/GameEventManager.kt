@@ -42,7 +42,6 @@ object GameEventManager {
             EntitySpawnEvent::class,
         )
 
-
     init {
         eventStackTraceEnabled.add(EntityDamageEvent::class)
     }

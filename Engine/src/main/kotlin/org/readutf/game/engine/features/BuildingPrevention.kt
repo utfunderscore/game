@@ -9,7 +9,7 @@ import org.readutf.game.engine.stage.Stage
 
 fun Stage.setBlockPlaceRule(blockRule: BlockRule) {
     registerListener<PlayerBlockPlaceEvent> {
-        if(it.isCancelled) return@registerListener
+        if (it.isCancelled) return@registerListener
         if (!blockRule.allow(it.player, it.block, it.blockPosition)) {
             it.isCancelled = true
         }
@@ -18,7 +18,7 @@ fun Stage.setBlockPlaceRule(blockRule: BlockRule) {
 
 fun Stage.setBlockBreakRule(blockRule: BlockRule) {
     registerListener<PlayerBlockBreakEvent> {
-        if(it.isCancelled) return@registerListener
+        if (it.isCancelled) return@registerListener
 
         if (!blockRule.allow(it.player, it.block, it.blockPosition)) {
             it.isCancelled = true
@@ -27,7 +27,9 @@ fun Stage.setBlockBreakRule(blockRule: BlockRule) {
 }
 
 fun interface BlockRule {
-
-    fun allow(player: Player, block: Block, position: BlockVec): Boolean
-
+    fun allow(
+        player: Player,
+        block: Block,
+        position: BlockVec,
+    ): Boolean
 }

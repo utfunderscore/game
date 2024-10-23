@@ -92,11 +92,9 @@ class SpectatorManager(
 
     @EventListener(priority = 0)
     fun onBlockBreak(e: PlayerBlockBreakEvent) {
-
-        if(isSpectator(e.player)) {
+        if (isSpectator(e.player)) {
             e.isCancelled = true
         }
-
     }
 
     fun interface CountdownHandler {

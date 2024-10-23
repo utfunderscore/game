@@ -58,7 +58,7 @@ class GameScheduler(
             stageTasks.forEach { (stage, tasks) ->
                 tasks.removeIf { it.markedForRemoval }
 
-                if(stage == game.currentStage) {
+                if (stage == game.currentStage) {
                     tasks.forEach(::tickTask)
                 }
             }

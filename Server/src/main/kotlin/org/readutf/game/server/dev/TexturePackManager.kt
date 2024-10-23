@@ -95,7 +95,6 @@ object TexturePackManager {
                 .path("/")
                 .build()
 
-
         server.start()
     }
 

@@ -4,9 +4,9 @@ import net.kyori.adventure.text.TextComponent
 import net.minestom.server.entity.Player
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.registry.DynamicRegistry
+import org.readutf.game.engine.features.combat.KillMessageData
 import org.readutf.game.engine.features.combat.KillMessageSupplier
 import org.readutf.game.engine.utils.toComponent
-import org.readutf.game.engine.features.combat.KillMessageData
 import org.readutf.game.server.game.impl.settings.TheBridgeSettings
 
 class TheBridgeKillMessages(
@@ -28,7 +28,6 @@ class TheBridgeKillMessages(
         victim: Player,
         damageType: DynamicRegistry.Key<DamageType>?,
     ): TextComponent {
-
         val killMessage =
             if (damageType == null) {
                 defaultMessage

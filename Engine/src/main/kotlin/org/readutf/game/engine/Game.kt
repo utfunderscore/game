@@ -106,7 +106,6 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
         val previous = currentStage
 
-
         val nextStage = nextStageCreator.create(this, previous).mapError { return it }
 
         val listeners = scan(nextStage).mapError { return it }
@@ -254,9 +253,7 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
     fun getTeam(playerId: UUID): GameTeam? = teams.values.find { it.players.contains(playerId) }
 
-    fun getTeam(teamName: String): GameTeam? {
-        return teams.entries.firstOrNull { entry -> entry.key.equals(teamName, true) }?.value
-    }
+    fun getTeam(teamName: String): GameTeam? = teams.entries.firstOrNull { entry -> entry.key.equals(teamName, true) }?.value
 
     fun getTeams(): List<GameTeam> = teams.values.toList()
 

@@ -3,7 +3,6 @@ package org.readutf.game.server.game.impl
 import io.github.oshai.kotlinlogging.KotlinLogging
 import io.github.togar2.pvp.entity.projectile.AbstractArrow
 import io.github.togar2.pvp.entity.projectile.Arrow
-import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.entity.ItemEntity
 import net.minestom.server.entity.Player
@@ -110,7 +109,6 @@ class TheBridgeStage(
 
     @EventListener
     fun onMove(e: PlayerMoveEvent) {
-
         val player = e.player
 
         val cuboid = Cuboid.fromVecs(Vec.ZERO, game.arena!!.size.asVec())
@@ -169,7 +167,10 @@ class TheBridgeStage(
         e.respawnTime = 2
         player.heal()
 
-        e.respawnLocation = localGame.damageTracker.getLastDamager(player).getPlayer()?.position ?: player.position
+        e.respawnLocation = localGame.damageTracker
+            .getLastDamager(player)
+            .getPlayer()
+            ?.position ?: player.position
 
         player.inventory.clear()
         player.addEffect(Potion(PotionEffect.INVISIBILITY, 1.toByte(), 10000))
@@ -177,26 +178,24 @@ class TheBridgeStage(
 
     @EventListener
     fun onProjectileLaunch(e: EntitySpawnEvent) {
-
         val arrow = e.entity
         if (arrow !is Arrow) return
         val shooter = arrow.shooter
-        if(shooter !is Player) return
+        if (shooter !is Player) return
 
         arrow.pickupMode = AbstractArrow.PickupMode.DISALLOWED
 
         game.scheduler.schedule(this, 3000) {
-            if(spectatorManager.isSpectator(shooter)) return@schedule
+            if (spectatorManager.isSpectator(shooter)) return@schedule
 
             val item = ItemStack.of(Material.ARROW)
             val itemEntity = ItemEntity(item)
             itemEntity.setPickupDelay(0, TimeUnit.SERVER_TICK) // Default 0.5 seconds
             itemEntity.setInstance(
                 Objects.requireNonNull<Instance>(shooter.instance),
-                shooter.getPosition().add(0.0, 0.1, 0.0)
+                shooter.getPosition().add(0.0, 0.1, 0.0),
             )
         }
-
     }
 
     @EventListener
@@ -204,9 +203,7 @@ class TheBridgeStage(
         e.entity.scheduleRemove(Duration.ofMillis(500))
     }
 
-    override fun toString(): String {
-        return "TheBridgeStage ${localGame.round}"
-    }
+    override fun toString(): String = "TheBridgeStage ${localGame.round}"
 
     inner class Countdown(
         game: GenericGame,

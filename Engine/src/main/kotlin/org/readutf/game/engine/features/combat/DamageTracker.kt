@@ -39,21 +39,21 @@ class DamageTracker(
             game,
             GameDeathEvent::class,
             RegisteredListener(
-                gameListener = TypedGameListener<GameDeathEvent> {
-                    lastDamager.remove(it.player.uuid)
-                },
+                gameListener =
+                    TypedGameListener<GameDeathEvent> {
+                        lastDamager.remove(it.player.uuid)
+                    },
                 ignoreCancelled = false,
                 ignoreSpectators = false,
                 priority = 50,
             ),
         )
-
-
     }
 
-    fun getLastDamager(player: Player): UUID? = lastDamager[player.uuid]?.let {
-        if (System.currentTimeMillis() - it.second < 5000) it.first else null
-    }
+    fun getLastDamager(player: Player): UUID? =
+        lastDamager[player.uuid]?.let {
+            if (System.currentTimeMillis() - it.second < 5000) it.first else null
+        }
 }
 
 fun GenericGame.enableDamageTracker(): DamageTracker = DamageTracker(this)

@@ -19,14 +19,11 @@ inline fun <reified T : Event> EventNode<Event>.addListener(listener: Consumer<T
     addListener(T::class.java, listener)
 }
 
-
 private val legacySerializer = LegacyComponentSerializer.legacy('&')
 
 fun String.toComponent() = legacySerializer.deserialize(this)
 
-fun UUID?.getPlayer(): Player? {
-    return this?.let { MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(it) }
-}
+fun UUID?.getPlayer(): Player? = this?.let { MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(it) }
 
 inline fun <T> List<T>.distinctBySimilar(isSimilar: (T, T) -> Boolean): List<T> {
     val result = mutableListOf<T>()
