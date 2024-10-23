@@ -1,5 +1,7 @@
 package org.readutf.game.engine.utils
 
+import io.github.oshai.kotlinlogging.KotlinLogging
+import net.minestom.server.coordinate.BlockVec
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Vec
 
@@ -11,7 +13,24 @@ class Cuboid(
     val maxY: Double,
     val maxZ: Double,
 ) {
-    fun contains(point: Point) = point.x() in minX..maxX && point.y() >= minY && point.y() <= maxY && point.z() >= minZ && point.z() <= maxZ
+    private val logger = KotlinLogging.logger {}
+
+    fun contains(point: Point): Boolean {
+        val blockVec = BlockVec(point)
+
+        return blockVec.x() in minX..maxX && blockVec.y() in minY..maxY && blockVec.z() in minZ..maxZ
+    }
+
+    fun getBlocks(): Iterator<BlockVec> =
+        sequence {
+            for (x in minX.toInt()..maxX.toInt()) {
+                for (y in minY.toInt()..maxY.toInt()) {
+                    for (z in minZ.toInt()..maxZ.toInt()) {
+                        yield(BlockVec(x, y, z))
+                    }
+                }
+            }
+        }.iterator()
 
     companion object {
         fun fromVecs(
