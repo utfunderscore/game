@@ -1,24 +1,33 @@
 package org.readutf.game.engine.features
 
+import net.minestom.server.coordinate.BlockVec
 import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.instance.block.Block
 import org.readutf.game.engine.stage.Stage
-import java.util.function.BiPredicate
 
-fun Stage.setBlockPlaceRule(biPredicate: BiPredicate<Player, Block>) {
+fun Stage.setBlockPlaceRule(blockRule: BlockRule) {
     registerListener<PlayerBlockPlaceEvent> {
-        if (!biPredicate.test(it.player, it.block)) {
+        if(it.isCancelled) return@registerListener
+        if (!blockRule.allow(it.player, it.block, it.blockPosition)) {
             it.isCancelled = true
         }
     }
 }
 
-fun Stage.setBlockBreakRule(biPredicate: BiPredicate<Player, Block>) {
+fun Stage.setBlockBreakRule(blockRule: BlockRule) {
     registerListener<PlayerBlockBreakEvent> {
-        if (!biPredicate.test(it.player, it.block)) {
+        if(it.isCancelled) return@registerListener
+
+        if (!blockRule.allow(it.player, it.block, it.blockPosition)) {
             it.isCancelled = true
         }
     }
+}
+
+fun interface BlockRule {
+
+    fun allow(player: Player, block: Block, position: BlockVec): Boolean
+
 }
