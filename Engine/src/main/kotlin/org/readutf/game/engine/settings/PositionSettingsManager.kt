@@ -101,8 +101,6 @@ class PositionSettingsManager {
             }
         }
 
-        println(parameters)
-
         try {
             val positionData = primaryConstructor.call(*parameters.toTypedArray())
             return Result.success(positionData)
@@ -124,7 +122,6 @@ class PositionSettingsManager {
             if (matchingPositions.isEmpty()) {
                 return Result.failure("No positions found matching $regex")
             }
-            println("matching $regex + $matchingPositions")
         }
         return Result.success(Unit)
     }
