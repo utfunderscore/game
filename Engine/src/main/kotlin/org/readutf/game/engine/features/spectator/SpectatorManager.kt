@@ -7,11 +7,11 @@ import net.minestom.server.event.player.PlayerBlockBreakEvent
 import org.readutf.game.engine.event.GameEventManager
 import org.readutf.game.engine.event.annotation.EventListener
 import org.readutf.game.engine.schedular.GameTask
-import org.readutf.game.engine.stage.Stage
+import org.readutf.game.engine.stage.GenericStage
 import org.readutf.game.engine.utils.toComponent
 
 class SpectatorManager(
-    val stage: Stage,
+    val stage: GenericStage,
     val intervals: List<Int> = listOf(15, 10, 5, 4, 3, 2, 1),
     val countdownHandler: CountdownHandler,
 ) {

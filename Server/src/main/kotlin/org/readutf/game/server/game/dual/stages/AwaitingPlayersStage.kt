@@ -1,7 +1,6 @@
 package org.readutf.game.server.game.dual.stages
 
 import org.readutf.game.engine.Game
-import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.annotation.EventListener
 import org.readutf.game.engine.event.impl.GameJoinEvent
@@ -18,12 +17,12 @@ import org.readutf.game.engine.types.Result
 import org.readutf.game.engine.utils.toComponent
 import org.readutf.game.server.game.dual.DualGamePositions
 
-class AwaitingPlayersStage(
-    override val game: GenericGame,
-    previousStage: Stage?,
+class AwaitingPlayersStage<ARENA : Arena<*>, TEAM : GameTeam>(
+    override val game: Game<ARENA, TEAM>,
+    previousStage: Stage<ARENA, TEAM>?,
     val settings: AwaitingPlayersSettings,
     val arenaPositions: DualGamePositions,
-) : Stage(game, previousStage) {
+) : Stage<ARENA, TEAM>(game, previousStage) {
     val countDownTask = CountdownTask(listOf(60, 30, 15, 10, 5, 4, 3, 2, 1))
 
     init {
@@ -105,14 +104,14 @@ class AwaitingPlayersStage(
         }
     }
 
-    class Creator<E : Arena<*>, T : GameTeam>(
+    class Creator<ARENA : Arena<*>, TEAM : GameTeam>(
         val settings: AwaitingPlayersSettings,
         val dualGamePositions: DualGamePositions,
-    ) : StageCreator<E, T> {
+    ) : StageCreator<ARENA, TEAM> {
         override fun create(
-            game: Game<E, T>,
-            previousStage: Stage?,
-        ): Result<Stage> = Result.success(AwaitingPlayersStage(game, previousStage, settings, dualGamePositions))
+            game: Game<ARENA, TEAM>,
+            previousStage: Stage<ARENA, TEAM>?,
+        ): Result<Stage<ARENA, TEAM>> = Result.success(AwaitingPlayersStage(game, previousStage, settings, dualGamePositions))
     }
 }
 

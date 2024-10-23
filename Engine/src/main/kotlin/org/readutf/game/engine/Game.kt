@@ -42,7 +42,7 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
     val scheduler = GameScheduler(this)
 
     @Expose
-    var currentStage: Stage? = null
+    var currentStage: Stage<ARENA, TEAM>? = null
 
     @Expose
     var respawnHandler: RespawnHandler? = null
@@ -87,7 +87,7 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
         return Result.success(Unit)
     }
 
-    fun startNextStage(): Result<Stage> {
+    fun startNextStage(): Result<Stage<ARENA, TEAM>> {
         logger.info { "Starting next stage" }
 
         val nextStageCreator = stageCreators.removeFirstOrNull() ?: return Result.failure("No more stages to start")
@@ -95,8 +95,8 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
         return startNextStage(nextStageCreator)
     }
 
-    fun startNextStage(nextStageCreator: StageCreator<*, *>): Result<Stage> {
-        val nextStageCreator = nextStageCreator as StageCreator<ARENA, TEAM>
+    fun startNextStage(nextStageCreator: StageCreator<ARENA, TEAM>): Result<Stage<ARENA, TEAM>> {
+        val nextStageCreator = nextStageCreator
 
         val localCurrentStage = currentStage
         if (localCurrentStage != null) {
@@ -230,7 +230,7 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
     fun addPlayer(
         player: Player,
-        predicate: Predicate<GameTeam>,
+        predicate: Predicate<TEAM>,
     ): Result<Unit> {
         val team =
             teams.values.firstOrNull { predicate.test(it) }
@@ -251,11 +251,11 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
         return Result.empty()
     }
 
-    fun getTeam(playerId: UUID): GameTeam? = teams.values.find { it.players.contains(playerId) }
+    fun getTeam(playerId: UUID): TEAM? = teams.values.find { it.players.contains(playerId) }
 
-    fun getTeam(teamName: String): GameTeam? = teams.entries.firstOrNull { entry -> entry.key.equals(teamName, true) }?.value
+    fun getTeam(teamName: String): TEAM? = teams.entries.firstOrNull { entry -> entry.key.equals(teamName, true) }?.value
 
-    fun getTeams(): List<GameTeam> = teams.values.toList()
+    fun getTeams(): List<TEAM> = teams.values.toList()
 
     fun getArena(): Result<ARENA> = arena?.let { Result.success(it) } ?: Result.failure("No arena is active")
 

@@ -34,20 +34,21 @@ dependencies {
     testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.24.0")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0")
 }
-tasks.withType<JavaCompile> {
-    // Preserve parameter names in the bytecode
-    options.compilerArgs.add("-parameters")
-}
 
-// optional: if you're using Kotlin
-tasks.withType<KotlinJvmCompile> {
-    compilerOptions {
-        javaParameters = true
+tasks {
+    withType<JavaCompile> {
+        // Preserve parameter names in the bytecode
+        options.compilerArgs.add("-parameters")
     }
-}
 
-tasks.test {
-    useJUnitPlatform()
+    withType<KotlinJvmCompile> {
+        compilerOptions {
+            javaParameters = true
+        }
+    }
+    test {
+        useJUnitPlatform()
+    }
 }
 kotlin {
     jvmToolchain(21)

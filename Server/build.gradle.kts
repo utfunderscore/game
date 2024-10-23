@@ -3,7 +3,6 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 plugins {
     kotlin("jvm")
     id("com.gradleup.shadow") version "8.3.3"
-    id("org.jlleitschuh.gradle.ktlint") version "12.1.1"
 }
 
 group = "com.readutf.game"

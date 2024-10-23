@@ -7,10 +7,10 @@ import net.minestom.server.entity.Player
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.batch.AbsoluteBlockBatch
 import net.minestom.server.instance.block.Block
-import org.readutf.game.engine.stage.Stage
+import org.readutf.game.server.game.impl.TheBridgeStage
 
 class CageManager(
-    val stage: Stage,
+    stage: TheBridgeStage,
 ) {
     private val logger = KotlinLogging.logger {}
     private val offsets = mutableListOf<BlockVec>()

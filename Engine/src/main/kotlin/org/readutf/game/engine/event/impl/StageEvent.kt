@@ -2,9 +2,9 @@ package org.readutf.game.engine.event.impl
 
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.GameEvent
-import org.readutf.game.engine.stage.Stage
+import org.readutf.game.engine.stage.GenericStage
 
 class StageEvent(
-    val stage: Stage,
+    val stage: GenericStage,
     game: GenericGame,
 ) : GameEvent(game)

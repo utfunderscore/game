@@ -6,7 +6,7 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.timer.Task
 import net.minestom.server.timer.TaskSchedule
 import org.readutf.game.engine.GenericGame
-import org.readutf.game.engine.stage.Stage
+import org.readutf.game.engine.stage.GenericStage
 
 class GameScheduler(
     val game: GenericGame,
@@ -15,7 +15,7 @@ class GameScheduler(
 
     @Expose private val globalTasks = mutableSetOf<GameTask>()
 
-    @Expose private val stageTasks = mutableMapOf<Stage, MutableSet<GameTask>>()
+    @Expose private val stageTasks = mutableMapOf<GenericStage, MutableSet<GameTask>>()
 
     private var task: Task? = null
 
@@ -24,7 +24,7 @@ class GameScheduler(
     }
 
     fun schedule(
-        stage: Stage,
+        stage: GenericStage,
         gameTask: GameTask,
     ) {
         if (task == null) task = startTask()
@@ -80,7 +80,7 @@ class GameScheduler(
     }
 
     fun schedule(
-        stage: Stage,
+        stage: GenericStage,
         task: () -> Unit,
     ) {
         schedule(
@@ -104,7 +104,7 @@ class GameScheduler(
     }
 
     fun schedule(
-        stage: Stage,
+        stage: GenericStage,
         delay: Long,
         runnable: () -> Unit,
     ) {
@@ -132,7 +132,7 @@ class GameScheduler(
     }
 
     fun schedule(
-        stage: Stage,
+        stage: GenericStage,
         delay: Long,
         period: Long,
         runnable: () -> Unit,

@@ -1,18 +1,22 @@
 package org.readutf.game.engine.stage
 
 import net.minestom.server.event.Event
-import org.readutf.game.engine.GenericGame
+import org.readutf.game.engine.Game
+import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.GameEventManager
 import org.readutf.game.engine.event.annotation.scan
 import org.readutf.game.engine.event.listener.RegisteredListener
 import org.readutf.game.engine.event.listener.TypedGameListener
 import org.readutf.game.engine.schedular.GameTask
+import org.readutf.game.engine.team.GameTeam
 import org.readutf.game.engine.types.Result
 import kotlin.reflect.KClass
 
-abstract class Stage(
-    open val game: GenericGame,
-    val previousStage: Stage?,
+typealias GenericStage = Stage<*, *>
+
+abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
+    open val game: Game<ARENA, TEAM>,
+    val previousStage: Stage<ARENA, TEAM>?,
 ) {
     val startTime = System.currentTimeMillis()
     val registeredListeners = LinkedHashMap<KClass<out Event>, MutableList<RegisteredListener>>()
@@ -61,6 +65,8 @@ abstract class Stage(
     }
 
     fun endStage() = game.startNextStage()
+
+    fun endStage(stageCreator: StageCreator<ARENA, TEAM>) = game.startNextStage(stageCreator)
 
     internal fun unregisterListeners() {
         registeredListeners.forEach { (type, listeners) ->

@@ -5,9 +5,9 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.event.player.PlayerBlockPlaceEvent
 import net.minestom.server.instance.block.Block
-import org.readutf.game.engine.stage.Stage
+import org.readutf.game.engine.stage.GenericStage
 
-fun Stage.setBlockPlaceRule(blockRule: BlockRule) {
+fun GenericStage.setBlockPlaceRule(blockRule: BlockRule) {
     registerListener<PlayerBlockPlaceEvent> {
         if (it.isCancelled) return@registerListener
         if (!blockRule.allow(it.player, it.block, it.blockPosition)) {
@@ -16,7 +16,7 @@ fun Stage.setBlockPlaceRule(blockRule: BlockRule) {
     }
 }
 
-fun Stage.setBlockBreakRule(blockRule: BlockRule) {
+fun GenericStage.setBlockBreakRule(blockRule: BlockRule) {
     registerListener<PlayerBlockBreakEvent> {
         if (it.isCancelled) return@registerListener
 

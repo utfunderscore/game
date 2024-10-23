@@ -20,6 +20,7 @@ import net.minestom.server.potion.Potion
 import net.minestom.server.potion.PotionEffect
 import net.minestom.server.utils.time.TimeUnit
 import org.readutf.game.engine.GenericGame
+import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.annotation.EventListener
 import org.readutf.game.engine.event.impl.GameRespawnEvent
 import org.readutf.game.engine.features.*
@@ -33,19 +34,19 @@ import org.readutf.game.engine.types.Result
 import org.readutf.game.engine.utils.Cuboid
 import org.readutf.game.engine.utils.getPlayer
 import org.readutf.game.engine.utils.toComponent
-import org.readutf.game.server.game.dual.stages.FightingStage
 import org.readutf.game.server.game.impl.cage.CageManager
 import org.readutf.game.server.game.impl.goal.GoalManager
+import org.readutf.game.server.game.impl.settings.TheBridgePositions
 import org.readutf.neolobby.scoreboard.ScoreboardManager
 import java.time.Duration
 import java.util.*
 
 class TheBridgeStage(
     val localGame: TheBridgeGame,
-    previousStage: Stage?,
+    previousStage: Stage<Arena<TheBridgePositions>, TheBridgeTeam>?,
     goals: Map<TheBridgeTeam, Cuboid>,
     safeZones: Map<String, Cuboid>,
-) : FightingStage<TheBridgeGame>(localGame, previousStage) {
+) : Stage<Arena<TheBridgePositions>, TheBridgeTeam>(localGame, previousStage) {
     private val logger = KotlinLogging.logger {}
     private var combatActiveAt: Long = Long.MAX_VALUE
     var hasCageDropped = false
@@ -54,9 +55,9 @@ class TheBridgeStage(
         SpectatorManager(
             stage = this,
             countdownHandler =
-                { player, interval ->
-                    player.sendMessage("&7You will be respawned in &9$interval &7seconds".toComponent())
-                },
+            { player, interval ->
+                player.sendMessage("&7You will be respawned in &9$interval &7seconds".toComponent())
+            },
         )
 
     private val cageManager = CageManager(this)
@@ -71,6 +72,7 @@ class TheBridgeStage(
         setBlockBreakRule(blockRule)
         setBlockPlaceRule(blockRule)
         enableItemPickup()
+        disableItemDrops()
         disableNaturalRegen()
         setFoodLossRule { false }
         setDamageRule { System.currentTimeMillis() > combatActiveAt }
@@ -136,8 +138,20 @@ class TheBridgeStage(
 
         combatActiveAt = System.currentTimeMillis() + (1000 * 3)
 
+        applyKit(player)
+
+        if (!cageManager.hasSpawned(player)) {
+            cageManager.generateCage(player, respawnPoint.position)
+        }
+    }
+
+    /**
+     * Apply the kit items to the players inventory,
+     * replacing non-coloured items with the team's colour.
+     */
+    private fun applyKit(player: Player) {
         localGame.kit.items.forEachIndexed { index, itemStack ->
-            val team = game.getTeam(player.uuid)!! as TheBridgeTeam
+            val team = game.getTeam(player.uuid)!!
             var actual = itemStack
 
             if (itemStack.material() == Material.TERRACOTTA) {
@@ -154,10 +168,6 @@ class TheBridgeStage(
 
             player.inventory.setItemStack(index, actual)
         }
-
-        if (!cageManager.hasSpawned(player)) {
-            cageManager.generateCage(player, respawnPoint.position)
-        }
     }
 
     @EventListener
@@ -166,6 +176,12 @@ class TheBridgeStage(
 
         e.respawnTime = 2
         player.heal()
+
+        val team = localGame.getTeam(player.uuid) ?: return
+
+        if (localGame.getTeamHealth(team) <= 0) {
+            e.respawn = false
+        }
 
         e.respawnLocation = localGame.damageTracker
             .getLastDamager(player)

@@ -9,8 +9,9 @@ import net.minestom.server.entity.Player
 import net.minestom.server.event.player.PlayerMoveEvent
 import net.minestom.server.instance.block.Block
 import org.readutf.game.engine.event.annotation.EventListener
-import org.readutf.game.engine.team.GameTeam
+import org.readutf.game.engine.types.toSuccess
 import org.readutf.game.engine.utils.Cuboid
+import org.readutf.game.server.game.dual.stages.VictoryStage
 import org.readutf.game.server.game.impl.TheBridgeGame
 import org.readutf.game.server.game.impl.TheBridgeStage
 import org.readutf.game.server.game.impl.TheBridgeTeam
@@ -38,11 +39,11 @@ class GoalManager(
 
     fun scoreGoal(
         scorer: Player,
-        goalTeam: GameTeam,
+        goalTeam: TheBridgeTeam,
     ) {
         logger.info { "${scorer.name} scored a goal for ${goalTeam.teamName}" }
 
-        val scorerTeam = game.getTeam(scorer.uuid)!! as TheBridgeTeam
+        val scorerTeam = game.getTeam(scorer.uuid)!!
 
         game.decreaseHealth(goalTeam)
         game.scoredGoal(scorer)
@@ -50,15 +51,28 @@ class GoalManager(
         // Send the title to your audience
         game.getOnlinePlayers().forEach { player ->
 
-            val selfTeam = game.getTeam(player.uuid) as TheBridgeTeam
+            val selfTeam = game.getTeam(player.uuid) ?: return@forEach
 
             val title =
                 Title.title(
                     Component.text("${scorer.username} scored!", scorerTeam.textColor),
-                    generateScoreLine(scorerTeam),
+                    generateScoreLine(selfTeam),
                 )
 
             player.showTitle(title)
+        }
+
+        println(game.teamHealths)
+
+        val aliveTeams = game.teamHealths.entries.filter { it.value > 0 }
+
+        if (aliveTeams.count() == 1) {
+            val winner = aliveTeams.first().key
+
+            stage
+                .endStage { game, previousStage ->
+                    VictoryStage(game, previousStage, winner).toSuccess()
+                }.onFailure { game.crash(it) }
         }
 
         stage.endStage().onFailure { game.crash(it) }
@@ -100,7 +114,7 @@ class GoalManager(
         game
             .getTeams()
             .asSequence()
-            .map { team -> team as TheBridgeTeam }
+            .map { team -> team }
             .filter { team -> team != selfTeam }
             .forEach { team ->
                 val score = game.getTeamHealth(team)

@@ -1,9 +1,9 @@
 package org.readutf.game.engine.features
 
 import net.minestom.server.event.player.PlayerDisconnectEvent
-import org.readutf.game.engine.stage.Stage
+import org.readutf.game.engine.stage.GenericStage
 
-fun Stage.removeOnDisconnect() {
+fun GenericStage.removeOnDisconnect() {
     // Remove player from game on disconnect
 
     registerListener<PlayerDisconnectEvent> { e ->

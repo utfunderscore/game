@@ -8,9 +8,15 @@ import net.minestom.server.event.item.PickupItemEvent
 import net.minestom.server.event.player.PlayerBlockBreakEvent
 import net.minestom.server.instance.block.Block
 import net.minestom.server.item.ItemStack
-import org.readutf.game.engine.stage.Stage
+import org.readutf.game.engine.stage.GenericStage
 
-fun Stage.allowDroppingItems() {
+fun GenericStage.disableItemDrops() {
+    registerListener<ItemDropEvent> {
+        it.isCancelled = true
+    }
+}
+
+fun GenericStage.allowDroppingItems() {
     registerListener<ItemDropEvent> {
         val player = it.player
         val droppedItem = it.itemStack
@@ -25,7 +31,7 @@ fun Stage.allowDroppingItems() {
     }
 }
 
-fun Stage.dropItemOnBlockBreak(itemFunc: (Block) -> ItemStack?) {
+fun GenericStage.dropItemOnBlockBreak(itemFunc: (Block) -> ItemStack?) {
     registerListener<PlayerBlockBreakEvent> {
         if (it.isCancelled) return@registerListener
         val item = itemFunc.invoke(it.block)
@@ -35,7 +41,7 @@ fun Stage.dropItemOnBlockBreak(itemFunc: (Block) -> ItemStack?) {
     }
 }
 
-fun Stage.enableItemPickup() {
+fun GenericStage.enableItemPickup() {
     registerListener<PickupItemEvent> {
         val player = it.entity
         if (player !is Player) return@registerListener
@@ -46,7 +52,7 @@ fun Stage.enableItemPickup() {
     }
 }
 
-fun dropItemsOnDeath(stage: Stage) {
+fun dropItemsOnDeath(stage: GenericStage) {
 //    stage.registerListener<GameDeathEvent> {
 //        val player = it.player
 //        player.inventory.itemStacks.forEach {

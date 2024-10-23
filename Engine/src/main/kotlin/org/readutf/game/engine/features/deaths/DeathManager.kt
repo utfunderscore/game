@@ -8,10 +8,10 @@ import net.minestom.server.registry.DynamicRegistry
 import org.readutf.game.engine.event.annotation.EventListener
 import org.readutf.game.engine.event.impl.GameDeathEvent
 import org.readutf.game.engine.features.spectator.SpectatorManager
-import org.readutf.game.engine.stage.Stage
+import org.readutf.game.engine.stage.GenericStage
 
 class DeathManager(
-    val stage: Stage,
+    val stage: GenericStage,
     val spectatorManager: SpectatorManager,
     val dropItems: Boolean = false,
 ) {
@@ -26,8 +26,6 @@ class DeathManager(
         damageType: DynamicRegistry.Key<DamageType>,
     ) {
         if (spectatorManager.isSpectator(player)) return
-
-        Exception().printStackTrace()
 
         logger.info { "Player ${player.username} has died" }
 

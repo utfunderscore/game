@@ -13,9 +13,9 @@ class TheBridgeBuildRule(
     override fun allow(
         player: Player,
         block: Block,
-        blockVec: BlockVec,
+        position: BlockVec,
     ): Boolean {
-        if (safeZones.any { it.contains(blockVec) }) {
+        if (safeZones.any { it.contains(position) }) {
             return false
         }
 

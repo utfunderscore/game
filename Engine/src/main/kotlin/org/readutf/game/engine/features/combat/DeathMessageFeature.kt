@@ -6,7 +6,7 @@ import net.minestom.server.entity.Player
 import net.minestom.server.entity.damage.DamageType
 import net.minestom.server.registry.DynamicRegistry
 import org.readutf.game.engine.event.impl.GameDeathEvent
-import org.readutf.game.engine.stage.Stage
+import org.readutf.game.engine.stage.GenericStage
 
 fun interface KillMessageSupplier {
     fun getKillMessage(
@@ -16,7 +16,7 @@ fun interface KillMessageSupplier {
     ): TextComponent
 }
 
-fun Stage.enableKillMessage(
+fun GenericStage.enableKillMessage(
     damageTracker: DamageTracker,
     killMessageSupplier: KillMessageSupplier,
 ) {
