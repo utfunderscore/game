@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jsonMapper
 import com.fasterxml.jackson.module.kotlin.kotlinModule
 import com.google.gson.annotations.Expose
 import io.github.oshai.kotlinlogging.KotlinLogging
+import io.github.togar2.pvp.feature.fall.VanillaFallFeature
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
@@ -50,7 +51,7 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
     var arena: ARENA? = null
         private set
 
-    private var teams = mutableMapOf<String, GameTeam>()
+    private var teams = LinkedHashMap<String, TEAM>()
 
     @Expose
     var gameState: GameState = GameState.STARTUP
@@ -59,11 +60,12 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
      * Adds players to a team, invokes the GameTeamAddEvent,
      * and teleports them to their spawn
      */
-    fun registerTeam(teamName: String): Result<Unit> {
+    fun registerTeam(team: TEAM): Result<Unit> {
+        val teamName = team.teamName
         logger.info { "Adding team $teamName to game ($gameId)" }
-        if (teams.containsKey(teamName)) return Result.failure("Team already exists")
+        if (teams.containsKey(teamName)) return Result.failure("Team already exists with the name $teamName")
 
-        teams[teamName] = GameTeam(teamName, mutableListOf())
+        teams[teamName] = team
 
         return Result.empty()
     }
@@ -104,7 +106,7 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
         val previous = currentStage
 
-        val nextStageCreator = stageCreators.removeFirstOrNull() ?: return Result.failure("No more stages to start")
+
         val nextStage = nextStageCreator.create(this, previous).mapError { return it }
 
         val listeners = scan(nextStage).mapError { return it }
@@ -167,7 +169,7 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
         stageCreators.addAll(stageCreator)
     }
 
-    private fun <T : GameEvent> callEvent(event: T): T {
+    fun <T : GameEvent> callEvent(event: T): T {
         GameEventManager.callEvent(event, this)
         return event
     }
@@ -179,13 +181,18 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
         val respawnResult = spawnHandling.getRespawnLocation(player).mapError { return it }
 
+        player.setTag(VanillaFallFeature.FALL_DISTANCE, 0.0)
+
         val event = GameEventManager.callEvent(GameRespawnEvent(this, player, respawnResult), this)
 
         val (position, instance, _) = event.respawnPositionResult
+        arena!!.instance.loadChunk(position)
 
         if (player.instance != instance) {
+            logger.info { "Teleporting player $player to $position in instance $instance" }
             player.setInstance(instance, position)
         } else {
+            logger.info { "Teleporting player $player to $position" }
             player.teleport(Pos.fromPoint(position))
         }
 
@@ -203,7 +210,7 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
         player: Player,
         team: GameTeam,
     ): Result<Unit> {
-        logger.info { "Adding player $player to team ${team.gameName}" }
+        logger.info { "Adding player $player to team ${team.teamName}" }
 
         GameManager.playerToGame[player.uuid] = this
         team.players.add(player.uuid)
@@ -247,7 +254,9 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
     fun getTeam(playerId: UUID): GameTeam? = teams.values.find { it.players.contains(playerId) }
 
-    fun getTeam(teamName: String) = teams[teamName]
+    fun getTeam(teamName: String): GameTeam? {
+        return teams.entries.firstOrNull { entry -> entry.key.equals(teamName, true) }?.value
+    }
 
     fun getTeams(): List<GameTeam> = teams.values.toList()
 
