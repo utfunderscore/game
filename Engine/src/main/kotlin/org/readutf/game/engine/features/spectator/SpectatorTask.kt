@@ -9,10 +9,11 @@ class SpectatorTask(
     val player: Player,
     duration: Int,
     val spectatorManager: SpectatorManager,
-) : CountdownTask(game, duration, spectatorManager.intervals) {
+) : CountdownTask(game, duration, spectatorManager.intervals.filter { it <= duration }) {
     override fun onInterval(interval: Int) {
         if (interval <= 0) {
             spectatorManager.removeSpectator(player)
+            return
         }
 
         spectatorManager.countdownHandler.onInterval(player, interval)
