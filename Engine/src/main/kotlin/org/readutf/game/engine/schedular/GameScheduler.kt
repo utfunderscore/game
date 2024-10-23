@@ -36,17 +36,32 @@ class GameScheduler(
     }
 
     fun cancelTask(gameTask: GameTask) {
-        globalTasks.remove(gameTask)
-        stageTasks.values.forEach { it.remove(gameTask) }
+        globalTasks.filter { it == gameTask }.forEach { it.markForRemoval() }
+        stageTasks.values
+            .forEach { tasks ->
+                tasks
+                    .filter { task ->
+                        task == gameTask
+                    }.forEach {
+                        it.markForRemoval()
+                    }
+            }
     }
 
     fun startTask() =
         MinecraftServer.getSchedulerManager().scheduleTask({
+            globalTasks.removeIf { it.markedForRemoval }
             globalTasks.forEach(::tickTask)
 
             if (game.currentStage == null) return@scheduleTask
 
-            stageTasks[game.currentStage]?.forEach(::tickTask)
+            stageTasks.forEach { (stage, tasks) ->
+                tasks.removeIf { it.markedForRemoval }
+
+                if(stage == game.currentStage) {
+                    tasks.forEach(::tickTask)
+                }
+            }
         }, TaskSchedule.tick(1), TaskSchedule.tick(1))
 
     private fun tickTask(task: GameTask) {
@@ -57,7 +72,7 @@ class GameScheduler(
         } else if (task is DelayedGameTask) {
             if (System.currentTimeMillis() - task.startTime >= task.delay) {
                 task.tick()
-                globalTasks.remove(task)
+                task.markForRemoval()
             }
         } else {
             task.tick()
@@ -90,8 +105,8 @@ class GameScheduler(
 
     fun schedule(
         stage: Stage,
-        runnable: () -> Unit,
         delay: Long,
+        runnable: () -> Unit,
     ) {
         schedule(
             stage,
@@ -104,8 +119,8 @@ class GameScheduler(
     }
 
     fun schedule(
-        runnable: () -> Unit,
         delay: Long,
+        runnable: () -> Unit,
     ) {
         schedule(
             object : DelayedGameTask(delay) {
@@ -118,9 +133,9 @@ class GameScheduler(
 
     fun schedule(
         stage: Stage,
-        runnable: () -> Unit,
         delay: Long,
         period: Long,
+        runnable: () -> Unit,
     ) {
         schedule(
             stage,
@@ -133,9 +148,9 @@ class GameScheduler(
     }
 
     fun schedule(
-        runnable: () -> Unit,
         delay: Long,
         period: Long,
+        runnable: () -> Unit,
     ) {
         schedule(
             object : RepeatingGameTask(delay, period) {
