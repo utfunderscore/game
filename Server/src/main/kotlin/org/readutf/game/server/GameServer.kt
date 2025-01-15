@@ -23,7 +23,6 @@ import org.readutf.game.server.commands.GamemodeCommand
 import org.readutf.game.server.commands.completions.GameCompleterFactory
 import org.readutf.game.server.commands.completions.GameTypeCompleterFactory
 import org.readutf.game.server.dev.AutoGameStarter
-import org.readutf.game.server.dev.TexturePackManager
 import org.readutf.game.server.game.GameTypeManager
 import org.readutf.game.server.game.dual.DualGamePositions
 import org.readutf.game.server.game.dual.stages.AwaitingPlayersSettings

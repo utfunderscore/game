@@ -5,7 +5,6 @@ import net.kyori.adventure.text.format.TextColor
 import net.minestom.server.entity.Player
 import org.readutf.game.engine.utils.plus
 import org.readutf.game.engine.utils.toComponent
-import org.readutf.game.server.dev.TexturePackManager
 import org.readutf.neolobby.scoreboard.Scoreboard
 
 class TheBridgeScoreboard(

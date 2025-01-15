@@ -5,9 +5,6 @@ plugins {
     id("java-library")
 }
 
-group = "com.readutf.game"
-version = "1.0-SNAPSHOT"
-
 dependencies {
     testImplementation("org.jetbrains.kotlin:kotlin-test")
 
@@ -26,7 +23,7 @@ dependencies {
     api("io.github.revxrsal:lamp.minestom:4.0.0-beta.17")
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.13.0")
 
-    api("com.github.TogAr2:MinestomPvP:0a5f94bcd7")
+    api("com.github.TogAr2:MinestomPvP:04180ddf9a")
 
     implementation(kotlin("reflect"))
 

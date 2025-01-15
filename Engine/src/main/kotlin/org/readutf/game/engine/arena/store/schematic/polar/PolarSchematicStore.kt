@@ -12,7 +12,6 @@ import net.minestom.server.instance.Chunk
 import net.minestom.server.instance.Instance
 import net.minestom.server.instance.InstanceContainer
 import net.minestom.server.instance.LightingChunk
-import net.minestom.server.instance.block.Block
 import net.minestom.server.utils.chunk.ChunkUtils
 import org.jetbrains.annotations.Blocking
 import org.readutf.game.engine.arena.marker.Marker
@@ -126,14 +125,12 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
 
         val taken =
             measureTimeMillis {
-                schematic
-                    .build(Rotation.NONE) { point, block ->
-                        if (markerPositions.any { it.originalPosition == point }) {
-                            return@build Block.AIR
-                        }
+                schematic.createBatch(Rotation.NONE) { block ->
 
-                        return@build block
-                    }.apply(instance, 0, 0, 0) { future.complete(Unit) }
+                    return@createBatch block
+                }.apply(instance, 0, 0, 0) {
+                    future.complete(Unit)
+                }
             }
         logger.info { "Pasted schematic in $taken ms" }
 

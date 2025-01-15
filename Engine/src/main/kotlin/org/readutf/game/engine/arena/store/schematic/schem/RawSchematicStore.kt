@@ -3,8 +3,8 @@ package org.readutf.game.engine.arena.store.schematic.schem
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.hollowcube.schem.Rotation
 import net.hollowcube.schem.Schematic
-import net.hollowcube.schem.SchematicReader
-import net.hollowcube.schem.SchematicWriter
+import net.hollowcube.schem.reader.SpongeSchematicReader
+import net.hollowcube.schem.writer.SpongeSchematicWriter
 import net.minestom.server.MinecraftServer
 import net.minestom.server.instance.Chunk
 import net.minestom.server.instance.Instance
@@ -13,7 +13,6 @@ import net.minestom.server.utils.chunk.ChunkUtils
 import org.readutf.game.engine.arena.marker.Marker
 import org.readutf.game.engine.arena.store.schematic.ArenaSchematicStore
 import org.readutf.game.engine.types.Result
-import java.io.ByteArrayInputStream
 import java.util.concurrent.CompletableFuture
 
 abstract class RawSchematicStore : ArenaSchematicStore {
@@ -26,7 +25,7 @@ abstract class RawSchematicStore : ArenaSchematicStore {
     ): Result<Unit> {
         val data =
             try {
-                SchematicWriter().write(schematic)
+                SpongeSchematicWriter().write(schematic)
             } catch (e: Exception) {
                 logger.error(e) { }
                 return Result.failure("Failed to write schematic to store")
@@ -39,7 +38,7 @@ abstract class RawSchematicStore : ArenaSchematicStore {
         val data = loadData(arenaId).mapError { return it }
         val schematic =
             try {
-                SchematicReader().read(ByteArrayInputStream(data))
+                SpongeSchematicReader().read(data)
             } catch (e: Exception) {
                 logger.error(e) { }
                 return Result.failure("Failed to read schematic from store")
@@ -62,7 +61,7 @@ abstract class RawSchematicStore : ArenaSchematicStore {
                 *chunks.toTypedArray(),
             ).join()
 
-        schematic.build(Rotation.NONE, true).applyUnsafe(instance, 0, 0, 0) {
+        schematic.createBatch(Rotation.NONE).applyUnsafe(instance, 0, 0, 0) {
             pasteFuture.complete(Unit)
         }
         pasteFuture.join()

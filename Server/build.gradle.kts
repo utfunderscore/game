@@ -5,7 +5,6 @@ plugins {
     id("com.gradleup.shadow") version "8.3.3"
 }
 
-group = "com.readutf.game"
 version = "1.0-SNAPSHOT"
 
 dependencies {
@@ -31,8 +30,6 @@ dependencies {
 
     // Resource Pack server
     implementation("team.unnamed:creative-server:1.7.3")
-
-    implementation("org.readutf.glyphs:api:1.0.0")
 }
 
 tasks.withType<JavaCompile> {

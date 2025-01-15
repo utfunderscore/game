@@ -1,18 +1,37 @@
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm") version "2.1.0"
 }
 
-group = "com.readutf.game"
-version = "1.0-SNAPSHOT"
+group = "org.readutf.arena"
+version = "1.0.0"
 
 subprojects {
+
+    group = rootProject.group
+    version = rootProject.version
+
+    apply(plugin = "java")
+    apply(plugin = "kotlin")
+
+    kotlin {
+        jvmToolchain(23)
+    }
 
     repositories {
         mavenLocal()
         mavenCentral()
-        maven { url = uri("https://www.jitpack.io") }
+    }
+
+    tasks.withType<JavaCompile> {
+        options.compilerArgs.add("-parameters")
+    }
+
+    tasks.withType<KotlinJvmCompile> {
+        compilerOptions {
+            javaParameters = true
+        }
     }
 }
 

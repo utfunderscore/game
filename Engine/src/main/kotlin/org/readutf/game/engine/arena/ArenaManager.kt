@@ -35,7 +35,7 @@ class ArenaManager(
         }
         logger.info { "Created arena $arenaName with positions $positions" }
 
-        val template = ArenaTemplate(arenaName, positions, Vec.fromPoint(schematic.size), listOf(*gameTypes))
+        val template = ArenaTemplate(arenaName, positions, Vec.fromPoint(schematic.size()), listOf(*gameTypes))
 
         templateStore.save(template).mapError { return it }
 
@@ -72,32 +72,35 @@ class ArenaManager(
     private fun extractMarkerPositions(schematic: Schematic): Map<String, Marker> {
         val positions = mutableMapOf<String, Marker>()
 
-        schematic.blockEntities.filter { it.value.id == "minecraft:sign" }.forEach { (key, signEntity) ->
-            val markerLines = extractMarkerLines(signEntity.trimmedTag)
+        schematic.blockEntities().filter { it.id.equals("minecraft:sign", true) }.forEach { blockEntity ->
+
+            val markerLines = extractMarkerLines(blockEntity.data)
+
+            val location = blockEntity.position
 
             if (!markerLines.getOrNull(0).equals("#marker", true)) {
-                logger.debug { "Sign at $key does not start with #marker lines: $markerLines" }
+                logger.debug { "Sign at $location does not start with #marker lines: $markerLines" }
                 return@forEach
             }
 
-            logger.info { "Found marker at $key" }
+            logger.info { "Found marker at $location" }
 
             val markerName = markerLines[1]
             if (markerName.equals("", false)) {
-                logger.info { "Marker at $key does not have a name" }
+                logger.info { "Marker at $location does not have a name" }
                 return@forEach
             }
             var offset: List<Int> = mutableListOf(0, 0, 0)
             if (markerLines[2].isNotEmpty()) {
-                logger.info { "Marker at $key does has an offset" }
+                logger.info { "Marker at $location does has an offset" }
                 offset = markerLines[2].split(",", "-", " ").mapNotNull { runCatching { it.toInt() }.getOrNull() }
             }
             if (offset.size != 3) {
-                logger.info { "Marker at $key does not have a valid offset" }
+                logger.info { "Marker at $location does not have a valid offset" }
                 return@forEach
             }
 
-            val originalPosition = Vec.fromPoint(signEntity.point)
+            val originalPosition = Vec.fromPoint(location)
 
             positions[markerName] =
                 Marker(
@@ -114,13 +117,12 @@ class ArenaManager(
         return positions
     }
 
-    private fun extractMarkerLines(compoundBinaryTag: CompoundBinaryTag): List<String> =
-        compoundBinaryTag
-            .getCompound("front_text")
-            .getList("messages")
-            .map {
-                (it as StringBinaryTag).value()
-            }.map {
-                it.substring(1, it.length - 1)
-            }
+    private fun extractMarkerLines(compoundBinaryTag: CompoundBinaryTag): List<String> = compoundBinaryTag
+        .getCompound("front_text")
+        .getList("messages")
+        .map {
+            (it as StringBinaryTag).value()
+        }.map {
+            it.substring(1, it.length - 1)
+        }
 }
