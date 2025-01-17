@@ -22,6 +22,7 @@ subprojects {
     repositories {
         mavenLocal()
         mavenCentral()
+        maven("https://jitpack.io")
     }
 
     tasks.withType<JavaCompile> {

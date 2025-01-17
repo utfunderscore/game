@@ -1,13 +1,13 @@
 package org.readutf.game.engine.event.impl
 
-import net.minestom.server.entity.Player
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.Cancellable
 import org.readutf.game.engine.event.GameEvent
+import org.readutf.game.engine.platform.player.GamePlayer
 
 class GameJoinEvent(
     game: GenericGame,
-    val player: Player,
+    val player: GamePlayer,
 ) : GameEvent(game),
     Cancellable {
     private var cancelled = false

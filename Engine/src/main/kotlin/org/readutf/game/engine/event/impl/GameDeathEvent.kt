@@ -1,13 +1,11 @@
 package org.readutf.game.engine.event.impl
 
-import net.minestom.server.entity.Player
-import net.minestom.server.entity.damage.DamageType
-import net.minestom.server.registry.DynamicRegistry
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.GameEvent
+import org.readutf.game.engine.platform.player.GamePlayer
 
 class GameDeathEvent(
     game: GenericGame,
-    val player: Player,
-    val damageType: DynamicRegistry.Key<DamageType>,
+    val player: GamePlayer,
+    val damageType: String,
 ) : GameEvent(game)

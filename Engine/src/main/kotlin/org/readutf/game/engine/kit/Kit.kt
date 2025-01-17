@@ -1,23 +1,22 @@
 package org.readutf.game.engine.kit
 
-import net.minestom.server.item.ItemStack
-import org.readutf.game.engine.utils.distinctBySimilar
+import org.readutf.game.engine.platform.item.ArenaItemStack
 
 /**
  * A kit is a set of items that a player can receive.
  */
-class Kit(
-    val pallet: List<ItemStack> = ArrayList(),
-    val items: List<ItemStack> = ArrayList(36),
+class Kit<T : ArenaItemStack<T>>(
+    val pallet: List<T> = ArrayList(),
+    val items: List<T> = ArrayList(36),
 ) {
-    constructor(items: List<ItemStack>) : this(
-        pallet = items.distinctBySimilar { itemStack, itemStack2 -> itemStack.isSimilar(itemStack2) },
+    constructor(items: List<T>) : this(
+        pallet = items.distinct(),
         items = items,
     )
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
-        if (other !is Kit) return false
+        if (other !is Kit<*>) return false
 
         if (items != other.items) return false
 
@@ -25,4 +24,5 @@ class Kit(
     }
 
     override fun toString(): String = "Kit(pallet=$pallet, items=$items)"
+    override fun hashCode(): Int = javaClass.hashCode()
 }

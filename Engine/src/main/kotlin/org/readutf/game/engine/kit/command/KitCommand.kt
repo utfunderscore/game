@@ -1,34 +1,40 @@
 package org.readutf.game.engine.kit.command
 
-import net.minestom.server.entity.Player
+import com.github.michaelbull.result.getOrElse
 import org.readutf.game.engine.kit.Kit
 import org.readutf.game.engine.kit.KitManager
+import org.readutf.game.engine.platform.Platform
+import org.readutf.game.engine.platform.item.ArenaItemStack
+import org.readutf.game.engine.platform.player.ArenaPlayer
 import org.readutf.game.engine.utils.toComponent
-import revxrsal.commands.annotation.Command
 
-class KitCommand(
-    val kitManager: KitManager,
+class KitCommand<T : ArenaItemStack<T>>(
+    val platform: Platform<T>,
+    private val kitManager: KitManager<T>,
 ) {
-    @Command("kit save <name>")
+
     fun save(
-        player: Player,
+        player: ArenaPlayer<T>,
         name: String,
     ) {
-        kitManager.saveKit(name, Kit(player.inventory.itemStacks.toList()))
+        kitManager.saveKit(name, Kit(player.getInventory() + player.getArmor()))
         player.sendMessage("&aSaved kit $name".toComponent())
     }
 
-    @Command("kit preview <name>")
     fun preview(
-        player: Player,
+        player: ArenaPlayer<T>,
         name: String,
     ) {
-        val kit =
-            kitManager.loadKit(name).getOrNull() ?: run {
-                player.sendMessage("&cKit $name not found".toComponent())
-                return
-            }
-        kit.items.forEachIndexed { index, item -> player.inventory.setItemStack(index, item) }
+        val kit = kitManager.loadKit(name).getOrElse {
+            player.sendMessage("&cKit $name not found".toComponent())
+            return
+        }
+
+        val inventory = kit.items.subList(0, kit.items.size - 4)
+        val armor = kit.items.subList(kit.items.size - 4, kit.items.size)
+
+        player.setInventory(inventory)
+        player.setArmor(armor)
 
         player.sendMessage("&aPreviewing kit $name".toComponent())
     }

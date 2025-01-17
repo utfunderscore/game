@@ -30,14 +30,12 @@ import org.readutf.game.engine.features.spectator.GameSpectateEvent
 import org.readutf.game.engine.features.spectator.SpectatorManager
 import org.readutf.game.engine.schedular.CountdownTask
 import org.readutf.game.engine.stage.Stage
-import org.readutf.game.engine.types.Result
 import org.readutf.game.engine.utils.Cuboid
 import org.readutf.game.engine.utils.getPlayer
 import org.readutf.game.engine.utils.toComponent
 import org.readutf.game.server.game.impl.cage.CageManager
 import org.readutf.game.server.game.impl.goal.GoalManager
 import org.readutf.game.server.game.impl.settings.TheBridgePositions
-import org.readutf.neolobby.scoreboard.ScoreboardManager
 import java.time.Duration
 import java.util.*
 
@@ -85,7 +83,7 @@ class TheBridgeStage(
         }
 
         game.getOnlinePlayers().forEach {
-            ScoreboardManager.setScoreboard(
+            ScoreboardManagerOld.setScoreboard(
                 it,
                 TheBridgeScoreboard(localGame),
             )
@@ -113,7 +111,7 @@ class TheBridgeStage(
     fun onMove(e: PlayerMoveEvent) {
         val player = e.player
 
-        val cuboid = Cuboid.fromVecs(Vec.ZERO, game.arena!!.size.asVec())
+        val cuboid = Cuboid.fromPositions(Vec.ZERO, game.arena!!.size.asVec())
 
         if (!cuboid.contains(player.position) && System.currentTimeMillis() - startTime > 1000) {
             synchronized(deathManager) {

@@ -4,7 +4,7 @@ import java.util.UUID
 import java.util.concurrent.atomic.AtomicInteger
 
 object GameManager {
-    val activeGames = mutableMapOf<String, GenericGame>()
+    val activeGames = mutableMapOf<String, Game<*, *, *>>()
     val playerToGame = mutableMapOf<UUID, GenericGame>()
 
     fun getGameByPlayer(playerId: UUID): GenericGame? = playerToGame[playerId]

@@ -2,17 +2,16 @@ package org.readutf.game.server.game.impl.settings
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.readutf.game.engine.arena.marker.Marker
-import org.readutf.game.engine.settings.location.Position
+import org.readutf.game.engine.settings.location.MarkerPosition
 import org.readutf.game.engine.settings.location.PositionData
-import org.readutf.game.engine.types.Result
 import org.readutf.game.engine.utils.Cuboid
 import org.readutf.game.server.game.dual.DualGamePositions
 import org.readutf.game.server.game.impl.TheBridgeTeam
 
 class TheBridgePositions(
-    @Position(startsWith = "goal") val goalMarkers: List<Marker>,
-    @Position(startsWith = "safezone") val safezone: List<Marker>,
-    @Position val dualGamePositions: DualGamePositions,
+    @MarkerPosition(startsWith = "goal") val goalMarkers: List<Marker>,
+    @MarkerPosition(startsWith = "safezone") val safezone: List<Marker>,
+    @MarkerPosition val dualGamePositions: DualGamePositions,
 ) : PositionData {
     private val logger = KotlinLogging.logger {}
 
@@ -26,7 +25,7 @@ class TheBridgePositions(
                 return Result.failure("No goal points found for team $team")
             }
 
-            val cuboid = Cuboid.fromVecs(points.first().position, points.last().position)
+            val cuboid = Cuboid.fromPositions(points.first().position, points.last().position)
 
             goals[team] = cuboid
         }
@@ -44,7 +43,7 @@ class TheBridgePositions(
                 return Result.failure("No safe zones found for team $team")
             }
 
-            val cuboid = Cuboid.fromVecs(points.first().position, points.last().position)
+            val cuboid = Cuboid.fromPositions(points.first().position, points.last().position)
 
             goals[team] = cuboid
         }

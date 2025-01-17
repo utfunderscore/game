@@ -1,10 +1,10 @@
 package org.readutf.neolobby.scoreboard
 
 import net.kyori.adventure.text.Component
-import net.minestom.server.entity.Player
+import org.readutf.game.engine.platform.player.ArenaPlayer
 
 interface Scoreboard {
-    fun getTitle(player: Player): Component
+    fun getTitle(player: ArenaPlayer<*>): Component
 
-    fun getLines(player: Player): List<Component>
+    fun getLines(player: ArenaPlayer<*>): List<Component>
 }
