@@ -4,5 +4,5 @@ import org.readutf.game.engine.platform.schematic.ArenaSchematic
 
 interface MarkerScanner {
 
-    fun getMarkerPositions(schematic: ArenaSchematic): Map<String, Marker>
+    fun getMarkerPositions(arenaSchematic: ArenaSchematic): Map<String, Marker>
 }

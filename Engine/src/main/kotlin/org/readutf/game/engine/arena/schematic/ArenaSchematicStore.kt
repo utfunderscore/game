@@ -5,7 +5,7 @@ import org.readutf.game.engine.platform.schematic.ArenaSchematic
 import org.readutf.game.engine.platform.world.ArenaWorld
 import org.readutf.game.engine.utils.SResult
 
-interface ArenaSchematicStore {
+interface ArenaSchematicStore<WORLD : ArenaWorld> {
     /**
      * Store a copy of the temporary instance used to
      * contain the pre-pasted schematic
@@ -22,5 +22,5 @@ interface ArenaSchematicStore {
     /**
      * Load a unique copy of the arena's schematic as an instance
      */
-    fun load(arenaId: String): SResult<ArenaWorld>
+    fun load(arenaId: String): SResult<WORLD>
 }

@@ -3,8 +3,7 @@ package org.readutf.arena.minestom.features.combat
 import net.kyori.adventure.text.TextComponent
 import net.minestom.server.MinecraftServer
 import net.minestom.server.entity.Player
-import net.minestom.server.entity.damage.DamageType
-import net.minestom.server.registry.DynamicRegistry
+import org.readutf.arena.minestom.platform.MinestomPlayer
 import org.readutf.game.engine.event.impl.GameDeathEvent
 import org.readutf.game.engine.stage.GenericStage
 
@@ -12,7 +11,7 @@ fun interface KillMessageSupplier {
     fun getKillMessage(
         attacker: Player?,
         victim: Player,
-        damage: DynamicRegistry.Key<DamageType>?,
+        damage: String,
     ): TextComponent
 }
 
@@ -21,7 +20,7 @@ fun GenericStage.enableKillMessage(
     killMessageSupplier: KillMessageSupplier,
 ) {
     registerListener<GameDeathEvent> { e ->
-        val target = e.player
+        val target = (e.player as MinestomPlayer).player
 
         val lastDamager = damageTracker.getLastDamager(target)?.let { MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(it) }
 

@@ -1,9 +1,11 @@
 package org.readutf.arena.minestom.platform
 
 import net.minestom.server.MinecraftServer
+import net.minestom.server.coordinate.Point
 import net.minestom.server.entity.Player
 import net.minestom.server.event.Event
 import net.minestom.server.event.EventNode
+import org.readutf.game.engine.utils.Position
 import java.util.*
 import java.util.function.Consumer
 
@@ -26,6 +28,8 @@ inline fun <T> List<T>.distinctBySimilar(isSimilar: (T, T) -> Boolean): List<T> 
     }
     return result
 }
+
+fun Point.toPosition(): Position = Position(x(), y(), z())
 
 fun <T> merge(vararg lists: List<T>): List<T> {
     val result = mutableListOf<T>()

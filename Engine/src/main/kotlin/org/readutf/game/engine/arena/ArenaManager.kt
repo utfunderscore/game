@@ -14,12 +14,12 @@ import org.readutf.game.engine.utils.SResult
 import java.util.*
 import kotlin.reflect.KClass
 
-class ArenaManager(
+class ArenaManager<WORLD : ArenaWorld>(
     private val markerScanner: MarkerScanner,
     private val positionSettingsManager: PositionSettingsManager,
     private val templateStore: ArenaTemplateStore,
-    private val schematicStore: ArenaSchematicStore,
-    private val arenaCreator: ArenaCreator,
+    private val schematicStore: ArenaSchematicStore<WORLD>,
+    private val arenaCreator: ArenaCreator<WORLD>,
 ) {
 
     fun saveTemplate(
@@ -45,7 +45,7 @@ class ArenaManager(
         return Ok(template)
     }
 
-    fun <T : PositionData, WORLD : ArenaWorld> loadArena(
+    fun <T : PositionData> loadArena(
         arenaName: String,
         kClass: KClass<T>,
     ): SResult<Arena<T, WORLD>> {
@@ -61,6 +61,7 @@ class ArenaManager(
             arenaCreator.create(
                 arenaId = UUID.randomUUID(),
                 positionSettings = positionSettings,
+                arenaWorld = schematicInstance,
                 positions = template.positions,
             ),
         )
