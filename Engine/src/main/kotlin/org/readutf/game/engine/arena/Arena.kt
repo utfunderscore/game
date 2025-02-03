@@ -7,7 +7,7 @@ import java.util.UUID
 
 typealias GenericArena = Arena<*, *>
 
-class Arena<POSITION : PositionData, WORLD : ArenaWorld>(
+abstract class Arena<POSITION : PositionData, WORLD : ArenaWorld>(
     val arenaId: UUID,
     val positionSettings: POSITION,
     val arenaWorld: WORLD,

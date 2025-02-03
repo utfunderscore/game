@@ -5,4 +5,4 @@ rootProject.name = "minestom-engine"
 include("Engine")
 include("Server")
 include("Minestom")
-include("MinestomServer")
+include("Minestom")

@@ -14,6 +14,8 @@ import org.readutf.game.engine.team.GameTeam
 import org.readutf.game.engine.utils.SResult
 import kotlin.reflect.KClass
 
+typealias GenericStage = Stage<*, *, *>
+
 abstract class Stage<WORLD : ArenaWorld, ARENA : Arena<*, WORLD>, TEAM : GameTeam>(
     open val game: Game<WORLD, ARENA, TEAM>,
     val previousStage: Stage<WORLD, ARENA, TEAM>?,

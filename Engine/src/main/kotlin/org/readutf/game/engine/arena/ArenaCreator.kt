@@ -5,12 +5,11 @@ import org.readutf.game.engine.platform.world.ArenaWorld
 import org.readutf.game.engine.settings.location.PositionData
 import java.util.*
 
-interface ArenaCreator<WORLD : ArenaWorld> {
+interface ArenaCreator {
 
-    fun <POSITION : PositionData> create(
+    fun <POSITION : PositionData, WORLD : ArenaWorld> create(
         arenaId: UUID,
         positionSettings: POSITION,
-        arenaWorld: WORLD,
         positions: Map<String, Marker>,
     ): Arena<POSITION, WORLD>
 }

@@ -23,7 +23,6 @@ subprojects {
         mavenLocal()
         mavenCentral()
         maven("https://jitpack.io")
-        maven("https://mvn.bladehunt.net/releases")
     }
 
     tasks.withType<JavaCompile> {
@@ -62,5 +61,5 @@ tasks.test {
     useJUnitPlatform()
 }
 kotlin {
-    jvmToolchain(23)
+    jvmToolchain(21)
 }

@@ -33,7 +33,7 @@ import kotlin.jvm.Throws
 
 typealias GenericGame = Game<*, *, *>
 
-abstract class Game<WORLD : ArenaWorld, ARENA : Arena<*, WORLD>, TEAM : GameTeam>(val platform: Platform<*>, val eventManager: GameEventManager) {
+abstract class Game<WORLD : ArenaWorld, ARENA : Arena<*, WORLD>, TEAM : GameTeam>(private val platform: Platform<*>, val eventManager: GameEventManager) {
 
     private val logger = KotlinLogging.logger { }
     val gameId: String = GameManager.generateGameId()

@@ -1,10 +1,5 @@
 package org.readutf.arena.minestom.features
 
-import net.minestom.server.coordinate.BlockVec
-import net.minestom.server.entity.Player
-import net.minestom.server.event.player.PlayerBlockBreakEvent
-import net.minestom.server.event.player.PlayerBlockPlaceEvent
-import net.minestom.server.instance.block.Block
 import org.readutf.game.engine.stage.GenericStage
 
 fun GenericStage.setBlockPlaceRule(blockRule: BlockRule) {

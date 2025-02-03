@@ -3,6 +3,7 @@ package org.readutf.arena.minestom.features.combat
 import io.github.togar2.pvp.events.FinalDamageEvent
 import net.minestom.server.entity.Player
 import org.readutf.game.engine.GenericGame
+import org.readutf.game.engine.event.GameEventManager
 import org.readutf.game.engine.event.impl.GameDeathEvent
 import org.readutf.game.engine.event.listener.RegisteredListener
 import org.readutf.game.engine.event.listener.TypedGameListener
@@ -15,12 +16,14 @@ class DamageTracker(
 
     val lastDamageListener =
         TypedGameListener<FinalDamageEvent> {
-            val attacker = it.damage.attacker ?: return@TypedGameListener
-            lastDamager[it.entity.uuid] = Pair(attacker.uuid, System.currentTimeMillis())
+            val attacker = it.damage.attacker
+            if (attacker != null) {
+                lastDamager[it.entity.uuid] = Pair(attacker.uuid, System.currentTimeMillis())
+            }
         }
 
     init {
-        game.eventManager.registerListener(
+        GameEventManager.registerListener(
             game,
             FinalDamageEvent::class,
             RegisteredListener(
@@ -32,7 +35,7 @@ class DamageTracker(
         )
 
         // Clear deaths when GameDeathEvent occurs
-        game.eventManager.registerListener(
+        GameEventManager.registerListener(
             game,
             GameDeathEvent::class,
             RegisteredListener(

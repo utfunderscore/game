@@ -14,13 +14,9 @@ abstract class ArenaPlayer<ITEM : ArenaItemStack<ITEM>>(val uuid: UUID) {
         sendMessage(Component.text(message))
     }
 
-    abstract fun getName(): String
-
     abstract fun sendMessage(message: Component)
 
     abstract fun teleport(position: Position, gameWorld: ArenaWorld)
-
-    abstract fun teleport(position: Position)
 
     abstract fun getInventory(): List<ITEM>
 
