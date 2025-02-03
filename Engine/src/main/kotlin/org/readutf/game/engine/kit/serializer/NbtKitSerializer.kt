@@ -1,13 +1,10 @@
 package org.readutf.game.engine.kit.serializer
 
-import com.github.michaelbull.result.Err
-import com.github.michaelbull.result.Ok
-import com.github.michaelbull.result.getOrElse
+import net.minestom.server.item.ItemStack
 import org.readutf.game.engine.kit.Kit
 import org.readutf.game.engine.kit.KitSerializer
 import org.readutf.game.engine.kit.itemstack.ItemStackSerializer
-import org.readutf.game.engine.platform.item.ArenaItemStack
-import org.readutf.game.engine.utils.SResult
+import org.readutf.game.engine.types.Result
 import org.readutf.game.engine.utils.readInt
 import org.readutf.game.engine.utils.writeInt
 import java.io.ByteArrayInputStream
@@ -15,32 +12,32 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.io.OutputStream
 
-class NbtKitSerializer<T : ArenaItemStack<T>>(private val serializer: ItemStackSerializer<T>) : KitSerializer<T> {
+object NbtKitSerializer : KitSerializer {
     override fun serialize(
-        kit: Kit<T>,
+        kit: Kit,
         outputStream: OutputStream,
-    ): SResult<Unit> {
+    ): Result<Unit> {
         val byteOutputStream = ByteArrayOutputStream()
 
         byteOutputStream.writeInt(kit.items.size)
         kit.items.forEach { itemStack ->
-            serializer.serialize(itemStack, byteOutputStream)
+            ItemStackSerializer.serialize(itemStack, byteOutputStream)
         }
 
         outputStream.write(byteOutputStream.toByteArray())
-        return Ok(Unit)
+        return Result.empty()
     }
 
-    override fun deserialize(inputStream: InputStream): SResult<Kit<T>> {
+    override fun deserialize(inputStream: InputStream): Kit {
         val inputByteStream: ByteArrayInputStream = inputStream.readAllBytes().inputStream()
 
         val itemsSize = inputByteStream.readInt()
-        val items = ArrayList<T>(itemsSize)
+        val items = ArrayList<ItemStack>(itemsSize)
         repeat(itemsSize) {
-            items += serializer.deserialize(inputByteStream).getOrElse { return Err(it) }
+            items += ItemStackSerializer.deserialize(inputByteStream)
         }
 
-        return Ok(Kit(items))
+        return Kit(items)
     }
 
     override fun toString(): String = "NbtKitSerializer"

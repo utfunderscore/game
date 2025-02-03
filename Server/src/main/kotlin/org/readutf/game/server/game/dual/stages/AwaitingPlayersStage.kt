@@ -61,13 +61,13 @@ class AwaitingPlayersStage<ARENA : Arena<*>, TEAM : GameTeam>(
     inner class CountdownTask(
         intervalAlerts: List<Int>,
     ) : RepeatingGameTask(1000, 50) {
-        private val unsentAlerts: MutableList<Int> =
+        val unsentAlerts: MutableList<Int> =
             intervalAlerts
                 .filter { it < settings.playersReachedCountdown }
                 .toMutableList()
 
-        private var sinceLastMinPlayers = 0L
-        private var sinceLastCountdown = 0L
+        var sinceLastMinPlayers = 0L
+        var sinceLastCountdown = 0L
 
         override fun tick() {
             if (settings.minStartPlayers <= 0) {

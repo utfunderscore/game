@@ -1,16 +1,34 @@
 package org.readutf.game.engine.kit.itemstack
 
-import org.readutf.game.engine.platform.item.ArenaItemStack
-import org.readutf.game.engine.utils.SResult
+import net.kyori.adventure.nbt.BinaryTagIO
+import net.minestom.server.item.ItemStack
+import org.readutf.game.engine.utils.readInt
+import org.readutf.game.engine.utils.writeInt
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 
-interface ItemStackSerializer<T : ArenaItemStack<T>> {
+object ItemStackSerializer {
+    private val nbtWriter = BinaryTagIO.writer()
+    private val nbtReader = BinaryTagIO.reader()
 
     fun serialize(
-        itemStack: T,
+        itemStack: ItemStack,
         outputStream: ByteArrayOutputStream,
-    ): SResult<Unit>
+    ) {
+        val itemStream = ByteArrayOutputStream()
 
-    fun deserialize(inputStream: ByteArrayInputStream): SResult<T>
+        val nbt = itemStack.toItemNBT()
+        nbtWriter.write(nbt, itemStream)
+
+        outputStream.writeInt(itemStream.size())
+        outputStream.write(itemStream.toByteArray())
+    }
+
+    fun deserialize(inputStream: ByteArrayInputStream): ItemStack {
+        val size = inputStream.readInt()
+        val bytes = ByteArray(size)
+        inputStream.read(bytes)
+
+        return ItemStack.fromItemNBT(nbtReader.read(ByteArrayInputStream(bytes)))
+    }
 }

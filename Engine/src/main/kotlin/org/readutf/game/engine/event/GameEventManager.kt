@@ -1,9 +1,17 @@
 package org.readutf.game.engine.event
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import net.minestom.server.MinecraftServer
+import net.minestom.server.event.Event
+import net.minestom.server.event.entity.EntityDamageEvent
+import net.minestom.server.event.entity.EntitySpawnEvent
+import net.minestom.server.event.trait.EntityEvent
+import net.minestom.server.event.trait.InstanceEvent
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.adapter.EventGameAdapter
+import org.readutf.game.engine.event.adapter.game.EntityEventGameAdapter
 import org.readutf.game.engine.event.adapter.game.GameEventGameAdapter
+import org.readutf.game.engine.event.adapter.game.InstanceEventGameAdapter
 import org.readutf.game.engine.event.adapter.game.StageEventGameAdapter
 import org.readutf.game.engine.event.impl.StageEvent
 import org.readutf.game.engine.event.listener.RegisteredListener
@@ -15,22 +23,30 @@ import kotlin.reflect.full.isSubclassOf
  * to be assigned to a given active game instance. Adapters for each event type
  * can be registered, including generic ones for abstract events like `PlayerEvent`.
  */
-abstract class GameEventManager {
+object GameEventManager {
     private val logger = KotlinLogging.logger { }
 
-    private val eventFilters: MutableMap<KClass<*>, EventGameAdapter> =
-        mutableMapOf(
+    private val eventFilters: Map<KClass<out Event>, EventGameAdapter> =
+        mapOf(
             StageEvent::class to StageEventGameAdapter(),
+            EntityEvent::class to EntityEventGameAdapter(),
             GameEvent::class to GameEventGameAdapter(),
+            InstanceEvent::class to InstanceEventGameAdapter(),
         )
 
-    private val registeredTypes = mutableSetOf<KClass<*>>()
-    private val noAdapters = mutableSetOf<KClass<*>>()
-    private val registeredListeners = LinkedHashMap<GenericGame, LinkedHashMap<KClass<*>, MutableList<RegisteredListener>>>()
+    private val registeredTypes = mutableSetOf<KClass<out Event>>()
+    private val noAdapters = mutableSetOf<KClass<out Event>>()
+    private val registeredListeners = LinkedHashMap<GenericGame, LinkedHashMap<KClass<out Event>, MutableList<RegisteredListener>>>()
     private val eventStackTraceEnabled =
-        mutableSetOf<KClass<*>>()
+        mutableSetOf<KClass<out Event>>(
+            EntitySpawnEvent::class,
+        )
 
-    fun <T : Any> callEvent(
+    init {
+        eventStackTraceEnabled.add(EntityDamageEvent::class)
+    }
+
+    fun <T : Event> callEvent(
         event: T,
         game: GenericGame,
     ): T {
@@ -61,13 +77,7 @@ abstract class GameEventManager {
         return event
     }
 
-    fun registerAdapter(clazz: KClass<*>, adapter: EventGameAdapter) {
-        synchronized(this) {
-            eventFilters
-        }
-    }
-
-    private fun eventHandler(event: Any) {
+    private fun eventHandler(event: Event) {
         val eventType = event::class
         val adapters = findAdapter(event)
 
@@ -96,31 +106,29 @@ abstract class GameEventManager {
 
     fun registerListener(
         game: GenericGame,
-        type: KClass<*>,
+        kClass: KClass<out Event>,
         registeredListener: RegisteredListener,
     ) {
-        if (!registeredTypes.contains(type)) {
-            registeredTypes.add(type)
-            println("Registering listener for event type: $type")
-            registerListener(type) { event ->
-                eventHandler(event)
+        if (!registeredTypes.contains(kClass)) {
+            registeredTypes.add(kClass)
+            println("Registering listener for event type: $kClass")
+            MinecraftServer.getGlobalEventHandler().addListener(kClass.java) {
+                eventHandler(it)
             }
         }
 
         val listeners =
             registeredListeners
                 .getOrPut(game) { LinkedHashMap() } // Game Listeners
-                .getOrPut(type) { mutableListOf() } // EventType listeners
+                .getOrPut(kClass) { mutableListOf() } // EventType listeners
 
         listeners.add(registeredListener)
         listeners.sortBy { it.priority }
     }
 
-    abstract fun registerListener(type: KClass<*>, listener: (Any) -> Unit)
-
     fun unregisterEvent(
         game: GenericGame,
-        kClass: KClass<*>,
+        kClass: KClass<out Event>,
         registeredListener: RegisteredListener,
     ) {
         val listeners = registeredListeners[game]?.get(kClass) ?: return
@@ -129,7 +137,7 @@ abstract class GameEventManager {
         }
     }
 
-    private fun findAdapter(event: Any): Collection<EventGameAdapter> {
+    private fun findAdapter(event: Event): Collection<EventGameAdapter> {
         synchronized(this) {
             return eventFilters.filterKeys { kClass -> event::class.isSubclassOf(kClass) }.values
         }

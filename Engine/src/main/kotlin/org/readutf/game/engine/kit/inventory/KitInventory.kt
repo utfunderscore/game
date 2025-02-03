@@ -1,8 +1,8 @@
 package org.readutf.game.engine.kit.inventory
 
-import org.readutf.game.engine.platform.item.ArenaItemStack
+import net.minestom.server.item.ItemStack
 
-data class KitInventory<T : ArenaItemStack<T>>(
-    val items: List<T> = ArrayList(36),
-    val armorItems: List<T> = ArrayList(4),
+data class KitInventory(
+    val items: List<ItemStack> = ArrayList(36),
+    val armorItems: List<ItemStack> = ArrayList(4),
 )

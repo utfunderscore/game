@@ -1,15 +1,14 @@
 package org.readutf.game.engine.kit
 
-import org.readutf.game.engine.platform.item.ArenaItemStack
-import org.readutf.game.engine.utils.SResult
+import org.readutf.game.engine.types.Result
 import java.io.InputStream
 import java.io.OutputStream
 
-interface KitSerializer<T : ArenaItemStack<T>> {
+interface KitSerializer {
     fun serialize(
-        kit: Kit<T>,
+        kit: Kit,
         outputStream: OutputStream,
-    ): SResult<Unit>
+    ): Result<Unit>
 
-    fun deserialize(inputStream: InputStream): SResult<Kit<T>>
+    fun deserialize(inputStream: InputStream): Kit
 }

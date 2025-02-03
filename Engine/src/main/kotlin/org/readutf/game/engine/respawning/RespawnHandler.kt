@@ -1,8 +1,8 @@
 package org.readutf.game.engine.respawning
 
-import org.readutf.game.engine.platform.player.GamePlayer
-import org.readutf.game.engine.utils.SResult
+import net.minestom.server.entity.Player
+import org.readutf.game.engine.types.Result
 
 fun interface RespawnHandler {
-    fun getRespawnLocation(player: GamePlayer): SResult<RespawnPosition>
+    fun getRespawnLocation(player: Player): Result<RespawnPosition>
 }

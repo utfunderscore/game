@@ -1,15 +1,15 @@
 package org.readutf.game.engine.kit.serializer
 
-import com.github.michaelbull.result.Err
-import com.github.michaelbull.result.Ok
-import com.github.michaelbull.result.getOrElse
 import io.github.oshai.kotlinlogging.KotlinLogging
+import net.minestom.server.item.ItemStack
 import org.readutf.game.engine.kit.Kit
 import org.readutf.game.engine.kit.KitSerializer
 import org.readutf.game.engine.kit.itemstack.ItemStackSerializer
-import org.readutf.game.engine.platform.Platform
-import org.readutf.game.engine.platform.item.ArenaItemStack
-import org.readutf.game.engine.utils.*
+import org.readutf.game.engine.types.Result
+import org.readutf.game.engine.utils.readInt
+import org.readutf.game.engine.utils.readShort
+import org.readutf.game.engine.utils.writeInt
+import org.readutf.game.engine.utils.writeShort
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
@@ -19,16 +19,13 @@ import java.io.OutputStream
  * Generates a 'pallet' of each type of item that is contained within the kit,
  * then uses the index of each item in the pallet to serialize the kit.
  */
-class PalletKitSerializer<T : ArenaItemStack<T>>(
-    val platform: Platform<T>,
-    private val serializer: ItemStackSerializer<T>,
-) : KitSerializer<T> {
+object PalletKitSerializer : KitSerializer {
     private val logger = KotlinLogging.logger {}
 
     override fun serialize(
-        kit: Kit<T>,
+        kit: Kit,
         outputStream: OutputStream,
-    ): SResult<Unit> {
+    ): Result<Unit> {
         val byteOutputStream = ByteArrayOutputStream()
 
         logger.debug { "Original Pallet items: $kit.pallet" }
@@ -41,86 +38,91 @@ class PalletKitSerializer<T : ArenaItemStack<T>>(
 
         outputStream.write(byteOutputStream.toByteArray())
 
-        return Ok(Unit)
+        return Result.empty()
     }
 
-    override fun deserialize(inputStream: InputStream): SResult<Kit<T>> {
+    override fun deserialize(inputStream: InputStream): Kit {
         val byteInputStream = ByteArrayInputStream(inputStream.readAllBytes())
 
-        val pallet = readItemStacks(byteInputStream).getOrElse { return Err(it) }
+        val pallet = readItemStacks(byteInputStream)
         logger.debug { "Deserialize pallet items $pallet" }
 
         val itemsSize = byteInputStream.readInt()
-        val items = ArrayList<T>(itemsSize)
+        val items = ArrayList<ItemStack>(itemsSize)
 
         repeat(itemsSize) {
-            items.add(readItemStackByPalletIndex(byteInputStream, pallet).getOrElse { return Err(it) })
+            items += readItemStackByPalletIndex(byteInputStream, pallet).getOrThrow()
         }
 
-        return Ok(Kit(items))
+        return Kit(items)
     }
 
     fun writeItemStackByPalletIndex(
         palletBytes: ByteArrayOutputStream,
-        pallet: List<T>,
-        itemStack: T,
-    ): SResult<Unit> {
+        pallet: List<ItemStack>,
+        itemStack: ItemStack,
+    ): Result<Unit> {
         val index = pallet.indexOfFirst { it.isSimilar(itemStack) }
-        if (index == -1) return Err("ItemStack not found in pallet")
+        if (index == -1) return Result.failure("ItemStack not found in pallet")
 
-        if (itemStack.isAir()) {
+        if (itemStack.isAir) {
             palletBytes.writeInt(-1)
             palletBytes.writeShort(0)
-            return Ok(Unit)
+            return Result.success(Unit)
         }
 
         palletBytes.writeInt(index)
-        palletBytes.writeShort(itemStack.getAmount().toShort())
+        palletBytes.writeShort(itemStack.amount().toShort())
 
-        return Ok(Unit)
+        return Result.success(Unit)
     }
 
     fun readItemStackByPalletIndex(
         input: ByteArrayInputStream,
-        pallet: List<T>,
-    ): SResult<T> {
+        pallet: List<ItemStack>,
+    ): Result<ItemStack> {
         val index = input.readInt()
         val amount = input.readShort()
 
-        if (index == -1) Ok(platform.getAir())
-        if (index >= pallet.size) return Err("Index out of bounds")
+        if (index == -1) {
+            return Result.success(ItemStack.AIR)
+        }
 
-        return copy(pallet[index].withAmount(amount.toInt()))
+        if (index >= pallet.size) return Result.failure("Index out of bounds")
+
+        return Result.success(copy(pallet[index].withAmount(amount.toInt())))
     }
 
-    private fun writeItemStacks(
+    fun writeItemStacks(
         palletBytes: ByteArrayOutputStream,
-        pallet: List<T>,
+        pallet: List<ItemStack>,
     ) {
         palletBytes.writeInt(pallet.size)
 
         pallet.forEach { itemStack ->
-            serializer.serialize(itemStack, palletBytes)
+            ItemStackSerializer.serialize(itemStack, palletBytes)
         }
     }
 
-    private fun readItemStacks(input: ByteArrayInputStream): SResult<List<T>> {
-        val pallet = mutableListOf<T>()
+    fun readItemStacks(input: ByteArrayInputStream): List<ItemStack> {
+        val pallet = mutableListOf<ItemStack>()
 
         val palletSize = input.readInt()
 
         repeat(palletSize) {
-            pallet.add(serializer.deserialize(input).getOrElse { return Err(it) })
+            pallet += ItemStackSerializer.deserialize(input)
         }
 
-        return Ok(pallet)
+        return pallet
     }
 
-    private fun copy(itemStack: T): SResult<T> {
+    fun copy(itemStack: ItemStack): ItemStack {
         val outputStream = ByteArrayOutputStream()
-        serializer.serialize(itemStack, outputStream)
+        ItemStackSerializer.serialize(itemStack, outputStream)
 
         val inputStream = ByteArrayInputStream(outputStream.toByteArray())
-        return serializer.deserialize(inputStream)
+        return ItemStackSerializer.deserialize(inputStream)
     }
+
+    override fun toString(): String = "PalletKitSerializer"
 }

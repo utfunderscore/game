@@ -1,10 +1,10 @@
 package org.readutf.game.engine.event.impl
 
+import net.minestom.server.entity.Player
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.GameEvent
-import org.readutf.game.engine.platform.player.GamePlayer
 
 class GamePreRespawnEvent(
     game: GenericGame,
-    val player: GamePlayer,
+    val player: Player,
 ) : GameEvent(game)

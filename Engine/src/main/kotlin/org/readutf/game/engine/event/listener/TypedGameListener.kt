@@ -1,10 +1,12 @@
 package org.readutf.game.engine.event.listener
 
-fun interface TypedGameListener<T : Any> : GameListener {
+import net.minestom.server.event.Event
+
+fun interface TypedGameListener<T : Event> : GameListener {
     fun onTypedEvent(event: T)
 
     @Suppress("UNCHECKED_CAST")
-    override fun onEvent(event: Any) {
+    override fun onEvent(event: Event) {
         onTypedEvent(event as T)
     }
 }

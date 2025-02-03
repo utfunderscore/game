@@ -1,33 +1,34 @@
 package org.readutf.game.engine.schedular
 
+import com.google.gson.annotations.Expose
 import io.github.oshai.kotlinlogging.KotlinLogging
+import net.minestom.server.MinecraftServer
+import net.minestom.server.timer.Task
+import net.minestom.server.timer.TaskSchedule
 import org.readutf.game.engine.GenericGame
-import org.readutf.game.engine.platform.Platform
 import org.readutf.game.engine.stage.GenericStage
 
 class GameScheduler(
-    private val platform: Platform<*>,
+    val game: GenericGame,
 ) {
     private val logger = KotlinLogging.logger { }
 
-    private val globalTasks = mutableSetOf<GameTask>()
+    @Expose private val globalTasks = mutableSetOf<GameTask>()
 
-    private val stageTasks = mutableMapOf<GenericStage, MutableSet<GameTask>>()
+    @Expose private val stageTasks = mutableMapOf<GenericStage, MutableSet<GameTask>>()
 
-    private var task: Runnable? = null
+    private var task: Task? = null
 
     init {
         logger.info { "Starting scheduler" }
-    }
-
-    private fun start(game: GenericGame) {
-        task = startGameThread(game)
     }
 
     fun schedule(
         stage: GenericStage,
         gameTask: GameTask,
     ) {
+        if (task == null) task = startTask()
+
         gameTask.startTime = System.currentTimeMillis()
 
         logger.info { "Scheduling task `${gameTask::class.simpleName}` for stage `${stage::class.simpleName}`" }
@@ -47,20 +48,21 @@ class GameScheduler(
             }
     }
 
-    fun startGameThread(game: GenericGame) = platform.scheduleTask(1, 1, {
-        globalTasks.removeIf { it.markedForRemoval }
-        globalTasks.forEach(::tickTask)
+    fun startTask() =
+        MinecraftServer.getSchedulerManager().scheduleTask({
+            globalTasks.removeIf { it.markedForRemoval }
+            globalTasks.forEach(::tickTask)
 
-        if (game.currentStage == null) return@scheduleTask
+            if (game.currentStage == null) return@scheduleTask
 
-        stageTasks.forEach { (stage, tasks) ->
-            tasks.removeIf { it.markedForRemoval }
+            stageTasks.forEach { (stage, tasks) ->
+                tasks.removeIf { it.markedForRemoval }
 
-            if (stage == game.currentStage) {
-                tasks.forEach(::tickTask)
+                if (stage == game.currentStage) {
+                    tasks.forEach(::tickTask)
+                }
             }
-        }
-    })
+        }, TaskSchedule.tick(1), TaskSchedule.tick(1))
 
     private fun tickTask(task: GameTask) {
         if (task is RepeatingGameTask) {

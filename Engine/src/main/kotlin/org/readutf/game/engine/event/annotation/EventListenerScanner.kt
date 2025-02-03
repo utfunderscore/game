@@ -1,13 +1,15 @@
 package org.readutf.game.engine.event.annotation
 
-import com.github.michaelbull.result.Ok
 import io.github.oshai.kotlinlogging.KotlinLogging
+import net.minestom.server.event.Event
 import org.readutf.game.engine.event.listener.GameListener
 import org.readutf.game.engine.event.listener.RegisteredListener
-import org.readutf.game.engine.utils.SResult
+import org.readutf.game.engine.types.Result
+import org.readutf.game.engine.types.toSuccess
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.functions
+import kotlin.reflect.full.isSubclassOf
 
 private val logger = KotlinLogging.logger {}
 
@@ -20,8 +22,8 @@ private val logger = KotlinLogging.logger {}
  * @return A `Result` containing a list of `GameListener` instances.
  */
 @Suppress("UNCHECKED_CAST")
-fun scan(toScan: Any): SResult<Map<KClass<*>, RegisteredListener>> {
-    val listeners = mutableMapOf<KClass<*>, RegisteredListener>()
+fun scan(toScan: Any): Result<Map<KClass<out Event>, RegisteredListener>> {
+    val listeners = mutableMapOf<KClass<out Event>, RegisteredListener>()
     val clazz = toScan::class
 
     for (function in clazz.functions) {
@@ -36,6 +38,10 @@ fun scan(toScan: Any): SResult<Map<KClass<*>, RegisteredListener>> {
 
         val parameter = function.parameters[1]
         val classifier = parameter.type.classifier
+        if (classifier !is KClass<*> || !classifier.isSubclassOf(Event::class)) {
+            logger.debug { "Function ${function.name} has incorrect parameter type" }
+            continue
+        }
 
         logger.debug { "Found event listener: ${function.name}" }
         val gameListener = GameListener { event -> function.call(toScan, event) }
@@ -46,8 +52,8 @@ fun scan(toScan: Any): SResult<Map<KClass<*>, RegisteredListener>> {
                 ignoreSpectators = eventListener.ignoreSpectators,
                 priority = eventListener.priority,
             )
-        listeners[classifier as KClass<*>] = registeredListener
+        listeners[classifier as KClass<out Event>] = registeredListener
     }
 
-    return Ok(listeners)
+    return listeners.toSuccess()
 }

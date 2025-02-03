@@ -1,24 +1,16 @@
 package org.readutf.game.engine.kit
 
-import com.github.michaelbull.result.Err
-import com.github.michaelbull.result.Ok
-import com.github.michaelbull.result.getOrElse
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.readutf.game.engine.kit.itemstack.ItemStackSerializer
 import org.readutf.game.engine.kit.serializer.CompressedSerializer
 import org.readutf.game.engine.kit.serializer.NbtKitSerializer
 import org.readutf.game.engine.kit.serializer.PalletKitSerializer
-import org.readutf.game.engine.platform.Platform
-import org.readutf.game.engine.platform.item.ArenaItemStack
-import org.readutf.game.engine.utils.SResult
+import org.readutf.game.engine.types.Result
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
 
-class KitManager<T : ArenaItemStack<T>>(
+class KitManager(
     baseDir: File,
-    itemStackSerializer: ItemStackSerializer<T>,
-    platform: Platform<T>,
 ) {
     private val logger = KotlinLogging.logger {}
     private val kitFolder = File(baseDir, "kits")
@@ -27,33 +19,33 @@ class KitManager<T : ArenaItemStack<T>>(
         kitFolder.mkdirs()
     }
 
-    private val kitSerializers: Map<Byte, KitSerializer<T>> =
+    private val kitSerializers: Map<Byte, KitSerializer> =
         mapOf(
-            0.toByte() to NbtKitSerializer(itemStackSerializer),
-            1.toByte() to PalletKitSerializer(platform, itemStackSerializer),
-            2.toByte() to CompressedSerializer(NbtKitSerializer(itemStackSerializer)),
-            3.toByte() to CompressedSerializer(PalletKitSerializer(platform, itemStackSerializer)),
+            0.toByte() to NbtKitSerializer,
+            1.toByte() to PalletKitSerializer,
+            2.toByte() to CompressedSerializer(NbtKitSerializer),
+            3.toByte() to CompressedSerializer(PalletKitSerializer),
         )
 
-    private val kits = mutableMapOf<String, Kit<T>>()
+    private val kits = mutableMapOf<String, Kit>()
 
-    fun loadKit(name: String): SResult<Kit<T>> {
+    fun loadKit(name: String): Result<Kit> {
         val local = kits[name]
-        if (local != null) return Ok(local)
+        if (local != null) return Result.success(local)
 
         val kitFile = File(kitFolder, "$name.kit")
         FileInputStream(kitFile).use { inputStream ->
             val type = inputStream.read().toByte()
-            val serializer = kitSerializers[type] ?: return Err("Unknown kit type: $type")
-            val kit = serializer.deserialize(inputStream).getOrElse { return Err(it) }
+            val serializer = kitSerializers[type] ?: return Result.failure("Unknown kit type: $type")
+            val kit = serializer.deserialize(inputStream)
             kits[name] = kit
-            return Ok(kit)
+            return Result.success(kit)
         }
     }
 
     fun saveKit(
         name: String,
-        kit: Kit<T>,
+        kit: Kit,
     ) {
         kitFolder.mkdirs()
         val kitFile = File(kitFolder, "$name.kit")
@@ -71,10 +63,11 @@ class KitManager<T : ArenaItemStack<T>>(
         }
     }
 
-    fun findMinSize(kit: Kit<T>): Pair<Byte, KitSerializer<T>> = kitSerializers
-        .minBy {
-            val outputStream = ByteArrayOutputStream()
-            it.value.serialize(kit, outputStream)
-            outputStream.size()
-        }.toPair()
+    fun findMinSize(kit: Kit): Pair<Byte, KitSerializer> =
+        kitSerializers
+            .minBy {
+                val outputStream = ByteArrayOutputStream()
+                it.value.serialize(kit, outputStream)
+                outputStream.size()
+            }.toPair()
 }

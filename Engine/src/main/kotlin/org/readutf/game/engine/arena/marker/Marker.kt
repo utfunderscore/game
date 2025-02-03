@@ -1,10 +1,10 @@
 package org.readutf.game.engine.arena.marker
 
-import org.readutf.game.engine.utils.Position
+import net.minestom.server.coordinate.Vec
 
 data class Marker(
-    val position: Position,
-    val originalPosition: Position,
+    val position: Vec,
+    val originalPosition: Vec,
     val markerLines: Array<String> = Array(4) { "" },
 ) {
     val markerName = markerLines[1]

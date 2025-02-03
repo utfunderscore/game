@@ -1,10 +1,10 @@
 package org.readutf.game.engine.respawning
 
-import org.readutf.game.engine.platform.world.ArenaWorld
-import org.readutf.game.engine.utils.Position
+import net.minestom.server.coordinate.Point
+import net.minestom.server.instance.Instance
 
 data class RespawnPosition(
-    var position: Position,
-    var instance: ArenaWorld,
+    var position: Point,
+    var instance: Instance,
     var safe: Boolean,
 )
