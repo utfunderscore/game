@@ -1,128 +1,16 @@
 package org.readutf.game.engine.arena
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import net.hollowcube.schem.Schematic
-import net.kyori.adventure.nbt.CompoundBinaryTag
-import net.kyori.adventure.nbt.StringBinaryTag
-import net.minestom.server.MinecraftServer
-import net.minestom.server.coordinate.BlockVec
-import net.minestom.server.coordinate.Vec
-import org.readutf.game.engine.arena.marker.Marker
-import org.readutf.game.engine.arena.store.schematic.ArenaSchematicStore
-import org.readutf.game.engine.arena.store.template.ArenaTemplateStore
-import org.readutf.game.engine.settings.PositionSettingsManager
 import org.readutf.game.engine.settings.location.PositionData
-import org.readutf.game.engine.types.Result
-import java.util.UUID
 import kotlin.reflect.KClass
 
-class ArenaManager(
-    private val positionSettingsManager: PositionSettingsManager,
-    private val templateStore: ArenaTemplateStore,
-    private val schematicStore: ArenaSchematicStore,
-) {
+abstract class ArenaManager {
     private val logger = KotlinLogging.logger {}
 
-    fun createArena(
-        arenaName: String,
-        schematic: Schematic,
-        vararg gameTypes: String,
-    ): Result<ArenaTemplate> {
-        val positions = extractMarkerPositions(schematic)
-
-        for (gameType in gameTypes) {
-            positionSettingsManager.validatePositionRequirements(gameType, positions).mapError { return it }
-        }
-        logger.info { "Created arena $arenaName with positions $positions" }
-
-        val template = ArenaTemplate(arenaName, positions, Vec.fromPoint(schematic.size()), listOf(*gameTypes))
-
-        templateStore.save(template).mapError { return it }
-
-        schematicStore.save(arenaName, schematic, template.positions.values.toList()).mapError { return it }
-
-        return Result.success(template)
-    }
-
-    fun <T : PositionData> loadArena(
+    abstract fun <T : PositionData> loadArena(
         arenaName: String,
         kClass: KClass<T>,
-    ): Result<Arena<T>> {
-        val template: ArenaTemplate =
-            templateStore.load(arenaName).mapError { return it }
+    ): Arena<T>
 
-        val schematicInstance = schematicStore.load(arenaName).mapError { return it }
-
-        val positionSettings =
-            positionSettingsManager.loadPositionData(template.positions, kClass).mapError { return it }
-
-        return Result.success(
-            Arena(
-                arenaId = UUID.randomUUID(),
-                instance = schematicInstance,
-                positionSettings = positionSettings,
-                size = BlockVec(template.size),
-                positions = template.positions,
-            ) { arena ->
-                MinecraftServer.getInstanceManager().unregisterInstance(arena.instance)
-            },
-        )
-    }
-
-    private fun extractMarkerPositions(schematic: Schematic): Map<String, Marker> {
-        val positions = mutableMapOf<String, Marker>()
-
-        schematic.blockEntities().filter { it.id.equals("minecraft:sign", true) }.forEach { blockEntity ->
-
-            val markerLines = extractMarkerLines(blockEntity.data)
-
-            val location = blockEntity.position
-
-            if (!markerLines.getOrNull(0).equals("#marker", true)) {
-                logger.debug { "Sign at $location does not start with #marker lines: $markerLines" }
-                return@forEach
-            }
-
-            logger.info { "Found marker at $location" }
-
-            val markerName = markerLines[1]
-            if (markerName.equals("", false)) {
-                logger.info { "Marker at $location does not have a name" }
-                return@forEach
-            }
-            var offset: List<Int> = mutableListOf(0, 0, 0)
-            if (markerLines[2].isNotEmpty()) {
-                logger.info { "Marker at $location does has an offset" }
-                offset = markerLines[2].split(",", "-", " ").mapNotNull { runCatching { it.toInt() }.getOrNull() }
-            }
-            if (offset.size != 3) {
-                logger.info { "Marker at $location does not have a valid offset" }
-                return@forEach
-            }
-
-            val originalPosition = Vec.fromPoint(location)
-
-            positions[markerName] =
-                Marker(
-                    Vec(
-                        originalPosition.x + offset[0].toDouble(),
-                        originalPosition.y + offset[1].toDouble(),
-                        originalPosition.z + offset[2].toDouble(),
-                    ),
-                    originalPosition,
-                    markerLines = arrayOf(markerLines[0], markerLines[1], markerLines[2], markerLines[3]),
-                )
-        }
-
-        return positions
-    }
-
-    private fun extractMarkerLines(compoundBinaryTag: CompoundBinaryTag): List<String> = compoundBinaryTag
-        .getCompound("front_text")
-        .getList("messages")
-        .map {
-            (it as StringBinaryTag).value()
-        }.map {
-            it.substring(1, it.length - 1)
-        }
+    abstract fun freeArena(arena: Arena<*>)
 }

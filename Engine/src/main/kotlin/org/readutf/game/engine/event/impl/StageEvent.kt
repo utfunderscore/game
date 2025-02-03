@@ -4,7 +4,7 @@ import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.GameEvent
 import org.readutf.game.engine.stage.GenericStage
 
-class StageEvent(
+open class StageEvent(
     val stage: GenericStage,
     game: GenericGame,
 ) : GameEvent(game)

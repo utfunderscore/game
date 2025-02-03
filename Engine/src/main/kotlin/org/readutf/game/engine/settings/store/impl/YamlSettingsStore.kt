@@ -7,7 +7,7 @@ import org.readutf.game.engine.settings.store.GameSettingsStore
 import java.io.File
 
 class YamlSettingsStore(
-    val baseDir: File,
+    private val baseDir: File,
 ) : GameSettingsStore {
     private val yamlMapper =
         ObjectMapper(JsonFactory()).registerModules(kotlinModule())

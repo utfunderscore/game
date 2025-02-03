@@ -1,23 +1,19 @@
 package org.readutf.game.engine.schedular
 
-import com.google.gson.annotations.Expose
 import io.github.oshai.kotlinlogging.KotlinLogging
-import net.minestom.server.MinecraftServer
-import net.minestom.server.timer.Task
-import net.minestom.server.timer.TaskSchedule
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.stage.GenericStage
 
-class GameScheduler(
+abstract class GameScheduler(
     val game: GenericGame,
 ) {
     private val logger = KotlinLogging.logger { }
 
-    @Expose private val globalTasks = mutableSetOf<GameTask>()
+    private val globalTasks = mutableSetOf<GameTask>()
 
-    @Expose private val stageTasks = mutableMapOf<GenericStage, MutableSet<GameTask>>()
+    private val stageTasks = mutableMapOf<GenericStage, MutableSet<GameTask>>()
 
-    private var task: Task? = null
+    private var task: Runnable? = null
 
     init {
         logger.info { "Starting scheduler" }
@@ -48,21 +44,7 @@ class GameScheduler(
             }
     }
 
-    fun startTask() =
-        MinecraftServer.getSchedulerManager().scheduleTask({
-            globalTasks.removeIf { it.markedForRemoval }
-            globalTasks.forEach(::tickTask)
-
-            if (game.currentStage == null) return@scheduleTask
-
-            stageTasks.forEach { (stage, tasks) ->
-                tasks.removeIf { it.markedForRemoval }
-
-                if (stage == game.currentStage) {
-                    tasks.forEach(::tickTask)
-                }
-            }
-        }, TaskSchedule.tick(1), TaskSchedule.tick(1))
+    abstract fun startTask(): Runnable
 
     private fun tickTask(task: GameTask) {
         if (task is RepeatingGameTask) {

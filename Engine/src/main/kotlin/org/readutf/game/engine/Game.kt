@@ -1,59 +1,32 @@
 package org.readutf.game.engine
 
-import com.fasterxml.jackson.core.StreamReadFeature
-import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.module.kotlin.jsonMapper
-import com.fasterxml.jackson.module.kotlin.kotlinModule
-import com.google.gson.annotations.Expose
 import io.github.oshai.kotlinlogging.KotlinLogging
-import io.github.togar2.pvp.feature.fall.VanillaFallFeature
 import net.kyori.adventure.text.Component
-import net.minestom.server.MinecraftServer
-import net.minestom.server.coordinate.Point
-import net.minestom.server.coordinate.Pos
-import net.minestom.server.entity.Player
 import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.GameEvent
 import org.readutf.game.engine.event.GameEventManager
-import org.readutf.game.engine.event.annotation.scan
 import org.readutf.game.engine.event.impl.*
-import org.readutf.game.engine.respawning.RespawnHandler
 import org.readutf.game.engine.schedular.GameScheduler
 import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.stage.StageCreator
 import org.readutf.game.engine.team.GameTeam
 import org.readutf.game.engine.types.Result
-import org.readutf.game.engine.utils.VectorDeserializer
-import org.readutf.game.engine.utils.VectorSerializer
 import java.util.UUID
 import java.util.function.Predicate
 import kotlin.jvm.Throws
 
 typealias GenericGame = Game<*, *>
 
-open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
+abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
+    val scheduler: GameScheduler,
+    val eventManager: GameEventManager,
+) {
     private val logger = KotlinLogging.logger { }
     val gameId: String = GameManager.generateGameId()
-
-    // Required game settings / features
     private var stageCreators: ArrayDeque<StageCreator<ARENA, TEAM>> = ArrayDeque()
-
-    @Expose
-    val scheduler = GameScheduler(this)
-
-    @Expose
     var currentStage: Stage<ARENA, TEAM>? = null
-
-    @Expose
-    var respawnHandler: RespawnHandler? = null
-
-    @Expose
     var arena: ARENA? = null
-        private set
-
     private var teams = LinkedHashMap<String, TEAM>()
-
-    @Expose
     var gameState: GameState = GameState.STARTUP
 
     /**
@@ -72,7 +45,7 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
     fun start(): Result<Unit> {
         logger.info { "Starting game" }
-        GameManager.activeGames.put(gameId, this)
+        GameManager.activeGames[gameId] = this
         if (gameState != GameState.STARTUP) {
             return Result.failure("Game is not in startup state")
         }
@@ -80,8 +53,6 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
         if (arena == null) return Result.failure("No arena is active")
 
-        if (respawnHandler == null) return Result.failure("No spawning handler has been defined.")
-        getOnlinePlayers().forEach(::spawnPlayer)
         currentStage?.onStart()
         gameState = GameState.ACTIVE
         return Result.success(Unit)
@@ -96,8 +67,6 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
     }
 
     fun startNextStage(nextStageCreator: StageCreator<ARENA, TEAM>): Result<Stage<ARENA, TEAM>> {
-        val nextStageCreator = nextStageCreator
-
         val localCurrentStage = currentStage
         if (localCurrentStage != null) {
             localCurrentStage.unregisterListeners()
@@ -105,27 +74,18 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
         }
 
         val previous = currentStage
-
         val nextStage = nextStageCreator.create(this, previous).mapError { return it }
-
-        val listeners = scan(nextStage).mapError { return it }
-        logger.info { "Scan result for ${nextStage::class.simpleName} is $listeners" }
-        listeners.forEach {
-            GameEventManager.registerListener(
-                this,
-                it.key,
-                it.value,
-            )
-        }
-
         currentStage = nextStage
+
+        callEvent(StageStartEvent(nextStage, previous))
+
         nextStage.onStart().mapError { return it }
 
         return Result.success(currentStage!!)
     }
 
     fun end(): Result<Unit> {
-        GameEventManager.callEvent(GameEndEvent(this), this)
+        callEvent(GameEndEvent(this))
 
         if (gameState != GameState.ACTIVE) {
             return Result.failure("GameState is not active")
@@ -138,16 +98,12 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
     @Throws(Exception::class)
     fun crash(result: Result<*>?) {
-        GameEventManager.callEvent(GameCrashEvent(this), this)
+        callEvent(GameCrashEvent(this))
 
         arena?.free()
 
         result?.debug { }
         logger.error { "Game $gameId crashed: ${result?.getErrorOrNull() ?: "Unknown Reason"}" }
-
-        getOnlinePlayers().forEach { onlinePlayer ->
-            onlinePlayer.sendMessage("Game crashed")
-        }
 
         throw Exception("Game crashed")
     }
@@ -159,7 +115,7 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
         if (gameState == GameState.ACTIVE) {
             for (onlinePlayer in getOnlinePlayers()) {
-                spawnPlayer(onlinePlayer)
+//                spawnPlayer(onlinePlayer)
             }
         }
     }
@@ -169,67 +125,39 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
     }
 
     fun <T : GameEvent> callEvent(event: T): T {
-        GameEventManager.callEvent(event, this)
+        eventManager.callEvent(event, this)
         return event
-    }
-
-    fun spawnPlayer(player: Player): Result<Unit> {
-        logger.info { "Spawning player $player" }
-
-        val spawnHandling = respawnHandler ?: return Result.failure("No spawning handler has been declared.")
-
-        val respawnResult = spawnHandling.getRespawnLocation(player).mapError { return it }
-
-        player.setTag(VanillaFallFeature.FALL_DISTANCE, 0.0)
-
-        val event = GameEventManager.callEvent(GameRespawnEvent(this, player, respawnResult), this)
-
-        val (position, instance, _) = event.respawnPositionResult
-        arena!!.instance.loadChunk(position)
-
-        if (player.instance != instance) {
-            logger.info { "Teleporting player $player to $position in instance $instance" }
-            player.setInstance(instance, position)
-        } else {
-            logger.info { "Teleporting player $player to $position" }
-            player.teleport(Pos.fromPoint(position))
-        }
-
-        return Result.success(Unit)
     }
 
     fun getPlayers(): List<UUID> = teams.values.flatMap { it.players }
 
-    fun getOnlinePlayers(): List<Player> =
-        getPlayers().mapNotNull {
-            MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(it)
-        }
+    abstract fun getOnlinePlayers(): List<UUID>
 
-    fun addPlayer(
-        player: Player,
+    abstract fun messagePlayer(playerId: UUID, component: Component)
+
+    private fun addPlayer(
+        playerId: UUID,
         team: GameTeam,
     ): Result<Unit> {
-        logger.info { "Adding player $player to team ${team.teamName}" }
+        logger.info { "Adding player $playerId to team ${team.teamName}" }
 
-        GameManager.playerToGame[player.uuid] = this
-        team.players.add(player.uuid)
-        GameEventManager.callEvent(GameJoinEvent(this, player), this)
-
-        spawnPlayer(player).onFailure { return it }
+        GameManager.playerToGame[playerId] = this
+        team.players.add(playerId)
+        callEvent(GameJoinEvent(this, playerId))
 
         return Result.empty()
     }
 
     fun addPlayer(
-        player: Player,
+        playerId: UUID,
         teamName: String,
     ): Result<Unit> {
         val team = teams[teamName] ?: return Result.failure("Team $teamName does not exist")
-        return addPlayer(player, team)
+        return addPlayer(playerId, team)
     }
 
     fun addPlayer(
-        player: Player,
+        player: UUID,
         predicate: Predicate<TEAM>,
     ): Result<Unit> {
         val team =
@@ -239,14 +167,12 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
         return addPlayer(player, team)
     }
 
-    fun removePlayer(player: Player): Result<Unit> {
-        logger.info { "Removing player $player" }
+    fun removePlayer(playerId: UUID): Result<Unit> {
+        logger.info { "Removing player $playerId" }
 
-        val team = getTeam(player.uuid) ?: return Result.failure("Player is not in a team")
-
-        team.players.remove(player.uuid)
-
-        GameEventManager.callEvent(GameLeaveEvent(this, player), this)
+        val team = getTeam(playerId) ?: return Result.failure("GamePlayer is not in a team")
+        team.players.remove(playerId)
+        callEvent(GameLeaveEvent(this, playerId))
 
         return Result.empty()
     }
@@ -261,21 +187,9 @@ open class Game<ARENA : Arena<*>, TEAM : GameTeam> {
 
     fun messageAll(component: Component) {
         for (onlinePlayer in getOnlinePlayers()) {
-            onlinePlayer.sendMessage(component)
+            messagePlayer(onlinePlayer, component)
         }
     }
 
     fun getTeamId(team: GameTeam): Int = teams.values.indexOf(team)
-
-    companion object {
-        internal val objectMapper =
-            jsonMapper {
-                addModule(kotlinModule())
-                enable(StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION)
-                val module = SimpleModule()
-                module.addSerializer(Point::class.java, VectorSerializer())
-                module.addDeserializer(Point::class.java, VectorDeserializer())
-                addModule(module)
-            }
-    }
 }

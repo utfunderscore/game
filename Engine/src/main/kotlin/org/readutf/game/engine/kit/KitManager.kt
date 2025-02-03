@@ -1,9 +1,6 @@
 package org.readutf.game.engine.kit
 
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.readutf.game.engine.kit.serializer.CompressedSerializer
-import org.readutf.game.engine.kit.serializer.NbtKitSerializer
-import org.readutf.game.engine.kit.serializer.PalletKitSerializer
 import org.readutf.game.engine.types.Result
 import java.io.ByteArrayOutputStream
 import java.io.File
@@ -13,20 +10,8 @@ class KitManager(
     baseDir: File,
 ) {
     private val logger = KotlinLogging.logger {}
-    private val kitFolder = File(baseDir, "kits")
-
-    init {
-        kitFolder.mkdirs()
-    }
-
-    private val kitSerializers: Map<Byte, KitSerializer> =
-        mapOf(
-            0.toByte() to NbtKitSerializer,
-            1.toByte() to PalletKitSerializer,
-            2.toByte() to CompressedSerializer(NbtKitSerializer),
-            3.toByte() to CompressedSerializer(PalletKitSerializer),
-        )
-
+    private val kitFolder = File(baseDir, "kits").also { it.mkdirs() }
+    private val kitSerializers: MutableMap<Byte, KitSerializer> = mutableMapOf()
     private val kits = mutableMapOf<String, Kit>()
 
     fun loadKit(name: String): Result<Kit> {
@@ -63,11 +48,24 @@ class KitManager(
         }
     }
 
-    fun findMinSize(kit: Kit): Pair<Byte, KitSerializer> =
-        kitSerializers
-            .minBy {
-                val outputStream = ByteArrayOutputStream()
-                it.value.serialize(kit, outputStream)
-                outputStream.size()
-            }.toPair()
+    fun registerSerializer(
+        type: Byte,
+        serializer: KitSerializer,
+    ) {
+        if (kitSerializers.containsKey(type)) {
+            logger.warn { "Serializer for type $type already exists, overwriting" }
+        }
+        kitSerializers[type] = serializer
+    }
+
+    fun unregisterSerializer(type: Byte) {
+        kitSerializers.remove(type)
+    }
+
+    private fun findMinSize(kit: Kit): Pair<Byte, KitSerializer> = kitSerializers
+        .minBy {
+            val outputStream = ByteArrayOutputStream()
+            it.value.serialize(kit, outputStream)
+            outputStream.size()
+        }.toPair()
 }

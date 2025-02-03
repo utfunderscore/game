@@ -1,9 +1,7 @@
 package org.readutf.game.engine.stage
 
-import net.minestom.server.event.Event
 import org.readutf.game.engine.Game
 import org.readutf.game.engine.arena.Arena
-import org.readutf.game.engine.event.GameEventManager
 import org.readutf.game.engine.event.annotation.scan
 import org.readutf.game.engine.event.listener.RegisteredListener
 import org.readutf.game.engine.event.listener.TypedGameListener
@@ -18,8 +16,8 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
     open val game: Game<ARENA, TEAM>,
     val previousStage: Stage<ARENA, TEAM>?,
 ) {
-    val startTime = System.currentTimeMillis()
-    val registeredListeners = LinkedHashMap<KClass<out Event>, MutableList<RegisteredListener>>()
+    private val startTime = System.currentTimeMillis()
+    private val registeredListeners = LinkedHashMap<KClass<*>, MutableList<RegisteredListener>>()
 
     open fun onStart(): Result<Unit> = Result.empty()
 
@@ -27,16 +25,16 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
 
     fun registerRawListener(
         registeredListener: RegisteredListener,
-        type: KClass<out Event>,
+        type: KClass<*>,
     ) {
         registeredListeners
             .getOrPut(type) { mutableListOf() }
             .add(registeredListener)
 
-        GameEventManager.registerListener(game, type, registeredListener)
+        game.eventManager.registerListener(game, type, registeredListener)
     }
 
-    inline fun <reified T : Event> registerListener(
+    inline fun <reified T : Any> registerListener(
         priority: Int = 50,
         gameListener: TypedGameListener<T>,
     ) {
@@ -71,7 +69,7 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
     internal fun unregisterListeners() {
         registeredListeners.forEach { (type, listeners) ->
             listeners.forEach { listener ->
-                GameEventManager.unregisterEvent(game, type, listener)
+                game.eventManager.unregisterEvent(game, type, listener)
             }
         }
     }

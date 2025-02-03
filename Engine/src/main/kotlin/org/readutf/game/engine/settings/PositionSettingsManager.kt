@@ -2,8 +2,8 @@ package org.readutf.game.engine.settings
 
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.readutf.game.engine.arena.marker.Marker
-import org.readutf.game.engine.settings.location.Position
 import org.readutf.game.engine.settings.location.PositionData
+import org.readutf.game.engine.settings.location.PositionMarker
 import org.readutf.game.engine.types.Result
 import kotlin.jvm.Throws
 import kotlin.reflect.KClass
@@ -42,7 +42,7 @@ class PositionSettingsManager {
             }
 
             val annotation =
-                parameter.findAnnotation<Position>()
+                parameter.findAnnotation<PositionMarker>()
                     ?: return Result.failure(
                         "${parameter.name} in ${positionRequirements::class.simpleName} is missing the @Position annotation",
                     )
@@ -80,7 +80,7 @@ class PositionSettingsManager {
                     classifier != List::class &&
                         classifier != Marker::class &&
                         !classifier.isSubclassOf(PositionData::class)
-                )
+                    )
             ) {
                 return Result.failure("Invalid type for ${parameter.name}")
             }
@@ -89,7 +89,7 @@ class PositionSettingsManager {
                 val subClass = classifier as KClass<out PositionData>
                 parameters.add(loadPositionData(positions, subClass).mapError { return it })
             } else {
-                val annotation = parameter.findAnnotation<Position>() ?: return Result.failure("Missing @Position annotation")
+                val annotation = parameter.findAnnotation<PositionMarker>() ?: return Result.failure("Missing @Position annotation")
                 val regex =
                     when {
                         annotation.name != "" -> Regex("^${annotation.name}$")
