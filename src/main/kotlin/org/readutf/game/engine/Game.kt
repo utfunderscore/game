@@ -32,7 +32,7 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
     var arena: ARENA? = null
     private var teams = LinkedHashMap<String, TEAM>()
     var gameState: GameState = GameState.STARTUP
-    val scheduler = schedulerFactory.build()
+    val scheduler by lazy { schedulerFactory.build(this) }
 
     /**
      * Adds players to a team, invokes the GameTeamAddEvent,
