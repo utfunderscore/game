@@ -13,8 +13,6 @@ abstract class GameScheduler(
 
     private val stageTasks = mutableMapOf<GenericStage, MutableSet<GameTask>>()
 
-    private var task: Runnable? = null
-
     init {
         logger.info { "Starting scheduler" }
     }
@@ -23,7 +21,20 @@ abstract class GameScheduler(
         stage: GenericStage,
         gameTask: GameTask,
     ) {
-        if (task == null) task = startTask()
+        startTask {
+            globalTasks.removeIf { it.markedForRemoval }
+            globalTasks.forEach(::tickTask)
+
+            if (game.currentStage == null) return@startTask
+
+            stageTasks.forEach { (stage, tasks) ->
+                tasks.removeIf { it.markedForRemoval }
+
+                if (stage == game.currentStage) {
+                    tasks.forEach(::tickTask)
+                }
+            }
+        }
 
         gameTask.startTime = System.currentTimeMillis()
 
@@ -44,7 +55,7 @@ abstract class GameScheduler(
             }
     }
 
-    abstract fun startTask(): Runnable
+    abstract fun startTask(runnable: Runnable)
 
     private fun tickTask(task: GameTask) {
         if (task is RepeatingGameTask) {

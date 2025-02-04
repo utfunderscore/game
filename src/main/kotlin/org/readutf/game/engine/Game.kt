@@ -22,7 +22,7 @@ import kotlin.jvm.Throws
 typealias GenericGame = Game<*, *>
 
 abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
-    val scheduler: GameSchedulerFactory,
+    private val schedulerFactory: GameSchedulerFactory,
     val eventManager: GameEventManager,
 ) {
     private val logger = KotlinLogging.logger { }
@@ -32,6 +32,7 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
     var arena: ARENA? = null
     private var teams = LinkedHashMap<String, TEAM>()
     var gameState: GameState = GameState.STARTUP
+    val scheduler = schedulerFactory.build()
 
     /**
      * Adds players to a team, invokes the GameTeamAddEvent,
