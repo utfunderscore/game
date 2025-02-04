@@ -26,6 +26,10 @@ class Cuboid(
 
     fun getSize(): Position = Position(maxX - minX, maxY - minY, maxZ - minZ)
 
+    fun getMin(): Position = Position(minX, minY, minZ)
+
+    fun getMax(): Position = Position(maxX, maxY, maxZ)
+
     companion object {
         fun fromPositions(
             vec1: Position,
