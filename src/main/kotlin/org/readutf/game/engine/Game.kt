@@ -14,9 +14,9 @@ import org.readutf.game.engine.schedular.GameSchedulerFactory
 import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.stage.StageCreator
 import org.readutf.game.engine.team.GameTeam
+import org.readutf.game.engine.team.TeamSelector
 import org.readutf.game.engine.utils.SResult
 import java.util.UUID
-import java.util.function.Predicate
 import kotlin.jvm.Throws
 
 typealias GenericGame = Game<*, *>
@@ -24,6 +24,7 @@ typealias GenericGame = Game<*, *>
 abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
     private val schedulerFactory: GameSchedulerFactory,
     val eventManager: GameEventManager,
+    var teamSelector: TeamSelector<TEAM>,
 ) {
     private val logger = KotlinLogging.logger { }
     val gameId: String = GameManager.generateGameId()
@@ -59,7 +60,6 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
             return Err("Game is not in startup state")
         }
         startNextStage().getOrElse {
-            logger.error { "Failed to start game: $it" }
             return Err(it)
         }
 
@@ -89,7 +89,6 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         if (localCurrentStage != null) {
             localCurrentStage.unregisterListeners()
             localCurrentStage.onFinish().getOrElse {
-                logger.error { "Failed to finish stage: $it" }
                 return Err(it)
             }
         }
@@ -101,7 +100,6 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         callEvent(StageStartEvent(nextStage, previous))
 
         nextStage.onStart().getOrElse {
-            logger.error { "Failed to start stage: $it" }
             return Err(it)
         }
 
@@ -159,42 +157,21 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
 
     abstract fun messagePlayer(playerId: UUID, component: Component)
 
-    private fun addPlayer(
+    fun addPlayer(
         playerId: UUID,
-        team: GameTeam,
     ): SResult<Unit> {
+        val team = teamSelector.getTeam(playerId).getOrElse {
+            return Err(it)
+        }
         logger.info { "Adding player $playerId to team ${team.teamName}" }
 
         GameManager.playerToGame[playerId] = this
         team.players.add(playerId)
+        teams[team.teamName] = team
+
         callEvent(GameJoinEvent(this, playerId))
 
         return Ok(Unit)
-    }
-
-    fun addPlayer(
-        playerId: UUID,
-        teamName: String,
-    ): SResult<Unit> {
-        val team = teams[teamName] ?: let {
-            logger.error { "Team $teamName does not exist" }
-            return Err("Team $teamName does not exist")
-        }
-        return addPlayer(playerId, team)
-    }
-
-    fun addPlayer(
-        player: UUID,
-        predicate: Predicate<TEAM>,
-    ): SResult<Unit> {
-        val team =
-            teams.values.firstOrNull { predicate.test(it) }
-                ?: let {
-                    logger.error { "No team matches the predicate" }
-                    return Err("No team matches the predicate")
-                }
-
-        return addPlayer(player, team)
     }
 
     fun removePlayer(playerId: UUID): SResult<Unit> {
