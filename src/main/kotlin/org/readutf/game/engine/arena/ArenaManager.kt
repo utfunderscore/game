@@ -11,4 +11,6 @@ abstract class ArenaManager {
     ): Arena<T>
 
     abstract fun freeArena(arena: Arena<*>)
+
+    abstract fun getTemplates(): List<ArenaTemplate>
 }
