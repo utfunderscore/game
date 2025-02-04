@@ -5,6 +5,7 @@ import org.readutf.game.engine.event.impl.StageStartEvent
 import org.readutf.game.engine.event.listener.TypedGameListener
 import org.readutf.game.engine.features.Feature
 import org.readutf.game.engine.utils.Position
+import org.readutf.game.engine.world.GameWorld
 import java.util.UUID
 
 abstract class RespawningFeature(respawnHandler: RespawnHandler) : Feature() {
@@ -17,7 +18,7 @@ abstract class RespawningFeature(respawnHandler: RespawnHandler) : Feature() {
             logger.info { "Respawning player $onlinePlayer" }
 
             val respawnLocation = respawnHandler.findRespawnLocation()
-            teleport(onlinePlayer, respawnLocation)
+            teleport(onlinePlayer, gameWorld = stageEvent.game.arena!!.instance, respawnLocation)
         }
     }
 
@@ -25,5 +26,5 @@ abstract class RespawningFeature(respawnHandler: RespawnHandler) : Feature() {
         registerListener(roundStartRespawn)
     }
 
-    abstract fun teleport(playerId: UUID, position: Position)
+    abstract fun teleport(playerId: UUID, gameWorld: GameWorld, position: Position)
 }
