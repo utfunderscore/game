@@ -10,7 +10,7 @@ import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.GameEvent
 import org.readutf.game.engine.event.GameEventManager
 import org.readutf.game.engine.event.impl.*
-import org.readutf.game.engine.schedular.GameScheduler
+import org.readutf.game.engine.schedular.GameSchedulerFactory
 import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.stage.StageCreator
 import org.readutf.game.engine.team.GameTeam
@@ -22,7 +22,7 @@ import kotlin.jvm.Throws
 typealias GenericGame = Game<*, *>
 
 abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
-    val scheduler: GameScheduler,
+    val scheduler: GameSchedulerFactory,
     val eventManager: GameEventManager,
 ) {
     private val logger = KotlinLogging.logger { }
