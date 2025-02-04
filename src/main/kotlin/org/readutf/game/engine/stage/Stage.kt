@@ -7,6 +7,7 @@ import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.annotation.scan
 import org.readutf.game.engine.event.listener.RegisteredListener
 import org.readutf.game.engine.event.listener.TypedGameListener
+import org.readutf.game.engine.features.Feature
 import org.readutf.game.engine.schedular.GameTask
 import org.readutf.game.engine.team.GameTeam
 import org.readutf.game.engine.utils.SResult
@@ -24,6 +25,20 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
     open fun onStart(): SResult<Unit> = Ok(Unit)
 
     open fun onFinish(): SResult<Unit> = Ok(Unit)
+
+    fun addFeature(feature: Feature) {
+        for (listener in feature.listeners) {
+            registerRawListener(
+                RegisteredListener(
+                    gameListener = listener,
+                    ignoreCancelled = false,
+                    ignoreSpectators = false,
+                    priority = 50,
+                ),
+                listener::class,
+            )
+        }
+    }
 
     fun registerRawListener(
         registeredListener: RegisteredListener,
