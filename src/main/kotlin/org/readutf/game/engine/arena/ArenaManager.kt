@@ -13,5 +13,5 @@ abstract class ArenaManager {
 
     abstract fun freeArena(arena: Arena<*>)
 
-    abstract fun getTemplates(): List<ArenaTemplate>
+    abstract fun getTemplates(gameType: String): List<ArenaTemplate>
 }
