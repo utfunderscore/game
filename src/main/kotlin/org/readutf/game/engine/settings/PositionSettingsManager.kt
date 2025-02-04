@@ -29,13 +29,17 @@ class PositionSettingsManager {
     ): SResult<List<Regex>> {
         logger.info { "Registering requirements for ${positionRequirements.simpleName}" }
 
-        val primary = positionRequirements.primaryConstructor ?: return Err("Primary constructor not found")
+        val primary = positionRequirements.primaryConstructor ?: let {
+            logger.error { "Primary constructor not found" }
+            return Err("Primary constructor not found")
+        }
 
         val requirements = mutableListOf<Regex>()
 
         for (parameter in primary.parameters) {
             val classifier = parameter.type.classifier
             if (classifier !is KClass<*>) {
+                logger.error { "${parameter.name} is not a valid type" }
                 return Err("${parameter.name} is not a valid type")
             }
 
@@ -54,7 +58,10 @@ class PositionSettingsManager {
                 annotation.name != "" -> requirements.add(Regex("^${annotation.name}$"))
                 annotation.startsWith != "" -> requirements.add(Regex("${annotation.startsWith}.*"))
                 annotation.endsWith != "" -> requirements.add(Regex(".*${annotation.endsWith}"))
-                else -> return Err("Invalid position annotation, a filter must be set")
+                else -> {
+                    logger.error { "Invalid position annotation, a filter must be set" }
+                    return Err("Invalid position annotation, a filter must be set")
+                }
             }
         }
 
@@ -69,10 +76,14 @@ class PositionSettingsManager {
         positionSettingsType: KClass<out T>,
     ): SResult<T> {
         if (positionSettingsType.qualifiedName == null) {
+            logger.error { "Invalid position settings type" }
             return Err("Invalid position settings type")
         }
 
-        val primaryConstructor = positionSettingsType.primaryConstructor ?: return Err("Primary constructor not found")
+        val primaryConstructor = positionSettingsType.primaryConstructor ?: let {
+            logger.error { "Primary constructor not found" }
+            return Err("Primary constructor not found")
+        }
 
         val parameters = mutableListOf<Any>()
 
@@ -85,6 +96,7 @@ class PositionSettingsManager {
                         !classifier.isSubclassOf(PositionData::class)
                     )
             ) {
+                logger.error { "Invalid type for ${parameter.name}" }
                 return Err("Invalid type for ${parameter.name}")
             }
 
@@ -92,13 +104,19 @@ class PositionSettingsManager {
                 val subClass = classifier as KClass<out PositionData>
                 parameters.add(loadPositionData(positions, subClass).getOrElse { return Err(it) })
             } else {
-                val annotation = parameter.findAnnotation<PositionMarker>() ?: return Err("Missing @Position annotation")
+                val annotation = parameter.findAnnotation<PositionMarker>() ?: let {
+                    logger.error { "Missing @Position annotation" }
+                    return Err("Missing @Position annotation")
+                }
                 val regex =
                     when {
                         annotation.name != "" -> Regex("^${annotation.name}$")
                         annotation.startsWith != "" -> Regex("${annotation.startsWith}.*")
                         annotation.endsWith != "" -> Regex(".*${annotation.endsWith}")
-                        else -> return Err("Invalid position annotation, a filter must be set")
+                        else -> {
+                            logger.error { "Invalid position annotation, a filter must be set" }
+                            return Err("Invalid position annotation, a filter must be set")
+                        }
                     }
                 parameters.add(getParameterForType(regex, parameter, positions).getOrElse { return Err(it) })
             }
@@ -117,12 +135,16 @@ class PositionSettingsManager {
         gameType: String,
         positions: Map<String, Marker>,
     ): SResult<Unit> {
-        val types = positionTypes[gameType] ?: return Err("No position requirements found for $gameType")
+        val types = positionTypes[gameType] ?: let {
+            logger.error { "No position requirements found for $gameType" }
+            return Err("No position requirements found for $gameType")
+        }
 
         types.forEach { regex ->
             val matchingPositions = positions.filter { it.key.matches(regex) }
 
             if (matchingPositions.isEmpty()) {
+                logger.error { "No positions found matching $regex" }
                 return Err("No positions found matching $regex")
             }
         }
@@ -140,6 +162,7 @@ class PositionSettingsManager {
             val values = positions.filter { it.key.matches(regex) }.values
 
             if (values.isEmpty()) {
+                logger.error { "No positions found for ${parameter.name} matching $regex" }
                 return Err("No positions found for ${parameter.name} matching $regex")
             }
             return Ok(values.toList())
@@ -147,6 +170,7 @@ class PositionSettingsManager {
             val multipleOptions = positions.filter { it.key.matches(regex) }.values
 
             if (multipleOptions.isEmpty()) {
+                logger.error { "No positions found for ${parameter.name} matching $regex" }
                 return Err("No positions found for ${parameter.name} matching $regex")
             }
             if (multipleOptions.size > 1) {

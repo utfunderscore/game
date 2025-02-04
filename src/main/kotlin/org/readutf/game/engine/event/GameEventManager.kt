@@ -26,6 +26,8 @@ abstract class GameEventManager {
         event: T,
         game: GenericGame,
     ): T {
+        logger.debug { "Calling event: ${event::class.simpleName}" }
+
         val gameListeners = registeredListeners[game]
         if (gameListeners == null) {
             if (eventStackTraceEnabled.contains(event::class)) {
@@ -89,7 +91,7 @@ abstract class GameEventManager {
     ) {
         if (!registeredTypes.contains(kClass)) {
             registeredTypes.add(kClass)
-            println("Registering listener for event type: $kClass")
+            logger.info { "Registering listener for event type: $kClass" }
             registerEventListener(kClass) { eventHandler(it) }
         }
 

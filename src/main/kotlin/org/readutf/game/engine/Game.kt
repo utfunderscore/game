@@ -201,6 +201,7 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         logger.info { "Removing player $playerId" }
 
         val team = getTeam(playerId) ?: let {
+            logger.error { "GamePlayer is not in a team" }
             return Err("GamePlayer is not in a team")
         }
         team.players.remove(playerId)

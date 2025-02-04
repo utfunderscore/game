@@ -12,8 +12,10 @@ abstract class RespawningFeature(respawnHandler: RespawnHandler) : Feature() {
     private val logger = KotlinLogging.logger { }
 
     private val roundStartRespawn = TypedGameListener<StageStartEvent> { stageEvent ->
-        logger.info { "Respawning all players for stage change" }
+        logger.info { "Respawning players" }
         for (onlinePlayer in stageEvent.game.getOnlinePlayers()) {
+            logger.info { "Respawning player $onlinePlayer" }
+
             val respawnLocation = respawnHandler.findRespawnLocation()
             teleport(onlinePlayer, respawnLocation)
         }

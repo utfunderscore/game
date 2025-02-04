@@ -23,7 +23,10 @@ class KitManager(
         val kitFile = File(kitFolder, "$name.kit")
         FileInputStream(kitFile).use { inputStream ->
             val type = inputStream.read().toByte()
-            val serializer = kitSerializers[type] ?: return Err("Unknown kit type: $type")
+            val serializer = kitSerializers[type] ?: let {
+                logger.error { "Unknown kit type: $type" }
+                return Err("Unknown kit type: $type")
+            }
             val kit = serializer.deserialize(inputStream)
             kits[name] = kit
             return Ok(kit)

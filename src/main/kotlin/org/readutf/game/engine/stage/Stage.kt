@@ -27,7 +27,7 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
     open fun onFinish(): SResult<Unit> = Ok(Unit)
 
     fun addFeature(feature: Feature) {
-        for (listener in feature.listeners) {
+        for ((listener, type) in feature.listeners) {
             registerRawListener(
                 RegisteredListener(
                     gameListener = listener,
@@ -35,7 +35,7 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
                     ignoreSpectators = false,
                     priority = 50,
                 ),
-                listener::class,
+                type,
             )
         }
     }
