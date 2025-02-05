@@ -17,7 +17,7 @@ abstract class RespawningFeature(respawnHandler: RespawnHandler) : Feature() {
         for (onlinePlayer in stageEvent.game.getOnlinePlayers()) {
             logger.info { "Respawning player $onlinePlayer" }
 
-            val respawnLocation = respawnHandler.findRespawnLocation()
+            val respawnLocation = respawnHandler.findRespawnLocation(onlinePlayer)
             teleport(onlinePlayer, gameWorld = stageEvent.game.arena!!.instance, respawnLocation)
         }
     }
