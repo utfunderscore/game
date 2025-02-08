@@ -26,8 +26,8 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
 
     open fun onFinish(): SResult<Unit> = Ok(Unit)
 
-    fun addFeature(feature: Feature) {
-        for ((listener, type) in feature.listeners) {
+    fun <T : Feature> addFeature(feature: T): T {
+        for ((type, listener) in feature.getListeners()) {
             registerRawListener(
                 RegisteredListener(
                     gameListener = listener,
@@ -38,6 +38,13 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
                 type,
             )
         }
+
+
+        for (task in feature.getTasks()) {
+            schedule(task)
+        }
+
+        return feature
     }
 
     fun registerRawListener(
@@ -86,7 +93,7 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
     internal fun unregisterListeners() {
         registeredListeners.forEach { (type, listeners) ->
             listeners.forEach { listener ->
-                game.eventManager.unregisterEvent(game, type, listener)
+                game.eventManager.unregisterListener(game, type, listener)
             }
         }
     }

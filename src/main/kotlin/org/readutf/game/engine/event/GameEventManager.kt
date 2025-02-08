@@ -3,6 +3,9 @@ package org.readutf.game.engine.event
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.adapter.EventGameAdapter
+import org.readutf.game.engine.event.adapter.impl.GameEventGameAdapter
+import org.readutf.game.engine.event.adapter.impl.StageEventGameAdapter
+import org.readutf.game.engine.event.impl.StageEvent
 import org.readutf.game.engine.event.listener.RegisteredListener
 import kotlin.reflect.KClass
 import kotlin.reflect.full.isSubclassOf
@@ -15,12 +18,17 @@ import kotlin.reflect.full.isSubclassOf
 abstract class GameEventManager {
     private val logger = KotlinLogging.logger { }
 
-    private val eventFilters: Map<KClass<*>, EventGameAdapter> = emptyMap()
+    private val eventAdapters: MutableMap<KClass<*>, EventGameAdapter> = mutableMapOf()
 
     private val registeredTypes = mutableSetOf<KClass<*>>()
     private val noAdapters = mutableSetOf<KClass<*>>()
     private val registeredListeners = LinkedHashMap<GenericGame, LinkedHashMap<KClass<*>, MutableList<RegisteredListener>>>()
     private val eventStackTraceEnabled = mutableSetOf<Any>()
+
+    init {
+        eventAdapters[GameEvent::class] = GameEventGameAdapter()
+        eventAdapters[StageEvent::class] = StageEventGameAdapter()
+    }
 
     fun <T : Any> callEvent(
         event: T,
@@ -104,7 +112,7 @@ abstract class GameEventManager {
         listeners.sortBy { it.priority }
     }
 
-    fun unregisterEvent(
+    fun unregisterListener(
         game: GenericGame,
         kClass: KClass<*>,
         registeredListener: RegisteredListener,
@@ -115,5 +123,11 @@ abstract class GameEventManager {
         }
     }
 
-    private fun findAdapter(event: Any): Collection<EventGameAdapter> = eventFilters.filterKeys { kClass -> event::class.isSubclassOf(kClass) }.values
+    fun registerAdapter(eventType: KClass<*>, eventGameAdapter: EventGameAdapter) {
+        eventAdapters[eventType] = eventGameAdapter
+    }
+
+    private fun findAdapter(event: Any): Collection<EventGameAdapter> = eventAdapters.filterKeys { kClass ->
+        event::class.isSubclassOf(kClass)
+    }.values
 }

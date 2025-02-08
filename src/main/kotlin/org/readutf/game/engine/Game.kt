@@ -10,6 +10,8 @@ import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.GameEvent
 import org.readutf.game.engine.event.GameEventManager
 import org.readutf.game.engine.event.impl.*
+import org.readutf.game.engine.event.listener.RegisteredListener
+import org.readutf.game.engine.features.Feature
 import org.readutf.game.engine.schedular.GameSchedulerFactory
 import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.stage.StageCreator
@@ -130,16 +132,32 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         throw Exception("Game crashed")
     }
 
+    fun addFeature(feature: Feature) {
+        for ((type, listener) in feature.getListeners().toList()) {
+            eventManager.registerListener(
+                this,
+                type,
+                RegisteredListener(
+                    gameListener = listener,
+                    ignoreCancelled = true,
+                    ignoreSpectators = false,
+                    priority = 50,
+                ),
+            )
+        }
+
+        for (task in feature.getTasks()) {
+            scheduler.schedule(task)
+        }
+    }
+
     fun changeArena(arena: ARENA) {
         logger.info { "Changing to arena $arena" }
 
+        val previousArena = this.arena
         this.arena = arena
 
-        if (gameState == GameState.ACTIVE) {
-            for (onlinePlayer in getOnlinePlayers()) {
-//                spawnPlayer(onlinePlayer)
-            }
-        }
+        callEvent(GameArenaChangeEvent(this, arena, previousArena))
     }
 
     fun registerStage(vararg stageCreator: StageCreator<ARENA, TEAM>) {
@@ -153,7 +171,9 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
 
     fun getPlayers(): List<UUID> = teams.values.flatMap { it.players }
 
-    abstract fun getOnlinePlayers(): List<UUID>
+    fun getOnlinePlayers(): List<UUID> = getPlayers().filter { isOnline(it) }
+
+    abstract fun isOnline(playerId: UUID): Boolean
 
     abstract fun messagePlayer(playerId: UUID, component: Component)
 

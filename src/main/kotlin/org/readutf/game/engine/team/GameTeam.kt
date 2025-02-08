@@ -4,5 +4,7 @@ import java.util.UUID
 
 open class GameTeam(
     val teamName: String,
-    val players: MutableList<UUID>,
-)
+) {
+
+    val players: MutableList<UUID> = mutableListOf()
+}
