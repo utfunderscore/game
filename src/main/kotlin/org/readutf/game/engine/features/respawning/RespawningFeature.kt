@@ -1,5 +1,7 @@
 package org.readutf.game.engine.features.respawning
 
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.readutf.game.engine.Game
 import org.readutf.game.engine.event.impl.GameArenaChangeEvent
@@ -10,6 +12,7 @@ import org.readutf.game.engine.event.listener.GameListener
 import org.readutf.game.engine.event.listener.TypedGameListener
 import org.readutf.game.engine.features.Feature
 import org.readutf.game.engine.utils.Position
+import org.readutf.game.engine.utils.SResult
 import org.readutf.game.engine.world.GameWorld
 import java.util.UUID
 import kotlin.reflect.KClass
@@ -55,7 +58,7 @@ abstract class RespawningFeature(
         }
     }
 
-    fun respawn(playerId: UUID) {
+    fun respawn(playerId: UUID): SResult<Unit> {
         val respawnLocation = respawnHandler.findRespawnLocation(playerId)
 
         val event =
@@ -67,9 +70,11 @@ abstract class RespawningFeature(
                     respawnLocation = respawnLocation,
                 ),
             )
-        if (event.isCancelled()) return
+        if (event.isCancelled()) return Err("Respawn event was cancelled")
 
         teleport(playerId, event.world, event.respawnLocation)
+
+        return Ok(Unit)
     }
 
     override fun getListeners(): Map<KClass<*>, GameListener> {
