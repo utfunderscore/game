@@ -11,6 +11,7 @@ import org.readutf.game.engine.event.GameEvent
 import org.readutf.game.engine.event.GameEventManager
 import org.readutf.game.engine.event.impl.*
 import org.readutf.game.engine.event.listener.RegisteredListener
+import org.readutf.game.engine.event.listener.TypedGameListener
 import org.readutf.game.engine.features.Feature
 import org.readutf.game.engine.schedular.GameSchedulerFactory
 import org.readutf.game.engine.stage.Stage
@@ -154,6 +155,19 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         }
 
         return feature
+    }
+
+    inline fun <reified T : Any> registerListener(typedGameListener: TypedGameListener<T>) {
+        eventManager.registerListener(
+            this,
+            T::class,
+            RegisteredListener(
+                gameListener = typedGameListener,
+                ignoreCancelled = true,
+                ignoreSpectators = false,
+                priority = 0,
+            ),
+        )
     }
 
     fun changeArena(arena: ARENA) {
