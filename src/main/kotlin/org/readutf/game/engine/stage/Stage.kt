@@ -39,7 +39,6 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
             )
         }
 
-
         for (task in feature.getTasks()) {
             schedule(task)
         }
@@ -59,7 +58,6 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
     }
 
     inline fun <reified T : Any> registerListener(
-        priority: Int = 50,
         gameListener: TypedGameListener<T>,
     ) {
         registerRawListener(
@@ -67,10 +65,16 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
                 gameListener = gameListener,
                 ignoreCancelled = false,
                 ignoreSpectators = false,
-                priority = priority,
+                priority = 0,
             ),
             T::class,
         )
+    }
+
+    inline fun <reified T : Any> registerListeners(
+        vararg listeners: TypedGameListener<T>,
+    ) {
+        listeners.forEach { registerListener(it) }
     }
 
     fun registerAll(any: Any) {
