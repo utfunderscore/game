@@ -8,6 +8,7 @@ import java.util.UUID
 
 data class Arena<T : PositionData>(
     val arenaId: UUID,
+    val templateName: String,
     val instance: GameWorld,
     val positionSettings: T,
     val positions: Map<String, Marker>,
