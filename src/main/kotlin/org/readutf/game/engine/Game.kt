@@ -76,8 +76,6 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
     }
 
     fun startNextStage(): SResult<Stage<ARENA, TEAM>> {
-        logger.info { "Starting next stage" }
-
         val nextStageCreator = stageCreators.removeFirstOrNull() ?: let {
             logger.error { "No more stages to start" }
             return Err("No more stages to start")
@@ -87,6 +85,8 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
     }
 
     fun startNextStage(nextStageCreator: StageCreator<ARENA, TEAM>): SResult<Stage<ARENA, TEAM>> {
+        logger.info { "Starting next stage..." }
+
         val localCurrentStage = currentStage
         if (localCurrentStage != null) {
             localCurrentStage.unregisterListeners()
@@ -97,6 +97,9 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
 
         val previous = currentStage
         val nextStage = nextStageCreator.create(this, previous).getOrElse { return Err(it) }
+
+        logger.info { "Starting stage ${nextStage.javaClass.simpleName}" }
+
         currentStage = nextStage
 
         callEvent(StageStartEvent(nextStage, previous))
@@ -132,7 +135,7 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         throw Exception("Game crashed")
     }
 
-    fun addFeature(feature: Feature) {
+    fun <T : Feature> addFeature(feature: T): T {
         for ((type, listener) in feature.getListeners().toList()) {
             eventManager.registerListener(
                 this,
@@ -149,6 +152,8 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         for (task in feature.getTasks()) {
             scheduler.schedule(task)
         }
+
+        return feature
     }
 
     fun changeArena(arena: ARENA) {

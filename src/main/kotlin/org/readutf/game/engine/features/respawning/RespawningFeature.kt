@@ -1,8 +1,10 @@
 package org.readutf.game.engine.features.respawning
 
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.readutf.game.engine.Game
 import org.readutf.game.engine.event.impl.GameArenaChangeEvent
 import org.readutf.game.engine.event.impl.GameJoinEvent
+import org.readutf.game.engine.event.impl.GameRespawnEvent
 import org.readutf.game.engine.event.impl.StageStartEvent
 import org.readutf.game.engine.event.listener.GameListener
 import org.readutf.game.engine.event.listener.TypedGameListener
@@ -13,7 +15,8 @@ import java.util.UUID
 import kotlin.reflect.KClass
 
 abstract class RespawningFeature(
-    respawnHandler: RespawnHandler,
+    val game: Game<*, *>,
+    private val respawnHandler: RespawnHandler,
     private val roundStart: Boolean = true,
     private val arenaChange: Boolean = true,
     private val playerJoin: Boolean = true,
@@ -50,6 +53,23 @@ abstract class RespawningFeature(
             val respawnLocation = respawnHandler.findRespawnLocation(onlinePlayer)
             teleport(onlinePlayer, gameWorld = stageEvent.game.arena!!.instance, respawnLocation)
         }
+    }
+
+    fun respawn(playerId: UUID) {
+        val respawnLocation = respawnHandler.findRespawnLocation(playerId)
+
+        val event =
+            game.callEvent(
+                GameRespawnEvent(
+                    game = game,
+                    playerId = playerId,
+                    world = game.arena!!.instance,
+                    respawnLocation = respawnLocation,
+                ),
+            )
+        if (event.isCancelled()) return
+
+        teleport(playerId, event.world, event.respawnLocation)
     }
 
     override fun getListeners(): Map<KClass<*>, GameListener> {
