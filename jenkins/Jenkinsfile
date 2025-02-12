@@ -1,6 +1,13 @@
 pipeline {
     agent any
     stages {
+        stage('Enable permissions for gradlew') {
+            steps {
+                script {
+                    sh 'chmod +x gradlew'
+                }
+            }
+        }
         stage('Compile from source') {
             steps {
                 script {
