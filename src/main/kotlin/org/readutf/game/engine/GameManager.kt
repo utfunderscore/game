@@ -11,6 +11,11 @@ object GameManager {
 
     fun getGameById(gameId: String): GenericGame? = activeGames[gameId]
 
+    fun removeGame(game: Game<*, *>) {
+        activeGames.remove(game.gameId)
+        game.getPlayers().forEach { player -> playerToGame.remove(player) }
+    }
+
     val tracker = AtomicInteger(1000)
 
     fun generateGameId(): String = tracker.incrementAndGet().toString()

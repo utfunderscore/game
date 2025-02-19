@@ -1,5 +1,8 @@
 pipeline {
     agent any
+    environment {
+
+    }
     stages {
         stage('Enable permissions for gradlew') {
             steps {

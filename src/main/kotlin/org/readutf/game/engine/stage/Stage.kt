@@ -20,6 +20,7 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
     val previousStage: Stage<ARENA, TEAM>?,
 ) {
     private val startTime = System.currentTimeMillis()
+    val features = mutableListOf<Feature>()
     private val registeredListeners = LinkedHashMap<KClass<*>, MutableList<RegisteredListener>>()
 
     open fun onStart(): SResult<Unit> = Ok(Unit)
@@ -42,6 +43,8 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
         for (task in feature.getTasks()) {
             schedule(task)
         }
+
+        features.add(feature)
 
         return feature
     }
@@ -90,7 +93,9 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
         return gameTask
     }
 
-    fun endStage() = game.startNextStage()
+    fun endStage() {
+        game.startNextStage()
+    }
 
     fun endStage(stageCreator: StageCreator<ARENA, TEAM>) = game.startNextStage(stageCreator)
 
