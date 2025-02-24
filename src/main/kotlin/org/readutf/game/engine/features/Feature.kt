@@ -8,4 +8,6 @@ abstract class Feature {
     open fun getListeners(): Map<KClass<*>, GameListener> = emptyMap()
 
     open fun getTasks(): List<GameTask> = emptyList()
+
+    abstract fun shutdown()
 }

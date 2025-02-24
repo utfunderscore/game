@@ -23,7 +23,7 @@ abstract class CountdownTask(
 
         if (timeLeft < 0) {
             onInterval(0)
-            game.scheduler.cancelTask(this)
+            cancel()
         }
     }
 

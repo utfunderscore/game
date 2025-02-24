@@ -9,13 +9,46 @@ abstract class GameTask(
     fun markForRemoval() {
         markedForRemoval = true
     }
+
+    fun cancel() = markForRemoval()
 }
 
 abstract class DelayedGameTask(
     val delay: Long,
-) : GameTask()
+) : GameTask() {
+
+    abstract fun run()
+
+    override fun tick() {
+        if (System.currentTimeMillis() - startTime >= delay) {
+            run()
+            markForRemoval()
+        }
+    }
+}
 
 abstract class RepeatingGameTask(
     val delay: Long,
     val period: Long,
-) : GameTask()
+) : GameTask() {
+
+    var lastTick = Long.MAX_VALUE
+
+    abstract fun run()
+
+    override fun tick() {
+        val sinceLastTick = System.currentTimeMillis() - lastTick
+        val sinceStart = System.currentTimeMillis() - startTime
+
+        if (sinceLastTick >= period) {
+            run()
+            return
+        }
+
+        if (sinceStart >= delay) {
+            run()
+            lastTick = System.currentTimeMillis()
+            return
+        }
+    }
+}

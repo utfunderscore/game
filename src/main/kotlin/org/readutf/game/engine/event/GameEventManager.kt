@@ -90,7 +90,9 @@ abstract class GameEventManager {
         }
     }
 
-    abstract fun <T : Any> registerEventListener(type: KClass<T>, eventConsumer: (T) -> Unit)
+    abstract fun <T : Any> registerEventListener(game: GenericGame, type: KClass<T>, eventConsumer: (T) -> Unit)
+
+    abstract fun unregisterListeners(game: GenericGame)
 
     fun registerListener(
         game: GenericGame,
@@ -100,7 +102,7 @@ abstract class GameEventManager {
         if (!registeredTypes.contains(kClass)) {
             registeredTypes.add(kClass)
             logger.info { "Registering listener for event type: $kClass" }
-            registerEventListener(kClass) { eventHandler(it) }
+            registerEventListener(game, kClass) { eventHandler(it) }
         }
 
         val listeners =
@@ -130,4 +132,9 @@ abstract class GameEventManager {
     private fun findAdapter(event: Any): Collection<EventGameAdapter> = eventAdapters.filterKeys { kClass ->
         event::class.isSubclassOf(kClass)
     }.values
+
+    fun shutdown(game: GenericGame) {
+        unregisterListeners(game)
+        registeredListeners.remove(game)
+    }
 }

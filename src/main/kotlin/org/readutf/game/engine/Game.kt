@@ -9,23 +9,29 @@ import net.kyori.adventure.text.Component
 import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.event.GameEvent
 import org.readutf.game.engine.event.GameEventManager
-import org.readutf.game.engine.event.impl.*
+import org.readutf.game.engine.event.impl.GameArenaChangeEvent
+import org.readutf.game.engine.event.impl.GameCrashEvent
+import org.readutf.game.engine.event.impl.GameEndEvent
+import org.readutf.game.engine.event.impl.GameJoinEvent
+import org.readutf.game.engine.event.impl.GameLeaveEvent
+import org.readutf.game.engine.event.impl.StageStartEvent
 import org.readutf.game.engine.event.listener.RegisteredListener
 import org.readutf.game.engine.event.listener.TypedGameListener
 import org.readutf.game.engine.features.Feature
-import org.readutf.game.engine.schedular.GameSchedulerFactory
+import org.readutf.game.engine.schedular.GameScheduler
+import org.readutf.game.engine.schedular.GameTask
 import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.stage.StageCreator
 import org.readutf.game.engine.team.GameTeam
 import org.readutf.game.engine.team.TeamSelector
 import org.readutf.game.engine.utils.SResult
 import java.util.UUID
-import kotlin.jvm.Throws
+import kotlin.reflect.KClass
 
 typealias GenericGame = Game<*, *>
 
 abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
-    private val schedulerFactory: GameSchedulerFactory,
+    internal val scheduler: GameScheduler,
     val eventManager: GameEventManager,
     var teamSelector: TeamSelector<TEAM>,
 ) {
@@ -36,7 +42,7 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
     var arena: ARENA? = null
     private var teams = LinkedHashMap<String, TEAM>()
     var gameState: GameState = GameState.STARTUP
-    val scheduler by lazy { schedulerFactory.build(this) }
+    private val features = mutableListOf<Feature>()
 
     /**
      * Adds players to a team, invokes the GameTeamAddEvent,
@@ -94,6 +100,10 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
             localCurrentStage.onFinish().getOrElse {
                 return Err(it)
             }
+            for (feature in localCurrentStage.features) {
+                println("Shutting down feature $${feature::class.java.simpleName}")
+                feature.shutdown()
+            }
         }
 
         val previous = currentStage
@@ -122,7 +132,22 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
 
         arena?.free()
 
+        scheduler.cancelGameTasks(this)
+        eventManager.shutdown(this)
+
+        for (feature in features) {
+            println("Shutting down feature ${feature::class.java.simpleName}")
+            feature.shutdown()
+        }
+        features.clear()
+
+        GameManager.removeGame(this)
+
         return Ok(Unit)
+    }
+
+    fun schedule(gameTask: GameTask) {
+        scheduler.schedule(this, gameTask)
     }
 
     @Throws(Exception::class)
@@ -137,6 +162,8 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
     }
 
     fun <T : Feature> addFeature(feature: T): T {
+        features.add(feature)
+
         for ((type, listener) in feature.getListeners().toList()) {
             eventManager.registerListener(
                 this,
@@ -151,11 +178,24 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         }
 
         for (task in feature.getTasks()) {
-            scheduler.schedule(task)
+            scheduler.schedule(this, task)
         }
 
         return feature
     }
+
+    fun <T : Feature> getFeature(kClass: KClass<out T>): Feature? {
+        features.find { it::class == kClass }?.let {
+            return it as T
+        }
+        currentStage?.features?.find { it::class == kClass }?.let {
+            return it as T
+        }
+
+        return null
+    }
+
+    inline fun <reified T : Feature> getFeature(): T? = getFeature(T::class) as T?
 
     inline fun <reified T : Any> registerListener(typedGameListener: TypedGameListener<T>) {
         eventManager.registerListener(

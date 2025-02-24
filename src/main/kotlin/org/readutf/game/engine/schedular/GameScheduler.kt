@@ -4,158 +4,52 @@ import io.github.oshai.kotlinlogging.KotlinLogging
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.stage.GenericStage
 
-abstract class GameScheduler(
-    val game: GenericGame,
-) {
+abstract class GameScheduler {
     private val logger = KotlinLogging.logger { }
 
-    private val globalTasks = mutableSetOf<GameTask>()
-
-    private val stageTasks = mutableMapOf<GenericStage, MutableSet<GameTask>>()
+    private val gameTasks = mutableMapOf<String, MutableList<GameTask>>()
 
     init {
-        logger.info { "Starting scheduler" }
-    }
+        scheduleTask {
 
-    fun schedule(
-        stage: GenericStage,
-        gameTask: GameTask,
-    ) {
-        startTask {
-            globalTasks.removeIf { it.markedForRemoval }
-            globalTasks.forEach(::tickTask)
+            val copy = gameTasks.toMap()
+            gameTasks.clear()
 
-            if (game.currentStage == null) return@startTask
-
-            stageTasks.forEach { (stage, tasks) ->
-                tasks.removeIf { it.markedForRemoval }
-
-                if (stage == game.currentStage) {
-                    tasks.forEach(::tickTask)
-                }
-            }
-        }
-
-        gameTask.startTime = System.currentTimeMillis()
-
-        logger.info { "Scheduling task `${gameTask::class.simpleName}` for stage `${stage::class.simpleName}`" }
-        stageTasks.getOrPut(stage) { mutableSetOf() }.add(gameTask)
-    }
-
-    fun cancelTask(gameTask: GameTask) {
-        globalTasks.filter { it == gameTask }.forEach { it.markForRemoval() }
-        stageTasks.values
-            .forEach { tasks ->
-                tasks
-                    .filter { task ->
-                        task == gameTask
-                    }.forEach {
-                        it.markForRemoval()
+            for ((gameId, tasks) in copy) {
+                for (task in tasks) {
+                    if (task.markedForRemoval) return@scheduleTask
+                    task.tick()
+                    if (!task.markedForRemoval) {
+                        gameTasks.getOrPut(gameId) { mutableListOf() }.add(task)
                     }
+                }
             }
-    }
-
-    abstract fun startTask(runnable: Runnable)
-
-    private fun tickTask(task: GameTask) {
-        if (task is RepeatingGameTask) {
-            if (System.currentTimeMillis() - task.startTime >= task.delay) {
-                task.tick()
-            }
-        } else if (task is DelayedGameTask) {
-            if (System.currentTimeMillis() - task.startTime >= task.delay) {
-                task.tick()
-                task.markForRemoval()
-            }
-        } else {
-            task.tick()
         }
     }
 
-    fun schedule(
-        stage: GenericStage,
-        task: () -> Unit,
-    ) {
-        schedule(
-            stage,
-            object : DelayedGameTask(0) {
-                override fun tick() {
-                    task()
-                }
-            },
-        )
-    }
+    abstract fun scheduleTask(runnable: Runnable)
 
-    fun schedule(runnable: () -> Unit) {
-        schedule(
-            object : DelayedGameTask(0) {
-                override fun tick() {
-                    runnable()
-                }
-            },
-        )
-    }
-
-    fun schedule(
-        stage: GenericStage,
-        delay: Long,
-        runnable: () -> Unit,
-    ) {
-        schedule(
-            stage,
-            object : DelayedGameTask(delay) {
-                override fun tick() {
-                    runnable()
-                }
-            },
-        )
-    }
-
-    fun schedule(
-        delay: Long,
-        runnable: () -> Unit,
-    ) {
-        schedule(
-            object : DelayedGameTask(delay) {
-                override fun tick() {
-                    runnable()
-                }
-            },
-        )
-    }
-
-    fun schedule(
-        stage: GenericStage,
-        delay: Long,
-        period: Long,
-        runnable: () -> Unit,
-    ) {
-        schedule(
-            stage,
-            object : RepeatingGameTask(delay, period) {
-                override fun tick() {
-                    runnable()
-                }
-            },
-        )
-    }
-
-    fun schedule(
-        delay: Long,
-        period: Long,
-        runnable: () -> Unit,
-    ) {
-        schedule(
-            object : RepeatingGameTask(delay, period) {
-                override fun tick() {
-                    runnable()
-                }
-            },
-        )
-    }
-
-    fun schedule(gameTask: GameTask) {
+    fun schedule(game: GenericGame, gameTask: GameTask) {
         logger.info { "Scheduling task $gameTask" }
-        globalTasks.add(gameTask)
+
+        gameTasks.getOrPut(game.gameId) { mutableListOf() }.add(gameTask)
+    }
+
+    fun schedule(stage: GenericStage, gameTask: GameTask) {
+        logger.info { "Scheduling task $gameTask" }
+
+        val task = object : GameTask() {
+            override fun tick() {
+                if (stage.game.currentStage == stage) {
+                    gameTask.tick()
+                }
+            }
+        }
+        schedule(stage.game, task)
+    }
+
+    fun cancelGameTasks(game: GenericGame) {
+        logger.info { "Cancelling tasks for game ${game.gameId}" }
+        gameTasks[game.gameId]?.forEach { it.markedForRemoval = true }
     }
 }
