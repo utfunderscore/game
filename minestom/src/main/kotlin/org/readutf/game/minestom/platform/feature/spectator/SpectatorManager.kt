@@ -3,7 +3,7 @@ package org.readutf.game.minestom.platform.feature.spectator
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.listener.GameListener
 import org.readutf.game.engine.features.Feature
-import org.readutf.game.engine.features.respawning.RespawningFeature
+import org.readutf.game.engine.game.features.respawning.RespawningFeature
 import org.readutf.game.engine.schedular.GameTask
 import org.readutf.game.minestom.platform.feature.spectator.event.GameSpectateEvent
 import java.util.UUID

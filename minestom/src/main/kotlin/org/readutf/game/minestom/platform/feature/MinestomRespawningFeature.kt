@@ -3,7 +3,7 @@ package org.readutf.game.minestom.platform.feature
 import net.minestom.server.coordinate.Pos
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.features.respawning.RespawnHandler
-import org.readutf.game.engine.features.respawning.RespawningFeature
+import org.readutf.game.engine.game.features.respawning.RespawningFeature
 import org.readutf.game.engine.utils.Position
 import org.readutf.game.engine.world.GameWorld
 import org.readutf.game.minestom.platform.MinestomWorld

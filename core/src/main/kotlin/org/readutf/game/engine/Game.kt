@@ -2,6 +2,7 @@ package org.readutf.game.engine
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.getOr
 import com.github.michaelbull.result.getOrElse
 import io.github.oshai.kotlinlogging.KotlinLogging
@@ -24,7 +25,6 @@ import org.readutf.game.engine.stage.Stage
 import org.readutf.game.engine.stage.StageCreator
 import org.readutf.game.engine.team.GameTeam
 import org.readutf.game.engine.team.TeamSelector
-import org.readutf.game.engine.utils.SResult
 import java.util.UUID
 import kotlin.reflect.KClass
 
@@ -48,12 +48,12 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
      * Adds players to a team, invokes the GameTeamAddEvent,
      * and teleports them to their spawn
      */
-    fun registerTeam(team: TEAM): SResult<Unit> {
+    fun registerTeam(team: TEAM): Result<Unit, Throwable> {
         val teamName = team.teamName
         logger.info { "Adding team $teamName to game ($gameId)" }
         if (teams.containsKey(teamName)) {
             logger.error { "Team already exists with the name $teamName" }
-            return Err("Team already exists with the name $teamName")
+            return Err(Exception("Team already exists with the name $teamName"))
         }
 
         teams[teamName] = team
@@ -61,12 +61,12 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         return Ok(Unit)
     }
 
-    fun start(): SResult<Unit> {
+    fun start(): Result<Unit, Throwable> {
         logger.info { "Starting game" }
         GameManager.activeGames[gameId] = this
         if (gameState != GameState.STARTUP) {
             logger.error { "Game is not in startup state" }
-            return Err("Game is not in startup state")
+            return Err(Exception("Game is not in startup state"))
         }
         startNextStage().getOrElse {
             return Err(it)
@@ -74,7 +74,7 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
 
         if (arena == null) {
             logger.error { "No arena is active" }
-            return Err("No arena is active")
+            return Err(Exception("No arena is active"))
         }
 
         currentStage?.onStart()
@@ -82,16 +82,16 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         return Ok(Unit)
     }
 
-    fun startNextStage(): SResult<Stage<ARENA, TEAM>> {
+    fun startNextStage(): Result<Stage<ARENA, TEAM>, Throwable> {
         val nextStageCreator = stageCreators.removeFirstOrNull() ?: let {
             logger.error { "No more stages to start" }
-            return Err("No more stages to start")
+            return Err(Exception("No more stages to start"))
         }
 
         return startNextStage(nextStageCreator)
     }
 
-    fun startNextStage(nextStageCreator: StageCreator<ARENA, TEAM>): SResult<Stage<ARENA, TEAM>> {
+    fun startNextStage(nextStageCreator: StageCreator<ARENA, TEAM>): Result<Stage<ARENA, TEAM>, Throwable> {
         logger.info { "Starting next stage..." }
 
         val localCurrentStage = currentStage
@@ -122,12 +122,12 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         return Ok(currentStage!!)
     }
 
-    fun end(): SResult<Unit> {
+    fun end(): Result<Unit, Throwable> {
         callEvent(GameEndEvent(this))
 
         if (gameState != GameState.ACTIVE) {
             logger.error { "GameState is not active" }
-            return Err("GameState is not active")
+            return Err(Exception("GameState is not active"))
         }
 
         arena?.free()
@@ -151,7 +151,7 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
     }
 
     @Throws(Exception::class)
-    fun crash(result: SResult<*>?) {
+    fun crash(result: Result<*, Throwable>?) {
         callEvent(GameCrashEvent(this))
 
         arena?.free()
@@ -238,7 +238,7 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
 
     fun addPlayer(
         playerId: UUID,
-    ): SResult<Unit> {
+    ): Result<Unit, Throwable> {
         val team = teamSelector.getTeam(playerId).getOrElse {
             return Err(it)
         }
@@ -253,12 +253,12 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
         return Ok(Unit)
     }
 
-    fun removePlayer(playerId: UUID): SResult<Unit> {
+    fun removePlayer(playerId: UUID): Result<Unit, Throwable> {
         logger.info { "Removing player $playerId" }
 
         val team = getTeam(playerId) ?: let {
             logger.error { "GamePlayer is not in a team" }
-            return Err("GamePlayer is not in a team")
+            return Err(Exception("GamePlayer is not in a team"))
         }
         team.players.remove(playerId)
         callEvent(GameLeaveEvent(this, playerId))
@@ -272,9 +272,9 @@ abstract class Game<ARENA : Arena<*>, TEAM : GameTeam>(
 
     fun getTeams(): List<TEAM> = teams.values.toList()
 
-    fun getArena(): SResult<ARENA> = arena?.let { Ok(it) } ?: let {
+    fun getArena(): Result<ARENA, Throwable> = arena?.let { Ok(it) } ?: let {
         logger.error { "No arena is active" }
-        return Err("No arena is active")
+        return Err(Exception("No arena is active"))
     }
 
     fun messageAll(component: Component) {

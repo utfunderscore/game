@@ -2,6 +2,7 @@ package org.readutf.game.minestom.arena
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.getOrElse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.hollowcube.schem.SpongeSchematic
@@ -11,7 +12,6 @@ import org.readutf.game.engine.arena.ArenaManager
 import org.readutf.game.engine.arena.ArenaTemplate
 import org.readutf.game.engine.settings.PositionSettingsManager
 import org.readutf.game.engine.settings.location.PositionData
-import org.readutf.game.engine.utils.SResult
 import org.readutf.game.minestom.arena.marker.MarkerUtils
 import org.readutf.game.minestom.arena.store.schematic.ArenaSchematicStore
 import org.readutf.game.minestom.arena.store.template.ArenaTemplateStore
@@ -34,7 +34,7 @@ class MinestomArenaManager(
         arenaName: String,
         schematic: SpongeSchematic,
         vararg gameTypes: String,
-    ): CompletableFuture<SResult<ArenaTemplate>> {
+    ): CompletableFuture<Result<ArenaTemplate, Throwable>> {
         val positions = MarkerUtils.extractMarkerPositions(schematic)
 
         for (gameType in gameTypes) {
@@ -61,7 +61,7 @@ class MinestomArenaManager(
     override fun <T : PositionData> loadArena(
         arenaName: String,
         kClass: KClass<T>,
-    ): SResult<Arena<T>> {
+    ): Result<Arena<T>, Throwable> {
         val template: ArenaTemplate =
             templateStore.load(arenaName).getOrElse { return Err(it) }
 

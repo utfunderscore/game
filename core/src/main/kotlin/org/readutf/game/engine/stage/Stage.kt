@@ -1,6 +1,7 @@
 package org.readutf.game.engine.stage
 
 import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.getOrThrow
 import org.readutf.game.engine.Game
 import org.readutf.game.engine.arena.Arena
@@ -10,7 +11,6 @@ import org.readutf.game.engine.event.listener.TypedGameListener
 import org.readutf.game.engine.features.Feature
 import org.readutf.game.engine.schedular.GameTask
 import org.readutf.game.engine.team.GameTeam
-import org.readutf.game.engine.utils.SResult
 import kotlin.reflect.KClass
 
 typealias GenericStage = Stage<*, *>
@@ -23,9 +23,9 @@ abstract class Stage<ARENA : Arena<*>, TEAM : GameTeam>(
     val features = mutableListOf<Feature>()
     private val registeredListeners = LinkedHashMap<KClass<*>, MutableList<RegisteredListener>>()
 
-    open fun onStart(): SResult<Unit> = Ok(Unit)
+    open fun onStart(): Result<Unit, Throwable> = Ok(Unit)
 
-    open fun onFinish(): SResult<Unit> = Ok(Unit)
+    open fun onFinish(): Result<Unit, Throwable> = Ok(Unit)
 
     fun <T : Feature> addFeature(feature: T): T {
         for ((type, listener) in feature.getListeners()) {

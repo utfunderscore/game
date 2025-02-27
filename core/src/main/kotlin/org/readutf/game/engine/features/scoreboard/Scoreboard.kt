@@ -1,4 +1,4 @@
-package org.readutf.engine.features.scoreboard
+package org.readutf.game.engine.features.scoreboard
 
 import net.kyori.adventure.text.Component
 

@@ -2,8 +2,8 @@ package org.readutf.game.engine.kit
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import io.github.oshai.kotlinlogging.KotlinLogging
-import org.readutf.game.engine.utils.SResult
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileInputStream
@@ -16,7 +16,7 @@ class KitManager(
     private val kitSerializers: MutableMap<Byte, KitSerializer> = mutableMapOf()
     private val kits = mutableMapOf<String, Kit>()
 
-    fun loadKit(name: String): SResult<Kit> {
+    fun loadKit(name: String): Result<Kit, Throwable> {
         val local = kits[name]
         if (local != null) return Ok(local)
 
@@ -25,7 +25,7 @@ class KitManager(
             val type = inputStream.read().toByte()
             val serializer = kitSerializers[type] ?: let {
                 logger.error { "Unknown kit type: $type" }
-                return Err("Unknown kit type: $type")
+                return Err(Exception("Unknown kit type: $type"))
             }
             val kit = serializer.deserialize(inputStream)
             kits[name] = kit

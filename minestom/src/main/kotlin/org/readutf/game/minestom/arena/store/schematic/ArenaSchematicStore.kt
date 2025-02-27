@@ -1,9 +1,9 @@
 package org.readutf.game.minestom.arena.store.schematic
 
+import com.github.michaelbull.result.Result
 import net.hollowcube.schem.SpongeSchematic
 import net.minestom.server.instance.Instance
 import org.readutf.game.engine.arena.marker.Marker
-import org.readutf.game.engine.utils.SResult
 import java.util.concurrent.CompletableFuture
 
 interface ArenaSchematicStore {
@@ -18,10 +18,10 @@ interface ArenaSchematicStore {
         arenaId: String,
         schematic: SpongeSchematic,
         markerPositions: List<Marker>,
-    ): CompletableFuture<SResult<Unit>>
+    ): CompletableFuture<Result<Unit, Throwable>>
 
     /**
      * Load a unique copy of the arena's schematic as an instance
      */
-    fun load(arenaId: String): SResult<Instance>
+    fun load(arenaId: String): Result<Instance, Throwable>
 }

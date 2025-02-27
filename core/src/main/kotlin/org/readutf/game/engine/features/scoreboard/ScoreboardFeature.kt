@@ -1,4 +1,4 @@
-package org.readutf.engine.features.scoreboard
+package org.readutf.game.engine.features.scoreboard
 
 import org.readutf.game.engine.features.Feature
 import org.readutf.game.engine.schedular.GameTask
@@ -7,11 +7,11 @@ import java.util.UUID
 
 abstract class ScoreboardFeature<T> : Feature() {
 
-    val scoreboards = mutableMapOf<UUID, Scoreboard<T>>()
+    val scoreboards = mutableMapOf<UUID, org.readutf.game.engine.features.scoreboard.Scoreboard<T>>()
 
     fun setScoreboard(
         playerId: UUID,
-        scoreboard: Scoreboard<T>,
+        scoreboard: org.readutf.game.engine.features.scoreboard.Scoreboard<T>,
     ) {
         scoreboards[playerId] = scoreboard
         refreshScoreboard(playerId, scoreboard)
@@ -21,7 +21,7 @@ abstract class ScoreboardFeature<T> : Feature() {
 
     abstract fun refreshScoreboard(
         playerId: UUID,
-        scoreboard: Scoreboard<T>,
+        scoreboard: org.readutf.game.engine.features.scoreboard.Scoreboard<T>,
     )
 
     private inner class Task : RepeatingGameTask(delay = 0, period = 1) {

@@ -3,14 +3,14 @@ package org.readutf.game.minestom.platform.scoreboard
 import net.kyori.adventure.text.Component
 import net.minestom.server.entity.Player
 import net.minestom.server.scoreboard.Sidebar
-import org.readutf.engine.features.scoreboard.Scoreboard
-import org.readutf.engine.features.scoreboard.ScoreboardFeature
+import org.readutf.game.engine.features.scoreboard.Scoreboard
+import org.readutf.game.engine.features.scoreboard.ScoreboardFeature
 import org.readutf.game.minestom.utils.toPlayer
 import java.util.UUID
 
 typealias MinestomScoreboard = Scoreboard<Player>
 
-object MinestomScoreboardFeature : ScoreboardFeature<Player>() {
+object MinestomScoreboardFeature : org.readutf.game.engine.features.scoreboard.ScoreboardFeature<Player>() {
     private val previousLines = mutableMapOf<UUID, List<Component>>()
     private val previousTitle = mutableMapOf<UUID, Component>()
     private val nativeSidebar = mutableMapOf<UUID, Sidebar>()

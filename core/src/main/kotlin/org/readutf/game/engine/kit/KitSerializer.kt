@@ -1,6 +1,6 @@
 package org.readutf.game.engine.kit
 
-import org.readutf.game.engine.utils.SResult
+import com.github.michaelbull.result.Result
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -8,7 +8,7 @@ interface KitSerializer {
     fun serialize(
         kit: Kit,
         outputStream: OutputStream,
-    ): SResult<Unit>
+    ): Result<Unit, Throwable>
 
     fun deserialize(inputStream: InputStream): Kit
 }

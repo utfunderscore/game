@@ -1,10 +1,10 @@
 package org.readutf.game.engine.event.annotation
 
 import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.readutf.game.engine.event.listener.GameListener
 import org.readutf.game.engine.event.listener.RegisteredListener
-import org.readutf.game.engine.utils.SResult
 import kotlin.reflect.KClass
 import kotlin.reflect.full.findAnnotation
 import kotlin.reflect.full.functions
@@ -20,7 +20,7 @@ private val logger = KotlinLogging.logger {}
  * @return A `Result` containing a list of `GameListener` instances.
  */
 @Suppress("UNCHECKED_CAST")
-fun scan(toScan: Any): SResult<Map<KClass<*>, RegisteredListener>> {
+fun scan(toScan: Any): Result<Map<KClass<*>, RegisteredListener>, Throwable> {
     val listeners = mutableMapOf<KClass<*>, RegisteredListener>()
     val clazz = toScan::class
 

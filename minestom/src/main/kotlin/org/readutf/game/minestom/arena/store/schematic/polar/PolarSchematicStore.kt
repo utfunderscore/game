@@ -2,6 +2,7 @@ package org.readutf.game.minestom.arena.store.schematic.polar
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.getOrElse
 import io.github.oshai.kotlinlogging.KotlinLogging
 import net.hollowcube.polar.PolarLoader
@@ -18,7 +19,6 @@ import net.minestom.server.instance.LightingChunk
 import net.minestom.server.instance.block.Block
 import org.jetbrains.annotations.Blocking
 import org.readutf.game.engine.arena.marker.Marker
-import org.readutf.game.engine.utils.SResult
 import org.readutf.game.minestom.arena.marker.MarkerUtils
 import org.readutf.game.minestom.arena.store.schematic.ArenaSchematicStore
 import java.util.concurrent.CompletableFuture
@@ -33,7 +33,7 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
         arenaId: String,
         schematic: SpongeSchematic,
         markerPositions: List<Marker>,
-    ): CompletableFuture<SResult<Unit>> {
+    ): CompletableFuture<Result<Unit, Throwable>> {
         val container = MinecraftServer.getInstanceManager().createInstanceContainer()
 
         logger.info { "Saving schematic for arena $arenaId" }
@@ -58,7 +58,7 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
             }
     }
 
-    override fun load(arenaId: String): SResult<Instance> {
+    override fun load(arenaId: String): Result<Instance, Throwable> {
         logger.info { "Loading arena $arenaId" }
 
         val (data, time) =
@@ -93,9 +93,9 @@ abstract class PolarSchematicStore : ArenaSchematicStore {
     protected abstract fun saveData(
         arenaId: String,
         data: ByteArray,
-    ): SResult<Unit>
+    ): Result<Unit, Throwable>
 
-    protected abstract fun loadData(arenaId: String): SResult<ByteArray>
+    protected abstract fun loadData(arenaId: String): Result<ByteArray, Throwable>
 
     @Blocking
     private fun loadChunksForPaste(container: InstanceContainer) {

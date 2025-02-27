@@ -5,11 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.getOr
 import io.github.oshai.kotlinlogging.KotlinLogging
 import org.readutf.game.engine.arena.ArenaTemplate
 import org.readutf.game.engine.arena.utils.ArenaFolder
-import org.readutf.game.engine.utils.SResult
 import org.readutf.game.minestom.arena.store.template.ArenaTemplateStore
 import java.io.File
 
@@ -20,30 +20,30 @@ class FileTemplateStore(
 
     private val logger = KotlinLogging.logger { }
 
-    override fun save(arenaTemplate: ArenaTemplate): SResult<Unit> {
+    override fun save(arenaTemplate: ArenaTemplate): Result<Unit, Throwable> {
         val templateFile = getTemplateFile(arenaTemplate.name)
 
         if (!templateFile.exists()) templateFile.createNewFile()
         if (templateFile.isDirectory) {
             logger.error { "Arena file is a directory" }
-            return Err("Arena file is a directory")
+            return Err(Exception("Arena file is a directory"))
         }
 
         objectMapper.writerWithDefaultPrettyPrinter().writeValue(templateFile, arenaTemplate)
         return Ok(Unit)
     }
 
-    override fun load(name: String): SResult<ArenaTemplate> {
+    override fun load(name: String): Result<ArenaTemplate, Throwable> {
         val arenaFile = getTemplateFile(name)
         if (!arenaFile.exists()) {
             logger.error { "Could not find template file." }
-            return Err("Could not find template file.")
+            return Err(Exception("Could not find template file."))
         }
         return try {
             Ok(objectMapper.readValue(arenaFile, object : TypeReference<ArenaTemplate>() {}))
         } catch (e: Throwable) {
             logger.error(e) { "Failed to load arena template" }
-            Err("Could not read template file.")
+            Err(e)
         }
     }
 

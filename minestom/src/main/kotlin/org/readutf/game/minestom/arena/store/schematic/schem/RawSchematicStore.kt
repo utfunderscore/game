@@ -2,6 +2,7 @@ package org.readutf.game.minestom.arena.store.schematic.schem
 
 import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
+import com.github.michaelbull.result.Result
 import com.github.michaelbull.result.andThen
 import com.github.michaelbull.result.getOrElse
 import com.github.michaelbull.result.runCatching
@@ -16,7 +17,6 @@ import net.minestom.server.instance.Instance
 import net.minestom.server.instance.LightingChunk
 import org.jetbrains.annotations.Blocking
 import org.readutf.game.engine.arena.marker.Marker
-import org.readutf.game.engine.utils.SResult
 import org.readutf.game.minestom.arena.store.schematic.ArenaSchematicStore
 import java.util.concurrent.CompletableFuture
 
@@ -27,7 +27,7 @@ abstract class RawSchematicStore : ArenaSchematicStore {
         arenaId: String,
         schematic: SpongeSchematic,
         markerPositions: List<Marker>,
-    ): CompletableFuture<SResult<Unit>> = CompletableFuture.supplyAsync {
+    ): CompletableFuture<Result<Unit, Throwable>> = CompletableFuture.supplyAsync {
         runCatching {
             SpongeSchematicWriter().write(schematic)
         }.andThen {
@@ -36,14 +36,14 @@ abstract class RawSchematicStore : ArenaSchematicStore {
     }
 
     @Blocking
-    override fun load(arenaId: String): SResult<Instance> {
+    override fun load(arenaId: String): Result<Instance, Throwable> {
         val data = loadData(arenaId).getOrElse { return Err(it) }
         val schematic =
             try {
                 SpongeSchematicReader().read(data)
             } catch (e: Exception) {
                 logger.error(e) { }
-                return Err("Failed to read schematic from store")
+                return Err(e)
             }
 
         val instance = MinecraftServer.getInstanceManager().createInstanceContainer()
@@ -75,7 +75,7 @@ abstract class RawSchematicStore : ArenaSchematicStore {
     abstract fun saveData(
         arenaId: String,
         data: ByteArray,
-    ): SResult<Unit>
+    ): Result<Unit, Throwable>
 
-    abstract fun loadData(arenaId: String): SResult<ByteArray>
+    abstract fun loadData(arenaId: String): Result<ByteArray, Throwable>
 }

@@ -7,7 +7,7 @@ import org.readutf.game.engine.GameManager
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.listener.GameListener
 import org.readutf.game.engine.event.listener.TypedGameListener
-import org.readutf.game.engine.features.respawning.RespawningFeature
+import org.readutf.game.engine.game.features.respawning.RespawningFeature
 import org.readutf.game.minestom.platform.feature.spectator.DamageListener
 import org.readutf.game.minestom.platform.feature.spectator.SpectatorData
 import org.readutf.game.minestom.platform.feature.spectator.SpectatorManager
