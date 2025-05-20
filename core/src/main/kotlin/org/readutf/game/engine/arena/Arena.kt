@@ -1,18 +1,17 @@
 package org.readutf.game.engine.arena
 
-import org.readutf.game.engine.arena.marker.Marker
-import org.readutf.game.engine.settings.location.PositionData
-import org.readutf.game.engine.utils.Position
+import org.readutf.buildformat.common.Build
+import org.readutf.buildformat.common.format.BuildFormat
+import org.readutf.buildformat.common.markers.Marker
 import org.readutf.game.engine.world.GameWorld
 import java.util.UUID
 
-data class Arena<T : PositionData>(
-    val arenaId: UUID,
-    val templateName: String,
+data class Arena<T : BuildFormat>(
+    val buildId: UUID,
+    val build: Build,
     val instance: GameWorld,
     val positionSettings: T,
-    val positions: Map<String, Marker>,
-    val size: Position,
+    val positions: List<Marker>,
     val freeFunc: (Arena<*>) -> Unit,
 ) {
     fun free() = freeFunc(this)
