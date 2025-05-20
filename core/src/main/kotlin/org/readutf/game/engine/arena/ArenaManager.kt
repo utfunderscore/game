@@ -1,17 +1,61 @@
 package org.readutf.game.engine.arena
 
+import com.github.michaelbull.result.Err
+import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
-import org.readutf.game.engine.settings.location.PositionData
+import com.github.michaelbull.result.getOrElse
+import io.github.oshai.kotlinlogging.KotlinLogging
+import org.readutf.buildformat.common.Build
+import org.readutf.buildformat.common.BuildManager
+import org.readutf.buildformat.common.format.BuildFormat
+import org.readutf.buildformat.common.format.BuildFormatManager
+import java.util.UUID
 import kotlin.reflect.KClass
 
-abstract class ArenaManager {
+abstract class ArenaManager(
+    private val buildManager: BuildManager,
+    private val arenaPlatform: ArenaPlatform,
+) {
 
-    abstract fun <T : PositionData> loadArena(
-        arenaName: String,
-        kClass: KClass<T>,
-    ): Result<Arena<T>, Throwable>
+    private val logger = KotlinLogging.logger { }
 
-    abstract fun freeArena(arena: Arena<*>)
+    inline fun <reified T : BuildFormat> loadArena(name: String): Result<Arena<T>?, Throwable> = loadArena(name, T::class)
 
-    abstract fun getTemplates(gameType: String): List<ArenaTemplate>
+    fun <T : BuildFormat> loadArena(name: String, kClass: KClass<T>): Result<Arena<T>?, Throwable> {
+        val build: Build = buildManager.getBuild(name) ?: return Ok(null)
+        val buildId = UUID.randomUUID()
+
+        val (world, origin, markers) = arenaPlatform.placeBuild(buildId, build).getOrElse { return Err(it) }
+        val format = BuildFormatManager.constructBuildFormat(markers, kClass.java)
+
+        return Ok(
+            Arena(
+                buildId = buildId,
+                build = build,
+                instance = world,
+                positionSettings = format,
+                positions = markers,
+                freeFunc = { arenaPlatform.freeArena(it) },
+            ),
+        )
+    }
+
+    fun <T : BuildFormat> getBuildsByFormat(format: String, kClass: KClass<T>): List<String> {
+        val buildsByFormat = buildManager.getBuildsByFormat(format)
+
+        val requirements = BuildFormatManager.getValidators(kClass.java)
+        val targetChecksum = BuildFormatManager.generateChecksum(requirements)
+
+        val builds = mutableListOf<String>()
+
+        for ((build, checksum) in buildsByFormat) {
+            if (checksum == targetChecksum) {
+                builds.add(build)
+            } else {
+                logger.info { "Invalid checksum received for $build" }
+            }
+        }
+
+        return builds
+    }
 }
