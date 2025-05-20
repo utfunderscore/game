@@ -12,7 +12,7 @@ import org.readutf.buildformat.common.format.BuildFormatManager
 import java.util.UUID
 import kotlin.reflect.KClass
 
-abstract class ArenaManager(
+class ArenaManager(
     private val buildManager: BuildManager,
     private val arenaPlatform: ArenaPlatform,
 ) {
