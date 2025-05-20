@@ -1,6 +1,6 @@
 package org.readutf.game.engine.features.respawning
 
-import org.readutf.game.engine.utils.Position
+import org.readutf.buildformat.common.markers.Position
 import java.util.UUID
 
 fun interface RespawnHandler {

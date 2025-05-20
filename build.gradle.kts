@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.readutf.arena"
-version = "1.1.0"
+version = "1.2.1"
 
 repositories {
     mavenLocal()
@@ -19,6 +19,9 @@ subprojects {
 
     apply(plugin = "kotlin")
     apply(plugin = "maven-publish")
+
+    group = rootProject.group
+    version = rootProject.version
 
     java {
         withJavadocJar()
