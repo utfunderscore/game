@@ -40,7 +40,9 @@ abstract class ArenaManager(
         )
     }
 
-    fun <T : BuildFormat> getBuildsByFormat(format: String, kClass: KClass<T>): List<String> {
+    inline fun <reified T : BuildFormat> getByFormat(format: String): List<String> = getByFormat(format, T::class)
+
+    fun <T : BuildFormat> getByFormat(format: String, kClass: KClass<T>): List<String> {
         val buildsByFormat = buildManager.getBuildsByFormat(format)
 
         val requirements = BuildFormatManager.getValidators(kClass.java)
