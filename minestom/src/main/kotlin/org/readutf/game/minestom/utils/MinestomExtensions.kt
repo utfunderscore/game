@@ -7,8 +7,8 @@ import net.minestom.server.MinecraftServer
 import net.minestom.server.coordinate.Point
 import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
+import org.readutf.buildformat.common.markers.Position
 import org.readutf.game.engine.GenericGame
-import org.readutf.game.engine.utils.Position
 import java.util.UUID
 
 fun Point.toPosition(): Position = Position(x(), y(), z())

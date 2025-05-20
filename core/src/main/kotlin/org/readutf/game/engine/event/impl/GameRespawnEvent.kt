@@ -1,9 +1,9 @@
 package org.readutf.game.engine.event.impl
 
+import org.readutf.buildformat.common.markers.Position
 import org.readutf.game.engine.GenericGame
 import org.readutf.game.engine.event.Cancellable
 import org.readutf.game.engine.event.GameEvent
-import org.readutf.game.engine.utils.Position
 import org.readutf.game.engine.world.GameWorld
 import java.util.*
 

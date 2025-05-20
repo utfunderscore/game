@@ -4,6 +4,7 @@ import com.github.michaelbull.result.Err
 import com.github.michaelbull.result.Ok
 import com.github.michaelbull.result.Result
 import io.github.oshai.kotlinlogging.KotlinLogging
+import org.readutf.buildformat.common.markers.Position
 import org.readutf.game.engine.Game
 import org.readutf.game.engine.event.impl.GameArenaChangeEvent
 import org.readutf.game.engine.event.impl.GameJoinEvent
@@ -13,7 +14,6 @@ import org.readutf.game.engine.event.listener.GameListener
 import org.readutf.game.engine.event.listener.TypedGameListener
 import org.readutf.game.engine.features.Feature
 import org.readutf.game.engine.features.respawning.RespawnHandler
-import org.readutf.game.engine.utils.Position
 import org.readutf.game.engine.world.GameWorld
 import java.util.UUID
 import kotlin.reflect.KClass

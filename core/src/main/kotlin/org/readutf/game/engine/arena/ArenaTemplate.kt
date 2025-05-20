@@ -1,11 +1,10 @@
 package org.readutf.game.engine.arena
 
-import org.readutf.game.engine.arena.marker.Marker
-import org.readutf.game.engine.utils.Position
+import org.readutf.buildformat.common.markers.Marker
+import org.readutf.buildformat.common.markers.Position
 
 data class ArenaTemplate(
     val name: String,
     val positions: Map<String, Marker>,
     val size: Position,
-    val supportedGames: List<String>,
 )

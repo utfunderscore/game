@@ -4,11 +4,9 @@ plugins {
     kotlin("jvm")
 }
 
-group = "org.readutf.arena"
-version = "1.1.0"
-
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 
 dependencies {
@@ -21,6 +19,7 @@ dependencies {
     api(kotlin("reflect"))
     api("net.kyori:adventure-api:4.18.0")
     api("com.michael-bull.kotlin-result:kotlin-result:2.0.1")
+    api("org.readutf.buildformat:common:1.0.1")
 
     testImplementation("org.jetbrains.kotlin:kotlin-test")
     testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.24.0")

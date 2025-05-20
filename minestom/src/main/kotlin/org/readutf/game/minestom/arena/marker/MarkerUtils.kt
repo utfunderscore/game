@@ -6,15 +6,15 @@ import net.kyori.adventure.nbt.CompoundBinaryTag
 import net.kyori.adventure.nbt.StringBinaryTag
 import net.minestom.server.coordinate.Vec
 import net.minestom.server.instance.block.Block
-import org.readutf.game.engine.arena.marker.Marker
-import org.readutf.game.engine.utils.Position
+import org.readutf.buildformat.common.markers.Marker
+import org.readutf.buildformat.common.markers.Position
 import org.readutf.game.minestom.utils.toPosition
 
 object MarkerUtils {
     private val logger = KotlinLogging.logger { }
 
-    fun extractMarkerPositions(schematic: SpongeSchematic): Map<String, Marker> {
-        val positions = mutableMapOf<String, Marker>()
+    fun extractMarkerPositions(schematic: SpongeSchematic): List<Marker> {
+        val markers = mutableListOf<Marker>()
 
         schematic.blockEntities().filter { it.data.getString("id") == "minecraft:sign" }.forEach { entity ->
             val markerLines = extractMarkerLines(entity.data)
@@ -43,19 +43,20 @@ object MarkerUtils {
                 return@forEach
             }
 
-            positions[markerName] =
+            markers.add(
                 Marker(
+                    markerName,
                     Position(
                         point.x + offset[0].toDouble(),
                         point.y + offset[1].toDouble(),
                         point.z + offset[2].toDouble(),
                     ),
                     point.toPosition(),
-                    markerLines = arrayOf(markerLines[0], markerLines[1], markerLines[2], markerLines[3]),
-                )
+                ),
+            )
         }
 
-        return positions
+        return markers
     }
 
     fun isMarker(block: Block): Boolean {
