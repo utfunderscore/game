@@ -18,7 +18,7 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
 
-    compileOnly("net.minestom:minestom-snapshots:0c129e5b27")
+    compileOnly("net.minestom:minestom-snapshots:1_21_5-69b9a5d844")
     compileOnly("org.readutf.arena:core:1.1.0")
 
     api(project(":core"))
