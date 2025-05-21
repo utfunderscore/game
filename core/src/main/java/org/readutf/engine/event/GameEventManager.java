@@ -25,7 +25,7 @@ public abstract class GameEventManager {
         eventAdapters.put(GameEvent.class, new GameEventAdapter());
     }
 
-    public <T> @NotNull T callEvent(@NotNull T event, @NotNull Game game) throws EventDispatchException {
+    public <T> @NotNull T callEvent(@NotNull T event, @NotNull Game<?,?> game) throws EventDispatchException {
         logger.debug("Calling event: {}", event.getClass().getSimpleName());
 
         Map<Class<?>, List<GameListener>> gameListeners = GameListeners.get(game);
@@ -68,7 +68,7 @@ public abstract class GameEventManager {
             return;
         }
 
-        Game foundGame = null;
+        Game<?,?> foundGame = null;
         for (GameEventAdapter adapter : adapters) {
             foundGame = adapter.convert(event);
             if (foundGame != null) break;
@@ -83,11 +83,11 @@ public abstract class GameEventManager {
         }
     }
 
-    public abstract <T> void registerEventListener(@NotNull Game game, @NotNull Class<T> type, @NotNull Consumer<T> consumer);
+    public abstract <T> void registerEventListener(@NotNull Game<?,?> game, @NotNull Class<T> type, @NotNull Consumer<T> consumer);
 
-    public abstract void unregisterListeners(@NotNull Game game);
+    public abstract void unregisterListeners(@NotNull Game<?,?> game);
 
-    public void registerListener(@NotNull Game game, @NotNull Class<?> eventClass, GameListener listener) {
+    public void registerListener(@NotNull Game<?,?> game, @NotNull Class<?> eventClass, GameListener listener) {
         if (!registeredTypes.contains(eventClass)) {
             registeredTypes.add(eventClass);
             logger.info("Registering listener for event type: {}", eventClass);
@@ -100,7 +100,7 @@ public abstract class GameEventManager {
         listeners.add(listener);
     }
 
-    public void unregisterListener(@NotNull Game game, @NotNull Class<?> eventClass, @NotNull GameListener listener) {
+    public void unregisterListener(@NotNull Game<?,?> game, @NotNull Class<?> eventClass, @NotNull GameListener listener) {
         Map<Class<?>, List<GameListener>> map = GameListeners.get(game);
         if (map == null) return;
 
@@ -125,11 +125,11 @@ public abstract class GameEventManager {
         return result;
     }
 
-    public void enableEventStackTrace(@NotNull Game game) {
+    public void enableEventStackTrace(@NotNull Game<?,?> game) {
         eventStackTraceEnabled.add(game.getClass());
     }
 
-    public void shutdown(@NotNull Game game) {
+    public void shutdown(@NotNull Game<?,?> game) {
         unregisterListeners(game);
         GameListeners.remove(game);
     }

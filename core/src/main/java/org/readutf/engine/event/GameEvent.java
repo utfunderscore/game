@@ -9,5 +9,5 @@ import org.readutf.engine.Game;
 @RequiredArgsConstructor
 public class GameEvent {
 
-    private @NotNull final Game game;
+    private @NotNull final Game<?, ?> game;
 }

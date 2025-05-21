@@ -26,13 +26,7 @@ import java.util.Map;
  */
 public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
 
-    /**
-     * @return the game instance this stage is part of
-     */
     @Getter protected final Game<ARENA, TEAM> game;
-    /**
-     * @return the previous stage in the sequence, or null if this is the first
-     */
     @Getter protected final Stage<ARENA, TEAM> previousStage;
 
     protected final List<Feature> features = new ArrayList<>();
@@ -157,7 +151,7 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
      * Unregisters all listeners registered during this stage.
      * Called internally by the engine when the stage ends.
      */
-    void unregisterListeners() {
+    public void unregisterListeners() {
         for (Map.Entry<Class<?>, List<GameListener>> entry : registeredListeners.entrySet()) {
             for (GameListener listener : entry.getValue()) {
                 game.getEventManager().unregisterListener(game, entry.getKey(), listener);

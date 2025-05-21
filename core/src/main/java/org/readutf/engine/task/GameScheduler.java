@@ -87,7 +87,7 @@ public abstract class GameScheduler {
      *
      * @param game the game whose tasks should be cancelled
      */
-    public void cancelGameTasks(@NotNull Game game) {
+    public void cancelGameTasks(@NotNull Game<?, ?> game) {
         logger.info("Cancelling tasks for game {}", game.getGameId());
 
         List<GameTask> tasks = gameTasks.get(game.getGameId());

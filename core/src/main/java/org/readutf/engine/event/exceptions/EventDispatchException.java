@@ -5,7 +5,8 @@ public class EventDispatchException extends Exception {
         super(message);
     }
 
-    public EventDispatchException() {}
+    public EventDispatchException() {
+    }
 
     public EventDispatchException(Throwable cause) {
         super(cause);
