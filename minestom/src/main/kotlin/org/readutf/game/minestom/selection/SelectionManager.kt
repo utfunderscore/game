@@ -16,7 +16,7 @@ import net.minestom.server.item.Material
 import org.readutf.game.engine.utils.Cuboid
 import org.readutf.game.minestom.utils.toPosition
 import java.awt.Color
-import java.util.UUID
+import java.util.*
 
 object SelectionManager {
     private val leftSelection = mutableMapOf<UUID, Point>()

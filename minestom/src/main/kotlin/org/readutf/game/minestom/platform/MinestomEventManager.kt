@@ -26,7 +26,9 @@ object MinestomEventManager : GameEventManager() {
         type: KClass<T>,
         eventConsumer: (T) -> Unit,
     ) {
-        val eventNode = eventNodes.getOrPut(game.gameId) { MinecraftServer.getGlobalEventHandler().addChild(EventNode.all(game.gameId)) }
+        val eventNode = eventNodes.getOrPut(game.gameId) {
+            MinecraftServer.getGlobalEventHandler().addChild(EventNode.all(game.gameId))
+        }
 
         val test =
             try {

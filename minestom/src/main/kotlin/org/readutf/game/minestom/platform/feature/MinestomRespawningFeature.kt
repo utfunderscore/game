@@ -9,7 +9,7 @@ import org.readutf.game.engine.world.GameWorld
 import org.readutf.game.minestom.platform.MinestomWorld
 import org.readutf.game.minestom.utils.toPlayer
 import org.readutf.game.minestom.utils.toPoint
-import java.util.UUID
+import java.util.*
 
 class MinestomRespawningFeature(
     game: GenericGame,

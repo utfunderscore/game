@@ -6,7 +6,7 @@ import net.minestom.server.scoreboard.Sidebar
 import org.readutf.game.engine.features.scoreboard.Scoreboard
 import org.readutf.game.engine.features.scoreboard.ScoreboardFeature
 import org.readutf.game.minestom.utils.toPlayer
-import java.util.UUID
+import java.util.*
 
 typealias MinestomScoreboard = Scoreboard<Player>
 
@@ -38,7 +38,10 @@ object MinestomScoreboardFeature : org.readutf.game.engine.features.scoreboard.S
         val newLines = scoreboard.getLines(player)
         val previousLines = previousLines.getOrPut(player.uuid) { emptyList() }
 
-        if (newLines.size == previousLines.size && newLines.zip(previousLines).all { (line1, line2) -> line1 == line2 }) {
+        if (newLines.size == previousLines.size &&
+            newLines.zip(previousLines)
+                .all { (line1, line2) -> line1 == line2 }
+        ) {
             // No need to update the scoreboard
             return
         }

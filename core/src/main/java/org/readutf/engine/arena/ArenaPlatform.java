@@ -1,6 +1,5 @@
 package org.readutf.engine.arena;
 
-
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.Build;
 import org.readutf.engine.arena.build.BuildPlacement;
@@ -19,7 +18,8 @@ public interface ArenaPlatform<WORLD> {
     /**
      * Places the build into a world, and returns the origin
      */
-    @NotNull BuildPlacement<WORLD> placeBuild(int buildId, @NotNull Build build) throws ArenaLoadException;
+    @NotNull
+    BuildPlacement<WORLD> placeBuild(int buildId, @NotNull Build build) throws ArenaLoadException;
 
     /**
      * Frees an arena.

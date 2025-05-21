@@ -1,7 +1,6 @@
 package org.readutf.game.minestom.arena
 
 import com.github.michaelbull.result.Ok
-import com.github.michaelbull.result.Result
 import net.hollowcube.schem.reader.SpongeSchematicReader
 import net.kyori.adventure.text.Component
 import net.minestom.server.MinecraftServer
@@ -13,7 +12,7 @@ import org.readutf.game.engine.arena.Arena
 import org.readutf.game.engine.arena.ArenaPlatform
 import org.readutf.game.engine.arena.BuildPlacement
 import org.readutf.game.minestom.platform.MinestomWorld
-import java.util.UUID
+import java.util.*
 
 class MinestomArenaPlatform : ArenaPlatform {
 

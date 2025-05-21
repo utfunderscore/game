@@ -11,6 +11,6 @@ public interface EventGameAdapter {
      * @param event the event to convert
      * @return the converted game, or null if the conversion failed
      */
-    @Nullable Game convert(Object event);
-
+    @Nullable
+    Game convert(Object event);
 }

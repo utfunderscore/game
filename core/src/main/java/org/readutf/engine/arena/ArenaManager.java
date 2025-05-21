@@ -1,10 +1,5 @@
 package org.readutf.engine.arena;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +14,12 @@ import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.engine.arena.build.BuildPlacement;
 import org.readutf.engine.arena.exception.ArenaLoadException;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Manages the loading and retrieval of arenas within the game engine.
@@ -51,7 +52,7 @@ public class ArenaManager<WORLD> {
      * @return a new Arena instance or null if the build is not found
      * @throws ArenaLoadException if loading fails or the build format is invalid
      */
-    public @Nullable <FORMAT extends BuildFormat> Arena<WORLD, FORMAT> loadArena(String name, Class<FORMAT> clazz) throws ArenaLoadException {
+    public @Nullable <FORMAT extends BuildFormat> Arena<WORLD, FORMAT> loadArena(String name, @NotNull Class<FORMAT> clazz) throws ArenaLoadException {
         Build build;
         try {
             build = buildManager.getBuild(name);
@@ -89,7 +90,7 @@ public class ArenaManager<WORLD> {
      * @return a list of build names matching the format and checksum
      * @throws BuildFormatException if validation or checksum generation fails
      */
-    public <T extends BuildFormat> List<String> getByFormat(String format, Class<T> kClass) throws BuildFormatException {
+    public <T extends BuildFormat> @NotNull List<String> getByFormat(@NotNull String format, @NotNull Class<T> kClass) throws BuildFormatException {
         Map<String, BuildFormatChecksum> buildsByFormat = buildManager.getBuildsByFormat(format);
 
         List<RequirementData> requirements = BuildFormatManager.getValidators(kClass);

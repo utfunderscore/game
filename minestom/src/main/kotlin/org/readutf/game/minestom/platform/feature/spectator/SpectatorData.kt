@@ -2,7 +2,7 @@ package org.readutf.game.minestom.platform.feature.spectator
 
 import org.readutf.buildformat.common.markers.Position
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 /**
  * Represents the data of a spectator

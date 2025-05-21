@@ -8,7 +8,7 @@ import net.minestom.server.tag.Tag
 import org.readutf.game.engine.event.listener.GameListener
 import org.readutf.game.engine.event.listener.TypedGameListener
 import org.readutf.game.engine.features.Feature
-import java.util.UUID
+import java.util.*
 import kotlin.reflect.KClass
 
 class ClickableManager : Feature() {

@@ -14,7 +14,7 @@ import org.readutf.game.minestom.platform.feature.spectator.SpectatorManager
 import org.readutf.game.minestom.utils.getOnline
 import org.readutf.game.minestom.utils.toPlayer
 import org.readutf.game.minestom.utils.toPos
-import java.util.UUID
+import java.util.*
 import java.util.function.Predicate
 import kotlin.reflect.KClass
 

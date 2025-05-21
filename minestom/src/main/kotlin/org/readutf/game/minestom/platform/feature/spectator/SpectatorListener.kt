@@ -4,7 +4,7 @@ import org.readutf.game.engine.GenericGame
 import org.readutf.game.minestom.platform.feature.spectator.event.GameSpectateEvent
 import org.readutf.game.minestom.utils.pos
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 class SpectatorListener(
     private val game: GenericGame,

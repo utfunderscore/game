@@ -9,7 +9,7 @@ import net.minestom.server.coordinate.Pos
 import net.minestom.server.entity.Player
 import org.readutf.buildformat.common.markers.Position
 import org.readutf.game.engine.GenericGame
-import java.util.UUID
+import java.util.*
 
 fun Point.toPosition(): Position = Position(x(), y(), z())
 

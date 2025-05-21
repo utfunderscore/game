@@ -9,8 +9,8 @@ public class GameEventAdapter implements EventGameAdapter {
 
     @Override
     public @Nullable Game convert(Object event) {
-        if(event instanceof GameEvent gameEvent) {
-            return gameEvent.;
+        if (event instanceof GameEvent gameEvent) {
+            return gameEvent.getGame();
         }
         return null;
     }

@@ -1,6 +1,6 @@
 package org.readutf.game.minestom.platform.feature.spectator
 
-import java.util.UUID
+import java.util.*
 
 fun interface DamageListener {
     fun onDamage(

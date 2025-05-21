@@ -1,9 +1,8 @@
 package org.readutf.engine.arena.exception;
 
-public class ArenaLoadException extends Exception{
+public class ArenaLoadException extends Exception {
 
-    public ArenaLoadException() {
-    }
+    public ArenaLoadException() {}
 
     public ArenaLoadException(String message) {
         super(message);
