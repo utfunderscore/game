@@ -3,10 +3,13 @@ package org.readutf.engine.stage;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
+import org.readutf.engine.GameException;
 import org.readutf.engine.arena.Arena;
+import org.readutf.engine.event.exceptions.EventDispatchException;
 import org.readutf.engine.event.listener.GameListener;
+import org.readutf.engine.event.listener.ListenerData;
 import org.readutf.engine.event.listener.TypedGameListener;
-import org.readutf.engine.feature.Feature;
+import org.readutf.engine.feature.System;
 import org.readutf.engine.task.GameTask;
 import org.readutf.engine.team.GameTeam;
 
@@ -29,7 +32,7 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
     @Getter protected final Game<ARENA, TEAM> game;
     @Getter protected final Stage<ARENA, TEAM> previousStage;
 
-    protected final List<Feature> features = new ArrayList<>();
+    protected final List<System> systems = new ArrayList<>();
     private final Map<Class<?>, List<GameListener>> registeredListeners = new LinkedHashMap<>();
 
     /**
@@ -68,16 +71,16 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
      * @return the added feature
      * @param <T> the feature type
      */
-    public <T extends Feature> @NotNull T addFeature(@NotNull T feature) {
-        for (Map.Entry<Class<?>, GameListener> entry : feature.getListeners().entrySet()) {
-            registerRawListener(entry.getValue(), entry.getKey());
+    public <T extends System> @NotNull T addFeature(@NotNull T feature) throws EventDispatchException {
+        for (ListenerData<?> listener : feature.getListeners()) {
+            registerRawListener(listener.listener(), listener.type());
         }
 
         for (GameTask task : feature.getTasks()) {
             schedule(task);
         }
 
-        features.add(feature);
+        systems.add(feature);
         return feature;
     }
 
@@ -87,7 +90,7 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
      * @param registeredListener the listener to register
      * @param type the class of the event
      */
-    public void registerRawListener(GameListener registeredListener, Class<?> type) {
+    public void registerRawListener(GameListener registeredListener, Class<?> type) throws EventDispatchException {
         registeredListeners
                 .computeIfAbsent(type, k -> new ArrayList<>())
                 .add(registeredListener);
@@ -102,7 +105,7 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
      * @param clazz the event class
      * @param <T> the type of the event
      */
-    public <T> void registerListener(TypedGameListener<T> gameListener, Class<T> clazz) {
+    public <T> void registerListener(TypedGameListener<T> gameListener, Class<T> clazz) throws EventDispatchException {
         registerRawListener(gameListener, clazz);
     }
 
@@ -114,7 +117,7 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
      * @param <T> the event type
      */
     @SafeVarargs
-    public final <T> void registerListeners(Class<T> clazz, TypedGameListener<T> @NotNull ... listeners) {
+    public final <T> void registerListeners(Class<T> clazz, TypedGameListener<T> @NotNull ... listeners) throws EventDispatchException {
         for (TypedGameListener<T> listener : listeners) {
             registerListener(listener, clazz);
         }
@@ -134,7 +137,7 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
     /**
      * Signals the game to proceed to the next stage.
      */
-    public void endStage() {
+    public void endStage() throws GameException {
         game.startNextStage();
     }
 
@@ -143,7 +146,7 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
      *
      * @param stageCreator the factory that creates the next stage
      */
-    public void endStage(StageCreator<ARENA, TEAM> stageCreator) {
+    public void endStage(StageCreator<ARENA, TEAM> stageCreator) throws Exception {
         game.startNextStage(stageCreator);
     }
 
@@ -160,8 +163,8 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
     }
 
     /** @return the features associated with this stage */
-    public @NotNull List<Feature> getFeatures() {
-        return features;
+    public @NotNull List<System> getSystems() {
+        return systems;
     }
 
 }

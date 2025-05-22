@@ -1,5 +1,6 @@
 package org.readutf.engine.arena;
 
+import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.Build;
 import org.readutf.engine.arena.build.BuildPlacement;

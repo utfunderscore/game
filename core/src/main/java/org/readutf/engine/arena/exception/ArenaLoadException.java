@@ -1,6 +1,8 @@
 package org.readutf.engine.arena.exception;
 
-public class ArenaLoadException extends Exception {
+import org.readutf.engine.GameException;
+
+public class ArenaLoadException extends GameException {
 
     public ArenaLoadException() {}
 

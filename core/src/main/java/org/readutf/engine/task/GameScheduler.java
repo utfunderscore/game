@@ -22,8 +22,8 @@ public abstract class GameScheduler {
      * Constructs a new GameScheduler and initializes the internal tick loop.
      * A background task is scheduled to periodically tick all active tasks.
      */
-    public GameScheduler() {
-        scheduleTask(() -> {
+    public GameScheduler(GameSchedulerPlatform platform) {
+        platform.scheduleTask(() -> {
             Map<UUID, List<GameTask>> copy = new HashMap<>(gameTasks);
             gameTasks.clear();
 
@@ -44,13 +44,6 @@ public abstract class GameScheduler {
     }
 
     /**
-     * Schedules a repeating task. The implementation defines how this is actually run.
-     *
-     * @param runnable the task to execute
-     */
-    public abstract void scheduleTask(@NotNull Runnable runnable);
-
-    /**
      * Schedules a task tied to a specific game instance.
      *
      * @param game the game to associate the task with
@@ -58,7 +51,7 @@ public abstract class GameScheduler {
      */
     public void schedule(@NotNull Game<?, ?> game, @NotNull GameTask gameTask) {
         logger.info("Scheduling task {}", gameTask);
-        gameTasks.computeIfAbsent(game.getGameId(), k -> new ArrayList<>()).add(gameTask);
+        gameTasks.computeIfAbsent(game.getId(), k -> new ArrayList<>()).add(gameTask);
     }
 
     /**
@@ -88,9 +81,9 @@ public abstract class GameScheduler {
      * @param game the game whose tasks should be cancelled
      */
     public void cancelGameTasks(@NotNull Game<?, ?> game) {
-        logger.info("Cancelling tasks for game {}", game.getGameId());
+        logger.info("Cancelling tasks for game {}", game.getId());
 
-        List<GameTask> tasks = gameTasks.get(game.getGameId());
+        List<GameTask> tasks = gameTasks.get(game.getId());
         if (tasks != null) {
             for (GameTask task : tasks) {
                 task.markForRemoval();

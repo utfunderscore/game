@@ -1,6 +1,8 @@
 package org.readutf.engine.event.exceptions;
 
-public class EventDispatchException extends Exception {
+import org.readutf.engine.GameException;
+
+public class EventDispatchException extends GameException {
     public EventDispatchException(String message) {
         super(message);
     }

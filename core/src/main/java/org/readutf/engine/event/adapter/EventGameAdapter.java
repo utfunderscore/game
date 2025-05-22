@@ -2,6 +2,7 @@ package org.readutf.engine.event.adapter;
 
 import org.jetbrains.annotations.Nullable;
 import org.readutf.engine.Game;
+import org.readutf.engine.event.exceptions.EventAdaptException;
 
 public interface EventGameAdapter {
 
@@ -12,5 +13,5 @@ public interface EventGameAdapter {
      * @return the converted game, or null if the conversion failed
      */
     @Nullable
-    Game<?,?> convert(Object event);
+    Game<?,?> convert(Object event) throws EventAdaptException;
 }

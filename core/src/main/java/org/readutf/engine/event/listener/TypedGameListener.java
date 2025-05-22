@@ -7,8 +7,7 @@ public interface TypedGameListener<T> extends GameListener {
     void onTypedEvent(@NotNull T event);
 
     @Override
-    @SuppressWarnings("UNCHECKED_CAST")
-    default void accept(@NotNull Object event) {
+    default void onEvent(@NotNull Object event) {
         onTypedEvent((T) event);
     }
 }

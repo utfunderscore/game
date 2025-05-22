@@ -1,6 +1,8 @@
 package org.readutf.engine.team.exception;
 
-public class TeamSelectException extends Exception{
+import org.readutf.engine.GameException;
+
+public class TeamSelectException extends GameException {
 
     public TeamSelectException() {
     }
