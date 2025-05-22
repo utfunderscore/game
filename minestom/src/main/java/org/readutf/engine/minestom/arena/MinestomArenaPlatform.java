@@ -68,9 +68,7 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
             }
         }
 
-        CompletableFuture.allOf(chunkFutures.toArray(new CompletableFuture[0])).thenAccept(_ -> {
-            schematic.createBatch().apply(instance, Pos.ZERO, () -> {});
-        });
+        CompletableFuture.allOf(chunkFutures.toArray(new CompletableFuture[0])).thenAccept(x -> schematic.createBatch().apply(instance, Pos.ZERO, () -> {}));
 
         List<Marker> markers;
         try {

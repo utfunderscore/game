@@ -10,8 +10,6 @@ import org.readutf.engine.minestom.arena.MinestomArenaPlatform;
 
 public class InstanceEventAdapter implements TypedEventAdapter<InstanceEvent> {
 
-    private final MinestomArenaPlatform arenaPlatform = MinestomArenaPlatform.getInstance();
-
     @Override
     public @Nullable Game<?, ?> convertEvent(InstanceEvent event) {
         return PlatformUtils.getGame(event.getInstance());

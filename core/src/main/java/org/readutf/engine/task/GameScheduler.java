@@ -5,6 +5,7 @@ import org.readutf.engine.Game;
 import org.readutf.engine.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.readutf.engine.task.GameSchedulerPlatform;
 
 import java.util.*;
 
@@ -12,7 +13,7 @@ import java.util.*;
  * Manages scheduling of game tasks across multiple games and stages.
  * Abstracts how tasks are executed (e.g., via thread, tick loop, etc.).
  */
-public abstract class GameScheduler {
+public class GameScheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(GameScheduler.class);
 
@@ -46,7 +47,7 @@ public abstract class GameScheduler {
     /**
      * Schedules a task tied to a specific game instance.
      *
-     * @param game the game to associate the task with
+     * @param game     the game to associate the task with
      * @param gameTask the task to schedule
      */
     public void schedule(@NotNull Game<?, ?> game, @NotNull GameTask gameTask) {
@@ -57,7 +58,7 @@ public abstract class GameScheduler {
     /**
      * Schedules a task tied to a specific stage. The task only runs if the stage is still active.
      *
-     * @param stage the stage to bind the task to
+     * @param stage    the stage to bind the task to
      * @param gameTask the task to execute
      */
     public void schedule(@NotNull Stage<?, ?> stage, @NotNull GameTask gameTask) {

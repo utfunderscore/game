@@ -94,7 +94,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
      * @param eventManager Event system for the game
      * @param teamSelector Team assignment strategy
      */
-    protected Game(
+    public Game(
             @NotNull GamePlatform platform,
             @NotNull GameScheduler scheduler,
             @NotNull GameEventManager eventManager,
