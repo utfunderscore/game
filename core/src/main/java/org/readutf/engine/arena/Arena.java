@@ -1,51 +1,34 @@
 package org.readutf.engine.arena;
 
 import java.util.Objects;
+import lombok.Getter;
+import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.Build;
 import org.readutf.buildformat.common.format.BuildFormat;
 import org.readutf.buildformat.common.markers.Position;
 
 import java.util.List;
 
-public class Arena<WORLD, T extends BuildFormat> {
-    private final int arenaId;
-    private final Build build;
-    private final WORLD world;
-    private final BuildFormat format;
-    private final List<Position> positions;
+@Getter
+public final class Arena<WORLD, T extends BuildFormat> {
+    @Getter private final int arenaId;
+    private @NotNull final Build build;
+    private @NotNull final WORLD world;
+    private @NotNull final T format;
+    private @NotNull final List<Position> positions;
 
     public Arena(
             int arenaId,
-            Build build,
-            WORLD world,
-            BuildFormat format,
-            List<Position> positions
+            @NotNull Build build,
+            @NotNull WORLD world,
+            @NotNull T format,
+            @NotNull List<Position> positions
     ) {
         this.arenaId = arenaId;
         this.build = build;
         this.world = world;
         this.format = format;
         this.positions = positions;
-    }
-
-    public int getArenaId() {
-        return arenaId;
-    }
-
-    public Build getBuild() {
-        return build;
-    }
-
-    public WORLD getWorld() {
-        return world;
-    }
-
-    public BuildFormat getFormat() {
-        return format;
-    }
-
-    public List<Position> getPositions() {
-        return positions;
     }
 
     @Override
