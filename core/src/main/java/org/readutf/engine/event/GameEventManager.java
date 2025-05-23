@@ -144,8 +144,8 @@ public class GameEventManager {
         return result;
     }
 
-    public void enableEventStackTrace(@NotNull Game<?, ?> game) {
-        eventStackTraceEnabled.add(game.getClass());
+    public void enableEventStackTrace(Class<?> clazz) {
+        eventStackTraceEnabled.add(clazz);
     }
 
     public void shutdown(@NotNull Game<?, ?> game) {
