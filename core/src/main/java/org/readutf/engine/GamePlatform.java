@@ -6,7 +6,7 @@ import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.markers.Position;
 
-public interface GamePlatform {
+public interface GamePlatform<WORLD> {
 
     /**
      * Checks if a player is online
@@ -24,6 +24,6 @@ public interface GamePlatform {
      */
     void messagePlayer(@NotNull UUID playerId, @NotNull Component component);
 
-    @NotNull CompletableFuture<Void> teleport(@NotNull UUID playerId, @NotNull Position position);
+    @NotNull CompletableFuture<Void> teleport(@NotNull UUID playerId, @NotNull Position position, @NotNull WORLD world);
 
 }

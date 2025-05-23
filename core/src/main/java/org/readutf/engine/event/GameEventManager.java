@@ -21,7 +21,7 @@ public class GameEventManager {
     private final Map<Class<?>, EventGameAdapter> eventAdapters = new HashMap<>();
     private final Set<Class<?>> registeredTypes = new HashSet<>();
     private final Set<Class<?>> noAdapters = new HashSet<>();
-    private final Map<Game<?, ?>, Map<Class<?>, List<GameListener>>> GameListeners = new LinkedHashMap<>();
+    private final Map<Game<?, ?, ?>, Map<Class<?>, List<GameListener>>> GameListeners = new LinkedHashMap<>();
     private final Set<Class<?>> eventStackTraceEnabled = new HashSet<>();
 
     public GameEventManager(@NotNull GameEventPlatform gameEventPlatform) {
@@ -36,7 +36,7 @@ public class GameEventManager {
         eventAdapters.put(type, adapter);
     }
 
-    public <T> @NotNull T callEvent(@NotNull T event, @NotNull Game<?, ?> game) throws EventDispatchException {
+    public <T> @NotNull T callEvent(@NotNull T event, @NotNull Game<?, ?, ?> game) throws EventDispatchException {
         logger.debug("Calling event: {}", event.getClass().getSimpleName());
 
         Map<Class<?>, List<GameListener>> gameListeners = GameListeners.get(game);
@@ -82,7 +82,7 @@ public class GameEventManager {
             return;
         }
 
-        Game<?, ?> foundGame = null;
+        Game<?, ?, ?> foundGame = null;
         for (EventGameAdapter adapter : adapters) {
             try {
                 foundGame = adapter.convert(event);
@@ -104,7 +104,7 @@ public class GameEventManager {
         }
     }
 
-    public void registerListener(@NotNull Game<?, ?> game, @NotNull Class<?> eventClass, GameListener listener)
+    public void registerListener(@NotNull Game<?, ?, ?> game, @NotNull Class<?> eventClass, GameListener listener)
             throws EventDispatchException {
         if (!registeredTypes.contains(eventClass)) {
             registeredTypes.add(eventClass);
@@ -119,7 +119,7 @@ public class GameEventManager {
     }
 
     public void unregisterListener(
-            @NotNull Game<?, ?> game, @NotNull Class<?> eventClass, @NotNull GameListener listener) {
+            @NotNull Game<?, ?, ?> game, @NotNull Class<?> eventClass, @NotNull GameListener listener) {
         Map<Class<?>, List<GameListener>> map = GameListeners.get(game);
         if (map == null) return;
 
@@ -148,7 +148,7 @@ public class GameEventManager {
         eventStackTraceEnabled.add(clazz);
     }
 
-    public void shutdown(@NotNull Game<?, ?> game) {
+    public void shutdown(@NotNull Game<?, ?, ?> game) {
         gameEventPlatform.unregisterListeners(game);
         GameListeners.remove(game);
     }

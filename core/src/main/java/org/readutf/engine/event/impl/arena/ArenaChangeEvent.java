@@ -12,7 +12,7 @@ public class ArenaChangeEvent extends GameEvent {
     private @NotNull final Arena<?, ?> previousArena;
     private @NotNull final Arena<?, ?> currentArena;
 
-    public ArenaChangeEvent(@NotNull Game<?, ?> game, @NotNull Arena<?, ?> previousArena, @NotNull Arena<?, ?> currentArena) {
+    public ArenaChangeEvent(@NotNull Game<?, ?, ?> game, @NotNull Arena<?, ?> previousArena, @NotNull Arena<?, ?> currentArena) {
         super(game);
         this.previousArena = previousArena;
         this.currentArena = currentArena;

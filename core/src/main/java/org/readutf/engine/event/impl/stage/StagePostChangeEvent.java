@@ -9,10 +9,10 @@ import org.readutf.engine.stage.Stage;
 @Getter
 public class StagePostChangeEvent extends GameEvent {
 
-    private final @NotNull Stage<?, ?> previousStage;
-    private final @NotNull Stage<?, ?> currentStage;
+    private final @NotNull Stage<?, ?, ?> previousStage;
+    private final @NotNull Stage<?, ?, ?> currentStage;
 
-    public StagePostChangeEvent(@NotNull Game<?,?> game, @NotNull Stage<?, ?> previousStage, @NotNull Stage<?, ?> currentStage) {
+    public StagePostChangeEvent(@NotNull Game<?, ?, ?> game, @NotNull Stage<?, ?, ?> previousStage, @NotNull Stage<?, ?, ?> currentStage) {
         super(game);
         this.previousStage = previousStage;
         this.currentStage = currentStage;

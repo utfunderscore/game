@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  * @param <ARENA> The type of arena used in the game
  * @param <TEAM>  The type of team used in the game
  */
-public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
+public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
 
     // Logger for this class
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -47,7 +47,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
 
     @NotNull
     @Getter
-    private final GamePlatform platform;
+    private final GamePlatform<WORLD> platform;
 
     // Game scheduler for managing timed tasks
     @NotNull
@@ -64,11 +64,11 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
 
     // Queue of stage creators for the game progression
     @NotNull
-    private final Deque<StageCreator<ARENA, TEAM>> stageCreators = new ArrayDeque<>();
+    private final Deque<StageCreator<WORLD, ARENA, TEAM>> stageCreators = new ArrayDeque<>();
 
     // Current active stage
     @Nullable
-    private Stage<ARENA, TEAM> currentStage;
+    private Stage<WORLD, ARENA, TEAM> currentStage;
 
     // Current active arena
     @Getter
@@ -95,7 +95,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
      * @param teamSelector Team assignment strategy
      */
     public Game(
-            @NotNull GamePlatform platform,
+            @NotNull GamePlatform<WORLD> platform,
             @NotNull GameScheduler scheduler,
             @NotNull GameEventManager eventManager,
             @NotNull TeamSelector<TEAM> teamSelector) {
@@ -161,8 +161,8 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
      * @throws GameException if no more stages are available
      */
     @NotNull
-    public Stage<ARENA, TEAM> startNextStage() throws GameException {
-        StageCreator<ARENA, TEAM> nextStageCreator = stageCreators.pollFirst();
+    public Stage<WORLD, ARENA, TEAM> startNextStage() throws GameException {
+        StageCreator<WORLD, ARENA, TEAM> nextStageCreator = stageCreators.pollFirst();
         if (nextStageCreator == null) {
             logger.error("No more stages to start");
             throw new StageChangeException("No more stages to start");
@@ -179,7 +179,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
      * @throws GameException if stage creation or initialization fails
      */
     @NotNull
-    public Stage<ARENA, TEAM> startNextStage(@NotNull StageCreator<ARENA, TEAM> nextStageCreator) throws GameException {
+    public Stage<WORLD, ARENA, TEAM> startNextStage(@NotNull StageCreator<WORLD, ARENA, TEAM> nextStageCreator) throws GameException {
         logger.info("Starting next stage...");
 
         if (currentStage != null) {
@@ -197,8 +197,8 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
             }
         }
 
-        Stage<ARENA, TEAM> previous = currentStage;
-        Stage<ARENA, TEAM> nextStage = nextStageCreator.startNextStage(this, previous);
+        Stage<WORLD, ARENA, TEAM> previous = currentStage;
+        Stage<WORLD, ARENA, TEAM> nextStage = nextStageCreator.startNextStage(this, previous);
 
         logger.info("Starting stage {}", nextStage.getClass().getSimpleName());
 
@@ -352,7 +352,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
      * @param stageCreators Stage creators in sequence
      */
     @SafeVarargs
-    public final void registerStage(@NotNull StageCreator<ARENA, TEAM>... stageCreators) {
+    public final void registerStage(@NotNull StageCreator<WORLD, ARENA, TEAM>... stageCreators) {
         Collections.addAll(this.stageCreators, stageCreators);
     }
 
@@ -538,7 +538,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
      * @return Current stage or null if no stage is active
      */
     @Nullable
-    public Stage<ARENA, TEAM> getCurrentStage() {
+    public Stage<WORLD, ARENA, TEAM> getCurrentStage() {
         return currentStage;
     }
 
@@ -547,7 +547,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
      *
      * @param currentStage New current stage
      */
-    public void setCurrentStage(@Nullable Stage<ARENA, TEAM> currentStage) {
+    public void setCurrentStage(@Nullable Stage<WORLD, ARENA, TEAM> currentStage) {
         this.currentStage = currentStage;
     }
 

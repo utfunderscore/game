@@ -20,7 +20,7 @@ public class SpectatorSystem implements System {
     /**
      * Reference to the game instance.
      */
-    private final @NotNull Game<?, ?> game;
+    private final @NotNull Game<?, ?, ?> game;
 
     /**
      * Handler responsible for respawning players.
@@ -45,7 +45,7 @@ public class SpectatorSystem implements System {
      * @param spectatorPlatform the spectator platform logic (must not be null)
      */
     public SpectatorSystem(
-            @NotNull Game<?, ?> game,
+            @NotNull Game<?, ?, ?> game,
             @NotNull SpawningSystem respawnHandler,
             @NotNull SpectatorPlatform spectatorPlatform) {
         this.game = game;

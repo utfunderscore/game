@@ -8,7 +8,7 @@ public class SpectatorEvent extends GameEvent {
 
     private final @NotNull SpectatorData spectatorData;
 
-    public SpectatorEvent(@NotNull Game<?, ?> game, @NotNull SpectatorData spectatorData) {
+    public SpectatorEvent(@NotNull Game<?, ?, ?> game, @NotNull SpectatorData spectatorData) {
         super(game);
         this.spectatorData = spectatorData;
     }

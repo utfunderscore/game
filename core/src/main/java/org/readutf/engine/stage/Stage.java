@@ -29,10 +29,10 @@ import java.util.Map;
  * @param <TEAM>  the type of GameTeam participating in the game
  */
 @Slf4j
-public abstract class Stage<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
+public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
 
-    @Getter protected final Game<ARENA, TEAM> game;
-    @Getter protected final Stage<ARENA, TEAM> previousStage;
+    @Getter protected final Game<WORLD, ARENA, TEAM> game;
+    @Getter protected final Stage<WORLD, ARENA, TEAM> previousStage;
 
     protected final List<System> systems = new ArrayList<>();
     private final Map<Class<?>, List<GameListener>> registeredListeners = new LinkedHashMap<>();
@@ -43,7 +43,7 @@ public abstract class Stage<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
      * @param game          the game instance this stage belongs to
      * @param previousStage the previous stage, or null if this is the first stage
      */
-    public Stage(Game<ARENA, TEAM> game, Stage<ARENA, TEAM> previousStage) {
+    public Stage(Game<WORLD, ARENA, TEAM> game, Stage<WORLD, ARENA, TEAM> previousStage) {
         this.game = game;
         this.previousStage = previousStage;
     }
@@ -152,7 +152,7 @@ public abstract class Stage<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
      *
      * @param stageCreator the factory that creates the next stage
      */
-    public void endStage(StageCreator<ARENA, TEAM> stageCreator) throws Exception {
+    public void endStage(StageCreator<WORLD, ARENA, TEAM> stageCreator) throws Exception {
         game.startNextStage(stageCreator);
     }
 

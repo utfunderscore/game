@@ -6,7 +6,7 @@ import org.readutf.engine.event.GameEvent;
 
 public class GameCrashEvent extends GameEvent {
 
-    public GameCrashEvent(@NotNull Game<?,?> game) {
+    public GameCrashEvent(@NotNull Game<?, ?, ?> game) {
         super(game);
     }
 }

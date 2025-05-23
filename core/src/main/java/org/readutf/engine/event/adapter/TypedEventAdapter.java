@@ -7,11 +7,11 @@ import org.readutf.engine.event.exceptions.EventAdaptException;
 public interface TypedEventAdapter<T> extends EventGameAdapter {
 
     @Nullable
-    Game<?, ?> convertEvent(T event);
+    Game<?, ?, ?> convertEvent(T event);
 
     @Override
     @Nullable
-    default Game<?, ?> convert(Object event) throws EventAdaptException {
+    default Game<?, ?, ?> convert(Object event) throws EventAdaptException {
         try {
             return convertEvent((T) event);
         } catch (Exception e) {

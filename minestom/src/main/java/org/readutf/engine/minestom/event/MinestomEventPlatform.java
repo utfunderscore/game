@@ -19,7 +19,7 @@ public class MinestomEventPlatform implements GameEventPlatform {
 
     @Override
     public <T> void registerEventListener(
-            @NotNull Game<?, ?> game, @NotNull Class<T> type, @NotNull Consumer<T> consumer)
+            @NotNull Game<?, ?, ?> game, @NotNull Class<T> type, @NotNull Consumer<T> consumer)
             throws EventDispatchException {
         if (Event.class.isAssignableFrom(type)) {
             eventNode.addListener((Class<? extends Event>) type, event -> consumer.accept((T) event));
@@ -27,5 +27,5 @@ public class MinestomEventPlatform implements GameEventPlatform {
     }
 
     @Override
-    public void unregisterListeners(@NotNull Game<?, ?> game) {}
+    public void unregisterListeners(@NotNull Game<?, ?, ?> game) {}
 }

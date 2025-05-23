@@ -8,6 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.markers.Position;
 import org.readutf.engine.Game;
 import org.readutf.engine.GamePlatform;
+import org.readutf.engine.arena.Arena;
 import org.readutf.engine.event.impl.arena.ArenaChangeEvent;
 import org.readutf.engine.event.impl.game.GameJoinEvent;
 import org.readutf.engine.event.impl.stage.StagePreChangeEvent;
@@ -17,9 +18,9 @@ import org.readutf.engine.feature.System;
 
 @AllArgsConstructor
 @Slf4j
-public sealed class SpawningSystem implements System {
+public sealed class SpawningSystem<WORLD> implements System {
 
-    private final Game<?, ?> game;
+    private final Game<WORLD, Arena<WORLD, ?>, ?> game;
     private final @NotNull SpawnFinder spawnFinder;
 
     public void spawn(UUID playerId) {
@@ -32,13 +33,13 @@ public sealed class SpawningSystem implements System {
             return;
         }
 
-        GamePlatform platform = game.getPlatform();
-        platform.teleport(playerId, position);
+        GamePlatform<WORLD> platform = game.getPlatform();
+        platform.teleport(playerId, position, game.getArena().getWorld());
     }
 
     public non-sealed static class StageStart extends SpawningSystem {
 
-        public StageStart(Game<?, ?> game, @NotNull SpawnFinder spawnFinder) {
+        public StageStart(Game<?, ?, ?> game, @NotNull SpawnFinder spawnFinder) {
             super(game, spawnFinder);
         }
 
@@ -53,7 +54,7 @@ public sealed class SpawningSystem implements System {
 
     public non-sealed static class ArenaChange extends SpawningSystem {
 
-        public ArenaChange(Game<?, ?> game, @NotNull SpawnFinder spawnFinder) {
+        public ArenaChange(Game<?, ?, ?> game, @NotNull SpawnFinder spawnFinder) {
             super(game, spawnFinder);
         }
 
@@ -68,7 +69,7 @@ public sealed class SpawningSystem implements System {
 
     public non-sealed static class GameJoin extends SpawningSystem {
 
-        public GameJoin(Game<?, ?> game, @NotNull SpawnFinder spawnFinder) {
+        public GameJoin(Game<?, ?, ?> game, @NotNull SpawnFinder spawnFinder) {
             super(game, spawnFinder);
         }
 

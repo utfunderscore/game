@@ -12,7 +12,7 @@ public class GameJoinEvent extends GameEvent {
 
     private final @NotNull UUID playerId;
 
-    public GameJoinEvent(@NotNull Game<?, ?> game, @NotNull UUID playerId) {
+    public GameJoinEvent(@NotNull Game<?, ?, ?> game, @NotNull UUID playerId) {
         super(game);
         this.playerId = playerId;
     }

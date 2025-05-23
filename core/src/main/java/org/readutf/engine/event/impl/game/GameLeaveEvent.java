@@ -12,7 +12,7 @@ public class GameLeaveEvent extends GameEvent {
 
     private final @NotNull UUID playerId;
 
-    public GameLeaveEvent(@NotNull Game<?, ?> game, @NotNull UUID playerId) {
+    public GameLeaveEvent(@NotNull Game<?, ?, ?> game, @NotNull UUID playerId) {
         super(game);
         this.playerId = playerId;
     }

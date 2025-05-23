@@ -8,7 +8,7 @@ import org.readutf.engine.event.adapter.TypedEventAdapter;
 
 public class GameEventAdapter implements TypedEventAdapter<GameEvent> {
     @Override
-    public @Nullable Game<?, ?> convertEvent(GameEvent event) {
+    public @Nullable Game<?, ?, ?> convertEvent(GameEvent event) {
         return event.getGame();
     }
 }

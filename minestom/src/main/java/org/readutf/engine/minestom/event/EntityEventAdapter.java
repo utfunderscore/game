@@ -10,7 +10,7 @@ import org.readutf.engine.minestom.PlatformUtils;
 
 public class EntityEventAdapter implements TypedEventAdapter<EntityEvent> {
     @Override
-    public @Nullable Game<?, ?> convertEvent(EntityEvent event) {
+    public @Nullable Game<?, ?, ?> convertEvent(EntityEvent event) {
 
         var entity = event.getEntity();
 

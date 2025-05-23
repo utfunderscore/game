@@ -8,8 +8,8 @@ import org.readutf.engine.arena.Arena;
 
 public class PlatformUtils {
 
-    public static @Nullable Game<?, ?> getGame(Instance instance) {
-        for (Game<?,?> game : GameManager.getGames()) {
+    public static @Nullable Game<?, ?, ?> getGame(Instance instance) {
+        for (Game<?, ?, ?> game : GameManager.getGames()) {
             Arena<?, ?> arena = game.getArena();
             if(arena != null && arena.getWorld() instanceof Instance targetInstance && targetInstance == instance) {
                 return game;

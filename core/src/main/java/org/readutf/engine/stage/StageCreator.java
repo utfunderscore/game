@@ -7,8 +7,8 @@ import org.readutf.engine.arena.Arena;
 import org.readutf.engine.stage.exception.StageChangeException;
 import org.readutf.engine.team.GameTeam;
 
-public interface StageCreator<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
+public interface StageCreator<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
 
     @NotNull
-    Stage<ARENA, TEAM> startNextStage(@NotNull Game<ARENA, TEAM> game, @Nullable Stage<ARENA, TEAM> previousStage) throws StageChangeException;
+    Stage<WORLD, ARENA, TEAM> startNextStage(@NotNull Game<WORLD, ARENA, TEAM> game, @Nullable Stage<WORLD, ARENA, TEAM> previousStage) throws StageChangeException;
 }

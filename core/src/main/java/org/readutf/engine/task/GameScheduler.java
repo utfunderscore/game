@@ -43,7 +43,7 @@ public class GameScheduler {
      * @param game     the game to associate the task with
      * @param gameTask the task to schedule
      */
-    public void schedule(@NotNull Game<?, ?> game, @NotNull GameTask gameTask) {
+    public void schedule(@NotNull Game<?, ?, ?> game, @NotNull GameTask gameTask) {
         logger.info("Scheduling task {}", gameTask);
         gameTasks.computeIfAbsent(game.getId(), k -> new ArrayList<>()).add(gameTask);
     }
@@ -54,7 +54,7 @@ public class GameScheduler {
      * @param stage    the stage to bind the task to
      * @param gameTask the task to execute
      */
-    public void schedule(@NotNull Stage<?, ?> stage, @NotNull GameTask gameTask) {
+    public void schedule(@NotNull Stage<?, ?, ?> stage, @NotNull GameTask gameTask) {
         logger.info("Scheduling task {}", gameTask);
 
         GameTask wrapped = new GameTask() {
@@ -74,7 +74,7 @@ public class GameScheduler {
      *
      * @param game the game whose tasks should be cancelled
      */
-    public void cancelGameTasks(@NotNull Game<?, ?> game) {
+    public void cancelGameTasks(@NotNull Game<?, ?, ?> game) {
         logger.info("Cancelling tasks for game {}", game.getId());
 
         List<GameTask> tasks = gameTasks.get(game.getId());
