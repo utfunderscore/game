@@ -11,7 +11,7 @@ public class PlatformUtils {
     public static @Nullable Game<?, ?> getGame(Instance instance) {
         for (Game<?,?> game : GameManager.getGames()) {
             Arena<?, ?> arena = game.getArena();
-            if(arena != null && arena.world() instanceof Instance targetInstance && targetInstance == instance) {
+            if(arena != null && arena.getWorld() instanceof Instance targetInstance && targetInstance == instance) {
                 return game;
             }
         }
