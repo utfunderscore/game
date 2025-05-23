@@ -105,7 +105,7 @@ public class ArenaManager<WORLD> {
             if (Arrays.equals(checksum.checksum(), targetChecksum)) {
                 builds.add(build);
             } else {
-                log.info("Invalid checksum received for {}", build);
+                log.info("Invalid checksum received for {} {} != {}", build, Arrays.toString(checksum.checksum()), Arrays.toString(targetChecksum));
             }
         }
 

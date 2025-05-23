@@ -32,10 +32,13 @@ import org.readutf.engine.arena.ArenaPlatform;
 import org.readutf.engine.arena.build.BuildPlacement;
 import org.readutf.engine.arena.exception.ArenaLoadException;
 import org.readutf.engine.minestom.PlatformUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
 
-
+    private static final Logger logger = LoggerFactory.getLogger(MinestomArenaPlatform.class);
     private @NotNull static final MinestomArenaPlatform instance = new MinestomArenaPlatform();
 
     private MinestomArenaPlatform() {
@@ -47,7 +50,6 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
 
     @Override
     public @NotNull BuildPlacement<Instance> placeBuild(int buildId, @NotNull Build build) throws ArenaLoadException {
-
         var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
 
         Schematic schematic;
@@ -59,16 +61,15 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
 
         List<CompletableFuture<Chunk>> chunkFutures = new ArrayList<>();
         Point size = schematic.size();
-        for (int x = 0; x < size.blockX() + 16; x++) {
-            for (int i = 0; i < size.blockZ(); i++) {
-                int chunkX = x >> 4;
-                int chunkZ = i >> 4;
 
-                chunkFutures.add(instance.loadChunk(chunkX, chunkZ));
+        for (int x = 0; x < (size.blockX() + 16) >> 4; x++) {
+            for (int z = 0; z < (size.blockZ() + 16) >> 4; z++) {
+                chunkFutures.add(instance.loadChunk(x, z));
+                logger.info("Loading chunk at {} {}", x, z);
             }
         }
 
-        CompletableFuture.allOf(chunkFutures.toArray(new CompletableFuture[0])).thenAccept(x -> schematic.createBatch().apply(instance, Pos.ZERO, () -> {}));
+        CompletableFuture.allOf(chunkFutures.toArray(new CompletableFuture[0])).thenAccept(x -> schematic.createBatch().apply(instance, schematic.offset(), () -> {}));
 
         List<Marker> markers;
         try {
@@ -142,7 +143,9 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         for (BinaryTag tag : messages) {
             if (tag instanceof StringBinaryTag line) {
                 String value = line.value();
-                result.add(value.substring(1, value.length() - 1));
+                if(value.length() < 2) continue;
+                logger.debug("Extracted marker line: {}", value);
+                result.add(value);
             }
         }
         return result;

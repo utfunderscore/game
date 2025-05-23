@@ -5,24 +5,17 @@ import org.readutf.engine.Game;
 import org.readutf.engine.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.readutf.engine.task.GameSchedulerPlatform;
 
 import java.util.*;
 
-/**
- * Manages scheduling of game tasks across multiple games and stages.
- * Abstracts how tasks are executed (e.g., via thread, tick loop, etc.).
- */
+
 public class GameScheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(GameScheduler.class);
 
     private final Map<@NotNull UUID, @NotNull List<@NotNull GameTask>> gameTasks = new HashMap<>();
 
-    /**
-     * Constructs a new GameScheduler and initializes the internal tick loop.
-     * A background task is scheduled to periodically tick all active tasks.
-     */
+
     public GameScheduler(GameSchedulerPlatform platform) {
         platform.scheduleTask(() -> {
             Map<UUID, List<GameTask>> copy = new HashMap<>(gameTasks);
