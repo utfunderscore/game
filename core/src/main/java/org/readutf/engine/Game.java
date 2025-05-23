@@ -85,7 +85,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
 
     // List of active features for the game
     @NotNull
-    private final List<org.readutf.engine.feature.System> systems = new ArrayList<>();
+    private final List<System> systems = new ArrayList<>();
 
     /**
      * Creates a new game instance with the specified components
@@ -198,7 +198,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
         }
 
         Stage<ARENA, TEAM> previous = currentStage;
-        Stage<ARENA, TEAM> nextStage = nextStageCreator.startNextStage(previous);
+        Stage<ARENA, TEAM> nextStage = nextStageCreator.startNextStage(this, previous);
 
         logger.info("Starting stage {}", nextStage.getClass().getSimpleName());
 
@@ -220,7 +220,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
     /**
      * Ends the game and performs cleanup
      *
-     * @throws GameEndException       if game is not in active state
+     * @throws GameEndException if game is not in active state
      */
     public void end() throws GameEndException {
         callEvent(new GameEndEvent(this));
@@ -302,7 +302,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
     @SuppressWarnings("unchecked")
     public <T extends System> T getFeature(@NotNull Class<? extends T> clazz) {
         // First check game features
-        for (org.readutf.engine.feature.System system : systems) {
+        for (System system : systems) {
             if (system.getClass().equals(clazz)) {
                 return (T) system;
             }
@@ -310,7 +310,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
 
         // Then check stage features
         if (currentStage != null) {
-            for (org.readutf.engine.feature.System system : currentStage.getSystems()) {
+            for (System system : currentStage.getSystems()) {
                 if (system.getClass().equals(clazz)) {
                     return (T) system;
                 }
@@ -334,6 +334,7 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
 
     /**
      * Changes the current arena
+     *
      * @param arena New arena
      */
     public void changeArena(@NotNull ARENA arena) {
@@ -373,28 +374,6 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
     }
 
     /**
-     * Gets all players in the game
-     *
-     * @return List of player UUIDs
-     */
-    @NotNull
-    public List<UUID> getPlayers() {
-        return teams.values().stream()
-                .flatMap(team -> team.getPlayers().stream())
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * Gets all online players in the game
-     *
-     * @return List of online player UUIDs
-     */
-    @NotNull
-    public List<UUID> getOnlinePlayers() {
-        return getPlayers().stream().filter(platform::isOnline).collect(Collectors.toList());
-    }
-
-    /**
      * Adds a player to the game
      *
      * @param playerId Player UUID
@@ -427,6 +406,39 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
 
         team.getPlayers().remove(playerId);
         callEvent(new GameLeaveEvent(this, playerId));
+    }
+
+    /**
+     * Sends a message to all online players
+     *
+     * @param component Message component
+     */
+    public void messageAll(@NotNull Component component) {
+        for (UUID onlinePlayer : getOnlinePlayers()) {
+            platform.messagePlayer(onlinePlayer, component);
+        }
+    }
+
+    /**
+     * Gets all players in the game
+     *
+     * @return List of player UUIDs
+     */
+    @NotNull
+    public List<UUID> getPlayers() {
+        return teams.values().stream()
+                .flatMap(team -> team.getPlayers().stream())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Gets all online players in the game
+     *
+     * @return List of online player UUIDs
+     */
+    @NotNull
+    public List<UUID> getOnlinePlayers() {
+        return getPlayers().stream().filter(platform::isOnline).collect(Collectors.toList());
     }
 
     /**
@@ -469,17 +481,6 @@ public class Game<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
     @NotNull
     public List<TEAM> getTeams() {
         return new ArrayList<>(teams.values());
-    }
-
-    /**
-     * Sends a message to all online players
-     *
-     * @param component Message component
-     */
-    public void messageAll(@NotNull Component component) {
-        for (UUID onlinePlayer : getOnlinePlayers()) {
-            platform.messagePlayer(onlinePlayer, component);
-        }
     }
 
     /**
