@@ -21,10 +21,9 @@ public class MinestomEventPlatform implements GameEventPlatform {
     public <T> void registerEventListener(
             @NotNull Game<?, ?> game, @NotNull Class<T> type, @NotNull Consumer<T> consumer)
             throws EventDispatchException {
-        if (!type.isAssignableFrom(Event.class)) {
-            throw new EventDispatchException("Event type not valid for platform 'Minestom'");
+        if (Event.class.isAssignableFrom(type)) {
+            eventNode.addListener((Class<? extends Event>) type, event -> consumer.accept((T) event));
         }
-        eventNode.addListener((Class<? extends Event>) type, event -> consumer.accept((T) event));
     }
 
     @Override
