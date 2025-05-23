@@ -1,6 +1,7 @@
 package org.readutf.engine.stage;
 
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 import org.readutf.engine.GameException;
@@ -20,14 +21,15 @@ import java.util.Map;
 
 /**
  * Represents a stage or phase in a game's lifecycle.
- * 
+ *
  * <p>A Stage is bound to a specific game and can reference the previous stage in the sequence.
  * It can register event listeners, add features, schedule tasks, and define startup and shutdown logic.
  *
  * @param <ARENA> the type of Arena used in the game
- * @param <TEAM> the type of GameTeam participating in the game
+ * @param <TEAM>  the type of GameTeam participating in the game
  */
-public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
+@Slf4j
+public abstract class Stage<ARENA extends Arena<?, ?>, TEAM extends GameTeam> {
 
     @Getter protected final Game<ARENA, TEAM> game;
     @Getter protected final Stage<ARENA, TEAM> previousStage;
@@ -38,7 +40,7 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
     /**
      * Constructs a new stage associated with the given game and an optional previous stage.
      *
-     * @param game the game instance this stage belongs to
+     * @param game          the game instance this stage belongs to
      * @param previousStage the previous stage, or null if this is the first stage
      */
     public Stage(Game<ARENA, TEAM> game, Stage<ARENA, TEAM> previousStage) {
@@ -68,12 +70,16 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
      * Adds a feature to the stage. All its listeners are registered and tasks scheduled.
      *
      * @param feature the feature to add
+     * @param <T>     the feature type
      * @return the added feature
-     * @param <T> the feature type
      */
-    public <T extends System> @NotNull T addFeature(@NotNull T feature) throws EventDispatchException {
+    public <T extends System> @NotNull T addFeature(@NotNull T feature) {
         for (ListenerData<?> listener : feature.getListeners()) {
-            registerRawListener(listener.listener(), listener.type());
+            try {
+                registerRawListener(listener.listener(), listener.type());
+            } catch (EventDispatchException e) {
+                log.error("Failed to register listener: {}", e.getMessage());
+            }
         }
 
         for (GameTask task : feature.getTasks()) {
@@ -88,7 +94,7 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
      * Registers a raw, low-level event listener for a specific event type.
      *
      * @param registeredListener the listener to register
-     * @param type the class of the event
+     * @param type               the class of the event
      */
     public void registerRawListener(GameListener registeredListener, Class<?> type) throws EventDispatchException {
         registeredListeners
@@ -102,8 +108,8 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
      * Registers a strongly typed listener for the given event class.
      *
      * @param gameListener the listener to register
-     * @param clazz the event class
-     * @param <T> the type of the event
+     * @param clazz        the event class
+     * @param <T>          the type of the event
      */
     public <T> void registerListener(TypedGameListener<T> gameListener, Class<T> clazz) throws EventDispatchException {
         registerRawListener(gameListener, clazz);
@@ -112,9 +118,9 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
     /**
      * Registers multiple listeners for the same event class.
      *
-     * @param clazz the class of the event
+     * @param clazz     the class of the event
      * @param listeners the listeners to register
-     * @param <T> the event type
+     * @param <T>       the event type
      */
     @SafeVarargs
     public final <T> void registerListeners(Class<T> clazz, TypedGameListener<T> @NotNull ... listeners) throws EventDispatchException {
@@ -162,7 +168,9 @@ public abstract class Stage<ARENA extends Arena<?,?>, TEAM extends GameTeam> {
         }
     }
 
-    /** @return the features associated with this stage */
+    /**
+     * @return the features associated with this stage
+     */
     public @NotNull List<System> getSystems() {
         return systems;
     }
