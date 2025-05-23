@@ -62,14 +62,25 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         List<CompletableFuture<Chunk>> chunkFutures = new ArrayList<>();
         Point size = schematic.size();
 
-        for (int x = 0; x < (size.blockX() + 16) >> 4; x++) {
-            for (int z = 0; z < (size.blockZ() + 16) >> 4; z++) {
-                chunkFutures.add(instance.loadChunk(x, z));
-                logger.info("Loading chunk at {} {}", x, z);
+        @NotNull Point min = schematic.offset();
+        @NotNull Point max = min.add(size.blockX(), size.blockY(), size.blockZ());
+
+        int minChunkX = min.blockX() >> 4;
+        int minChunkZ = min.blockZ() >> 4;
+
+        int maxChunkX = max.blockX() >> 4;
+        int maxChunkZ = max.blockZ() >> 4;
+
+        for (int x = minChunkX; x <= maxChunkX; x++) {
+            for (int z = minChunkZ; z <= maxChunkZ; z++) {
+                CompletableFuture<Chunk> chunkFuture = instance.loadChunk(x, z);
+                chunkFutures.add(chunkFuture);
             }
         }
 
-        CompletableFuture.allOf(chunkFutures.toArray(new CompletableFuture[0])).thenAccept(x -> schematic.createBatch().apply(instance, schematic.offset(), () -> {}));
+        logger.info("Offset {}" , schematic.offset());
+
+        CompletableFuture.allOf(chunkFutures.toArray(new CompletableFuture[0])).thenAccept(x -> schematic.createBatch().apply(instance, Pos.ZERO, () -> {}));
 
         List<Marker> markers;
         try {
