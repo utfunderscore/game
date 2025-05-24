@@ -1,14 +1,21 @@
 package org.readutf.engine.minestom.arena;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Future;
 import java.util.stream.Stream;
+import net.hollowcube.polar.PolarLoader;
+import net.hollowcube.polar.PolarReader;
+import net.hollowcube.polar.PolarWorld;
+import net.hollowcube.polar.PolarWriter;
 import net.hollowcube.schem.BlockEntityData;
 import net.hollowcube.schem.Schematic;
+import net.hollowcube.schem.SpongeSchematic;
 import net.hollowcube.schem.reader.SchematicReadException;
 import net.hollowcube.schem.reader.SpongeSchematicReader;
 import net.kyori.adventure.nbt.BinaryTag;
@@ -20,13 +27,16 @@ import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.InstanceContainer;
+import net.minestom.server.instance.LightingChunk;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.readutf.buildformat.common.Build;
+import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.markers.Position;
-import org.readutf.engine.Game;
-import org.readutf.engine.GameManager;
+import org.readutf.buildformat.common.meta.BuildMeta;
+import org.readutf.buildformat.common.schematic.BuildSchematic;
+import org.readutf.buildformat.common.schematic.BuildSchematicStore;
 import org.readutf.engine.arena.Arena;
 import org.readutf.engine.arena.ArenaPlatform;
 import org.readutf.engine.arena.build.BuildPlacement;
@@ -39,30 +49,75 @@ import org.slf4j.LoggerFactory;
 public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
 
     private static final Logger logger = LoggerFactory.getLogger(MinestomArenaPlatform.class);
-    private @NotNull static final MinestomArenaPlatform instance = new MinestomArenaPlatform();
 
-    private MinestomArenaPlatform() {
-        // Private constructor to prevent instantiation
+    private @NotNull final BuildSchematicStore buildSchematicStore;
+    private @NotNull final SpongeSchematicReader schematicReader;
+    private final Map<String, CachedArenaData> arenaCache;
+
+    public MinestomArenaPlatform(@NotNull BuildSchematicStore buildSchematicStore) {
+        this.buildSchematicStore = buildSchematicStore;
+        this.schematicReader = new SpongeSchematicReader();
+        this.arenaCache = new HashMap<>();
     }
 
-    private @NotNull static final SpongeSchematicReader SCHEMATIC_READER = new SpongeSchematicReader();
-    private @NotNull final Map<Integer, Instance> instances = new HashMap<>();
+    @Override
+    public @NotNull BuildPlacement<Instance> placeBuild(int buildId, @NotNull BuildMeta buildMeta) throws ArenaLoadException {
+
+        @Nullable CachedArenaData cachedArenaData = arenaCache.get(buildMeta.name());
+
+        if (cachedArenaData == null || cachedArenaData.version() != buildMeta.version()) {
+            logger.info("Download build data for {}", buildMeta.name());
+            long start = System.currentTimeMillis();
+            @NotNull BuildSchematic buildSchematic;
+            try {
+                buildSchematic = buildSchematicStore.load(buildMeta.name());
+            } catch (BuildFormatException e) {
+                throw new ArenaLoadException("Failed to load build data", e);
+            }
+            logger.info("Build data loaded in {} ms", System.currentTimeMillis() - start);
+            cachedArenaData = getArenaData(buildMeta, buildSchematic);
+            arenaCache.put(buildMeta.name(), cachedArenaData);
+        }
+
+        PolarWorld read = PolarReader.read(cachedArenaData.polarData());
+        PolarLoader polarLoader = new PolarLoader(read);
+
+        InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer();
+        instance.setChunkLoader(polarLoader);
+        instance.setChunkSupplier(LightingChunk::new);
+
+//        instances.put(buildId, instance);
+
+        return new BuildPlacement<>(instance, Position.ZERO, cachedArenaData.markers());
+    }
 
     @Override
-    public @NotNull BuildPlacement<Instance> placeBuild(int buildId, @NotNull Build build) throws ArenaLoadException {
-        var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
+    public void freeArena(Arena<Instance, ?> arena) {
+    }
 
-        Schematic schematic;
+    private @NotNull CachedArenaData getArenaData(@NotNull BuildMeta buildMeta, @NotNull BuildSchematic buildData) throws ArenaLoadException {
+
+        SpongeSchematic schematic;
         try {
-            schematic = SCHEMATIC_READER.read(build.buildSchematic().buildData());
+            schematic = (SpongeSchematic) schematicReader.read(buildData.buildData());
         } catch (SchematicReadException e) {
             throw new ArenaLoadException("Failed to read schematic", e);
         }
 
-        List<CompletableFuture<Chunk>> chunkFutures = new ArrayList<>();
+        List<Marker> markers = extractMarkerPositions(schematic).stream().map(marker -> new Marker(
+                marker.name(),
+                marker.position().add(PlatformUtils.fromPoint(schematic.offset())),
+                marker.offset()
+        )).toList();
+
+        var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
+        instance.setChunkSupplier(LightingChunk::new);
+        PolarWorld polarWorld = new PolarWorld();
+        PolarLoader chunkLoader = new PolarLoader(polarWorld);
+        instance.setChunkLoader(chunkLoader);
         Point size = schematic.size();
 
-        @NotNull Point min = schematic.offset();
+        @NotNull Point min = new Pos(0, 0, 0);
         @NotNull Point max = min.add(size.blockX(), size.blockY(), size.blockZ());
 
         int minChunkX = min.blockX() >> 4;
@@ -71,32 +126,47 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         int maxChunkX = max.blockX() >> 4;
         int maxChunkZ = max.blockZ() >> 4;
 
+
+        List<Chunk> chunks = new ArrayList<>();
         for (int x = minChunkX; x <= maxChunkX; x++) {
             for (int z = minChunkZ; z <= maxChunkZ; z++) {
-                CompletableFuture<Chunk> chunkFuture = instance.loadChunk(x, z);
-                chunkFutures.add(chunkFuture);
+                Chunk chunk = instance.loadChunk(x, z).join();
+                chunks.add(chunk);
             }
         }
 
-        logger.info("Offset {}" , schematic.offset());
+        LightingChunk.relight(instance, chunks);
+        CompletableFuture<Void> pasteJob = new CompletableFuture<>();
+        schematic.createBatch().apply(instance, schematic.offset().mul(-1), () -> {
+            pasteJob.complete(null);
+        });
+        pasteJob.join();
 
-        CompletableFuture.allOf(chunkFutures.toArray(new CompletableFuture[0])).thenAccept(x -> schematic.createBatch().apply(instance, Pos.ZERO, () -> {}));
+        instance.saveChunksToStorage().join();
 
-        List<Marker> markers;
-        try {
-            markers = extractMarkerPositions(schematic);
-        } catch (Exception e) {
-            throw new ArenaLoadException(e);
-        }
-        instances.put(buildId, instance);
+        PolarWriter.write(polarWorld);
 
-        return new BuildPlacement<>(instance, Position.ZERO, markers);
+        byte[] polarData = PolarWriter.write(polarWorld);
+        System.out.println(Arrays.toString(polarData));
+
+        MinecraftServer.getInstanceManager().unregisterInstance(instance);
+
+        return new CachedArenaData(
+                buildMeta.version(),
+                polarData,
+                markers
+        );
     }
 
-    @Override
-    public void freeArena(Arena<Instance, ?> arena) throws ArenaLoadException {}
+    private record CachedArenaData(
+            int version,
+            byte[] polarData,
+            List<Marker> markers
+    ) {
 
-    public static @NotNull List<Marker> extractMarkerPositions(@NotNull Schematic schematic) {
+    }
+
+    private @NotNull List<Marker> extractMarkerPositions(@NotNull Schematic schematic) {
         List<Marker> markers = new ArrayList<>();
 
         for (BlockEntityData entity : schematic.blockEntities()) {
@@ -141,28 +211,24 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
             markers.add(new Marker(
                     markerName,
                     new Position(point.x() + offset.get(0), point.y() + offset.get(1), point.z() + offset.get(2)),
-                    new Position(point.x(), point.y(), point.z())));
+                    new Position(offset.get(0), offset.get(1), offset.get(2))));
         }
 
         return markers;
     }
 
-    private static List<String> extractMarkerLines(CompoundBinaryTag compoundBinaryTag) {
+    private List<String> extractMarkerLines(CompoundBinaryTag compoundBinaryTag) {
         CompoundBinaryTag frontText = compoundBinaryTag.getCompound("front_text");
         ListBinaryTag messages = frontText.getList("messages");
         List<String> result = new ArrayList<>(messages.size());
         for (BinaryTag tag : messages) {
             if (tag instanceof StringBinaryTag line) {
                 String value = line.value();
-                if(value.length() < 2) continue;
+                if (value.length() < 2) continue;
                 logger.debug("Extracted marker line: {}", value);
                 result.add(value);
             }
         }
         return result;
-    }
-
-    public static MinestomArenaPlatform getInstance() {
-        return instance;
     }
 }

@@ -12,6 +12,8 @@ import org.readutf.buildformat.common.format.BuildFormatChecksum;
 import org.readutf.buildformat.common.format.BuildFormatManager;
 import org.readutf.buildformat.common.format.requirements.RequirementData;
 import org.readutf.buildformat.common.markers.Marker;
+import org.readutf.buildformat.common.meta.BuildMeta;
+import org.readutf.buildformat.common.meta.BuildMetaStore;
 import org.readutf.engine.arena.build.BuildPlacement;
 import org.readutf.engine.arena.exception.ArenaLoadException;
 
@@ -36,10 +38,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class ArenaManager<WORLD> {
 
-    private @NotNull final BuildManager buildManager;
+    private @NotNull final BuildMetaStore buildMetaStore;
     private @NotNull final ArenaPlatform<WORLD> arenaPlatform;
     private @NotNull final AtomicInteger idTracker;
-
 
     /**
      * Loads an arena by name and build format class.
@@ -53,16 +54,16 @@ public class ArenaManager<WORLD> {
      * @throws ArenaLoadException if loading fails or the build format is invalid
      */
     public @Nullable <FORMAT extends BuildFormat> Arena<WORLD, FORMAT> loadArena(String name, @NotNull Class<FORMAT> clazz) throws ArenaLoadException {
-        Build build;
+        @Nullable BuildMeta buildMeta;
         try {
-            build = buildManager.getBuild(name);
+            buildMeta = buildMetaStore.getByName(name);
 
-            if (build == null) {
+            if (buildMeta == null) {
                 return null;
             }
 
             int id = idTracker.getAndIncrement();
-            BuildPlacement<WORLD> placement = arenaPlatform.placeBuild(id, build);
+            BuildPlacement<WORLD> placement = arenaPlatform.placeBuild(id, buildMeta);
 
             FORMAT format;
 
@@ -70,7 +71,7 @@ public class ArenaManager<WORLD> {
 
             return new Arena<>(
                     id,
-                    build,
+                    buildMeta,
                     placement.world(),
                     format,
                     placement.markers().stream().map(Marker::getTargetPosition).toList()
@@ -91,7 +92,7 @@ public class ArenaManager<WORLD> {
      * @throws BuildFormatException if validation or checksum generation fails
      */
     public <T extends BuildFormat> @NotNull List<String> getByFormat(@NotNull String format, @NotNull Class<T> kClass) throws BuildFormatException {
-        Map<String, BuildFormatChecksum> buildsByFormat = buildManager.getBuildsByFormat(format);
+        Map<String, BuildFormatChecksum> buildsByFormat = buildMetaStore.getBuildsByFormat(format);
 
         List<RequirementData> requirements = BuildFormatManager.getValidators(kClass);
         byte[] targetChecksum = BuildFormatManager.generateChecksum(requirements);
