@@ -20,6 +20,7 @@ dependencies {
     api(project(":core"))
 
     api("dev.hollowcube:schem:2.0.0")
+    api("dev.hollowcube:polar:1.14.0")
     api("org.slf4j:slf4j-api:2.0.16")
 
     api("net.bladehunt:kotstom:0.4.0-beta.0")
