@@ -18,7 +18,7 @@ public class SpectatorTask extends RepeatingGameTask {
         for (UUID onlineSpectator : spectatorManager.getOnlineSpectators()) {
             SpectatorData spectatorData = spectatorManager.getSpectatorData(onlineSpectator);
             if (spectatorData == null) continue;
-            if (!spectatorData.isRespawn()) return;
+            if (!spectatorData.isCanRespawn()) return;
 
             if (spectatorData.getRespawnTime().isBefore(LocalDateTime.now())) {
                 spectatorManager.respawnSpectator(spectatorData);
