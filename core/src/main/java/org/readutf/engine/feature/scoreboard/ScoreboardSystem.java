@@ -7,15 +7,14 @@ import java.util.*;
 import org.readutf.engine.task.GameTask;
 import org.readutf.engine.task.impl.RepeatingGameTask;
 
-public abstract class ScoreboardSystem implements System {
+public class ScoreboardSystem implements System {
 
     private final @NotNull ScoreboardPlatform scoreboardPlatform;
     private final @NotNull Map<UUID, Scoreboard> scoreboards;
 
-    public ScoreboardSystem(
-            @NotNull ScoreboardPlatform scoreboardPlatform, @NotNull Map<UUID, Scoreboard> scoreboards) {
+    public ScoreboardSystem(@NotNull ScoreboardPlatform scoreboardPlatform) {
         this.scoreboardPlatform = scoreboardPlatform;
-        this.scoreboards = scoreboards;
+        this.scoreboards = new HashMap<>();
     }
 
     public void setScoreboard(@NotNull UUID playerId, @NotNull Scoreboard scoreboard) {
