@@ -7,7 +7,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.markers.Position;
 import org.readutf.engine.Game;
-import org.readutf.engine.GamePlatform;
 import org.readutf.engine.arena.Arena;
 import org.readutf.engine.event.impl.arena.ArenaChangeEvent;
 import org.readutf.engine.event.impl.game.GameJoinEvent;
@@ -15,12 +14,13 @@ import org.readutf.engine.event.impl.stage.StagePreChangeEvent;
 import org.readutf.engine.event.listener.ListenerData;
 import org.readutf.engine.event.listener.TypedGameListener;
 import org.readutf.engine.feature.System;
+import org.readutf.engine.team.GameTeam;
 
 @AllArgsConstructor
 @Slf4j
-public sealed class SpawningSystem<WORLD> implements System {
+public sealed class SpawningSystem<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> implements System {
 
-    private final Game<WORLD, Arena<WORLD, ?>, ?> game;
+    private final Game<WORLD, ARENA, TEAM> game;
     private final @NotNull SpawnFinder spawnFinder;
 
     public void spawn(UUID playerId) {
@@ -28,13 +28,17 @@ public sealed class SpawningSystem<WORLD> implements System {
         log.info("Spawning player {}", playerId);
 
         Position position = spawnFinder.find(playerId);
+        Arena<WORLD, ?> arena = game.getArena();
         if (position == null) {
             log.warn("No spawn found for player {}", playerId);
             return;
         }
+        if(arena == null) {
+            log.warn("There is no active arena");
+            return;
+        }
 
-        GamePlatform<WORLD> platform = game.getPlatform();
-        platform.teleport(playerId, position, game.getArena().getWorld());
+        game.getPlatform().teleport(playerId, position, arena.getWorld());
     }
 
     public non-sealed static class StageStart extends SpawningSystem {

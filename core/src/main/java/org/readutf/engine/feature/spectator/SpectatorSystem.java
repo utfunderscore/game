@@ -8,6 +8,7 @@ import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.engine.Game;
+import org.readutf.engine.arena.Arena;
 import org.readutf.engine.feature.System;
 import org.readutf.engine.feature.spawning.SpawningSystem;
 import org.readutf.engine.task.GameTask;
@@ -73,7 +74,8 @@ public class SpectatorSystem implements System {
 
         game.callEvent(new SpectatorEvent(game, spectatorData));
 
-        spectatorPlatform.setSpectatorState(spectatorData.getPlayerId());
+
+        spectatorPlatform.setSpectatorState(spectatorData);
 
         spectators.put(spectatorData.getPlayerId(), spectatorData);
     }
@@ -87,9 +89,13 @@ public class SpectatorSystem implements System {
         SpectatorData data = spectators.get(spectatorData.getPlayerId());
         if (data == null) return;
 
-        spectators.remove(spectatorData.getPlayerId());
-        respawnHandler.spawn(data.getPlayerId());
-        spectatorPlatform.setNormalState(data.getPlayerId());
+        try {
+            respawnHandler.spawn(data.getPlayerId());
+            spectatorPlatform.setNormalState(data.getPlayerId());
+            spectators.remove(spectatorData.getPlayerId());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -160,4 +166,5 @@ public class SpectatorSystem implements System {
     public @Nullable SpectatorData getSpectatorData(@NotNull UUID playerId) {
         return spectators.get(playerId);
     }
+
 }

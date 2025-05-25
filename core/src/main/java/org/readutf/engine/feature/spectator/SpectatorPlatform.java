@@ -4,8 +4,8 @@ import java.util.UUID;
 
 public interface SpectatorPlatform {
 
-    void setSpectatorState(UUID playerId);
+    void setSpectatorState(SpectatorData spectatorData);
 
-    void setNormalState(UUID playerId);
+    void setNormalState(UUID playerId) throws Exception;
 
 }
