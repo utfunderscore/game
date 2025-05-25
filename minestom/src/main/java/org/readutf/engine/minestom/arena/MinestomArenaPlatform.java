@@ -147,8 +147,6 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         PolarWriter.write(polarWorld);
 
         byte[] polarData = PolarWriter.write(polarWorld);
-        System.out.println(Arrays.toString(polarData));
-
         MinecraftServer.getInstanceManager().unregisterInstance(instance);
 
         return new CachedArenaData(

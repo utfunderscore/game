@@ -1,6 +1,8 @@
 package org.readutf.engine.minestom;
 
 import java.lang.ref.WeakReference;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.WeakHashMap;
@@ -13,12 +15,17 @@ import net.minestom.server.instance.Instance;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.markers.Position;
+import org.readutf.engine.Game;
 import org.readutf.engine.GamePlatform;
 
 public class MinestomPlatform implements GamePlatform<Instance> {
 
     public static @Nullable Player getPlayer(UUID playerId) {
         return MinecraftServer.getConnectionManager().getOnlinePlayerByUuid(playerId);
+    }
+
+    public static @NotNull List<@NotNull Player> getOnlinePlayers(Game<?, ?, ?> game) {
+        return game.getOnlinePlayers().stream().map(MinestomPlatform::getPlayer).filter(Objects::nonNull).toList();
     }
 
     @Override
@@ -38,6 +45,12 @@ public class MinestomPlatform implements GamePlatform<Instance> {
         Player player = getPlayer(playerId);
         if (player == null) return CompletableFuture.completedFuture(null);
 
-        return player.setInstance(instance, new Pos(position.x(), position.y(), position.z()));
+        Pos targetPos = new Pos(position.x(), position.y(), position.z());
+        if(player.getInstance() == instance) {
+            return player.teleport(targetPos);
+        } else {
+            return player.setInstance(instance, targetPos);
+        }
     }
+
 }
