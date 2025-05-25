@@ -2,30 +2,24 @@ package org.readutf.engine.minestom.feature.spectator;
 
 import java.util.UUID;
 import net.minestom.server.entity.Player;
-import org.jetbrains.annotations.NotNull;
+import org.readutf.engine.feature.spectator.SpectatorData;
 import org.readutf.engine.feature.spectator.SpectatorPlatform;
-import org.readutf.engine.feature.spectator.SpectatorSystem;
 import org.readutf.engine.minestom.MinestomPlatform;
+import org.readutf.engine.minestom.PlatformUtils;
 
 public class MinestomSpectator implements SpectatorPlatform {
 
-    private @NotNull final SpectatorSystem spectatorSystem;
-
-    public MinestomSpectator(@NotNull SpectatorSystem spectatorSystem) {
-        this.spectatorSystem = spectatorSystem;
-    }
-
     @Override
-    public void setSpectatorState(UUID playerId) {
-        Player player = MinestomPlatform.getPlayer(playerId);
+    public void setSpectatorState(SpectatorData spectatorData) {
+        Player player = MinestomPlatform.getPlayer(spectatorData.getPlayerId());
         if(player == null) return;
+
+        player.teleport(PlatformUtils.fromPosition(spectatorData.getSpectatorPosition()));
 
         player.setAllowFlying(true);
         player.setFlying(true);
         player.setInvisible(true);
-
         player.setAutoViewable(false);
-        player.updateViewableRule(viewer -> spectatorSystem.isSpectator(player.getUuid()));
     }
 
     @Override
@@ -36,8 +30,5 @@ public class MinestomSpectator implements SpectatorPlatform {
         player.setAllowFlying(false);
         player.setFlying(false);
         player.setInvisible(false);
-
-        player.updateViewableRule(viewer -> true);
-
     }
 }
