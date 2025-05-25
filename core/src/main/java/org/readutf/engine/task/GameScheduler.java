@@ -1,12 +1,15 @@
 package org.readutf.engine.task;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 import org.readutf.engine.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
 
 
 public class GameScheduler {
@@ -55,8 +58,6 @@ public class GameScheduler {
      * @param gameTask the task to execute
      */
     public void schedule(@NotNull Stage<?, ?, ?> stage, @NotNull GameTask gameTask) {
-        logger.info("Scheduling task {}", gameTask);
-
         GameTask wrapped = new GameTask() {
             @Override
             public void tick() {

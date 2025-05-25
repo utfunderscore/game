@@ -1,16 +1,15 @@
 package org.readutf.engine.arena;
 
+import java.util.List;
 import java.util.Objects;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.format.BuildFormat;
 import org.readutf.buildformat.common.markers.Position;
-
-import java.util.List;
 import org.readutf.buildformat.common.meta.BuildMeta;
 
 @Getter
-public final class Arena<WORLD, T extends BuildFormat> {
+public class Arena<WORLD, T extends BuildFormat> {
     @Getter private final int arenaId;
     private @NotNull final BuildMeta buildMeta;
     private @NotNull final WORLD world;

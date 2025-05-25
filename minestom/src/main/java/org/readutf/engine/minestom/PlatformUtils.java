@@ -1,6 +1,7 @@
 package org.readutf.engine.minestom;
 
 import net.minestom.server.coordinate.Point;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.Instance;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,6 +24,10 @@ public class PlatformUtils {
 
     public static @NotNull Position fromPoint(@NotNull Point point) {
         return new Position(point.x(), point.y(), point.z());
+    }
+
+    public static @NotNull Pos fromPosition(@NotNull Position position) {
+        return new Pos(position.x(), position.y(), position.z());
     }
 
 }
