@@ -43,8 +43,8 @@ public abstract class CountdownTask extends RepeatingGameTask {
      *
      * @return The time left in milliseconds, or 0 if the countdown has expired
      */
-    public long getTimeLeft() {
-        return Duration.between(LocalDateTime.now(), endTime).toMillis();
+    public long getTimeLeftSeconds() {
+        return Duration.between(LocalDateTime.now(), endTime).toSeconds();
     }
 
     /**
@@ -53,17 +53,21 @@ public abstract class CountdownTask extends RepeatingGameTask {
      */
     @Override
     public void run() {
+
         // Check if the countdown has expired
         if (LocalDateTime.now().isAfter(endTime) || LocalDateTime.now().isEqual(endTime)) {
-            log.info("Countdown expired, executing final callback.");
-            handleInterval(0); // Execute final callback with 0
+            log.info("Countdown expired, executing final callback. {}", isMarkedForRemoval());
             markForRemoval(); // Stop the task
+            try {
+                handleInterval(0); // Execute final callback with 0
+            } catch (Exception e) {
+                log.error("Error executing final callback for CountdownTask", e);
+            }
             return;
         }
 
         // Check which intervals should be triggered based on remaining time
-        long timeLeft = getTimeLeft();
-
+        long timeLeft = getTimeLeftSeconds();
         // Create a copy to avoid concurrent modification during iteration
         List<Integer> intervalsToCheck = new ArrayList<>(remainingIntervals);
 
