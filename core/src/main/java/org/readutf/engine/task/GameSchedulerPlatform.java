@@ -7,6 +7,8 @@ public interface GameSchedulerPlatform {
      *
      * @param runnable the task to execute
      */
-    void scheduleTask(Runnable runnable);
+    void scheduleRepeatingTask(Runnable runnable);
+
+    void executeTask(Runnable runnable);
 
 }

@@ -7,13 +7,14 @@ import org.readutf.engine.event.GameEvent;
 import org.readutf.engine.stage.Stage;
 
 @Getter
-public class StagePreChangeEvent extends GameEvent {
+public class StagePreChangeEvent implements GameEvent {
 
+    private final @NotNull Game<?, ?, ?> game;
     private final @NotNull Stage<?, ?, ?> previousStage;
     private final @NotNull Stage<?, ?, ?> currentStage;
 
     public StagePreChangeEvent(@NotNull Game<?, ?,?> game, @NotNull Stage<?, ?, ?> previousStage, @NotNull Stage<?, ?, ?> currentStage) {
-        super(game);
+        this.game = game;
         this.previousStage = previousStage;
         this.currentStage = currentStage;
     }

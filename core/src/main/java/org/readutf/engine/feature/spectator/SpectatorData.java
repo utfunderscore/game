@@ -15,7 +15,7 @@ import org.readutf.buildformat.common.markers.Position;
  */
 @Getter
 @Setter
-public final class SpectatorData {
+public class SpectatorData {
     private @NotNull final UUID playerId;
     private @NotNull final LocalDateTime deathTime;
     private @Nullable LocalDateTime respawnTime;

@@ -23,7 +23,7 @@ subprojects {
     version = rootProject.version
 
     java {
-        withJavadocJar()
+//        withJavadocJar()
         withSourcesJar()
     }
 

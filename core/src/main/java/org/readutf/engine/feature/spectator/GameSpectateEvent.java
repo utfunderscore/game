@@ -1,20 +1,19 @@
-package org.readutf.engine.event.impl.game;
+package org.readutf.engine.feature.spectator;
 
-import java.util.UUID;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 import org.readutf.engine.event.GameEvent;
 
 @Getter
-public class GameJoinEvent implements GameEvent {
+public class GameSpectateEvent implements GameEvent {
 
     private final @NotNull Game<?, ?, ?> game;
-    private final @NotNull UUID playerId;
+    private final @NotNull SpectatorData spectatorData;
 
-    public GameJoinEvent(@NotNull Game<?, ?, ?> game, @NotNull UUID playerId) {
+    public GameSpectateEvent(@NotNull Game<?, ?, ?> game, @NotNull SpectatorData spectatorData) {
         this.game = game;
-        this.playerId = playerId;
+        this.spectatorData = spectatorData;
     }
 
     @Override

@@ -8,7 +8,6 @@ import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.engine.Game;
-import org.readutf.engine.arena.Arena;
 import org.readutf.engine.feature.System;
 import org.readutf.engine.feature.spawning.SpawningSystem;
 import org.readutf.engine.task.GameTask;
@@ -72,7 +71,7 @@ public class SpectatorSystem implements System {
     public void setSpectator(@NotNull SpectatorData spectatorData) {
         spectators.put(spectatorData.getPlayerId(), spectatorData);
 
-        game.callEvent(new SpectatorEvent(game, spectatorData));
+        game.callEvent(new GameSpectateEvent(game, spectatorData));
 
 
         spectatorPlatform.setSpectatorState(spectatorData);
