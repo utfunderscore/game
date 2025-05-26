@@ -11,33 +11,44 @@ import org.readutf.engine.stage.Stage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class GameScheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(GameScheduler.class);
 
+    private final GameSchedulerPlatform platform;
+    private final Map<UUID, List<GameTask>> pendingTasks = new HashMap<>();
     private final Map<@NotNull UUID, @NotNull List<@NotNull GameTask>> gameTasks = new HashMap<>();
 
-
     public GameScheduler(GameSchedulerPlatform platform) {
-        platform.scheduleTask(() -> {
-            Map<UUID, List<GameTask>> copy = new HashMap<>(gameTasks);
-            gameTasks.clear();
+        this.platform = platform;
+        platform.scheduleRepeatingTask(this::tick);
+    }
 
-            for (Map.Entry<UUID, List<GameTask>> entry : copy.entrySet()) {
-                UUID gameId = entry.getKey();
-                List<GameTask> tasks = entry.getValue();
+    public void tick() {
 
-                for (@NotNull GameTask task : tasks) {
-                    if (task.isMarkedForRemoval()) continue;
-                    task.tick();
+        for (Map.Entry<@NotNull UUID, @NotNull List<@NotNull GameTask>> uuidListEntry : pendingTasks.entrySet()) {
+            gameTasks.computeIfAbsent(uuidListEntry.getKey(), k -> new ArrayList<>()).addAll(uuidListEntry.getValue());
+        }
+        pendingTasks.clear();
 
-                    if (!task.isMarkedForRemoval()) {
-                        gameTasks.computeIfAbsent(gameId, k -> new ArrayList<>()).add(task);
-                    }
+        Map<UUID, List<GameTask>> remaining = new HashMap<>();
+        for (Map.Entry<UUID, List<GameTask>> entry : gameTasks.entrySet()) {
+            List<GameTask> remainingTasks = new ArrayList<>();
+            List<GameTask> startingTasks = entry.getValue();
+            for (@NotNull GameTask task : startingTasks) {
+                task.tick();
+                if (!task.isMarkedForRemoval()) {
+                    remainingTasks.add(task);
+                } else {
+                    logger.info("Task {} for game {} is marked for removal", task, entry.getKey());
                 }
             }
-        });
+            remaining.put(entry.getKey(), remainingTasks);
+        }
+        gameTasks.clear();
+        for (Map.Entry<@NotNull UUID, @NotNull List<@NotNull GameTask>> uuidListEntry : remaining.entrySet()) {
+            gameTasks.computeIfAbsent(uuidListEntry.getKey(), k -> new ArrayList<>()).addAll(uuidListEntry.getValue());
+        }
     }
 
     /**
@@ -47,8 +58,12 @@ public class GameScheduler {
      * @param gameTask the task to schedule
      */
     public void schedule(@NotNull Game<?, ?, ?> game, @NotNull GameTask gameTask) {
-        logger.info("Scheduling task {}", gameTask);
-        gameTasks.computeIfAbsent(game.getId(), k -> new ArrayList<>()).add(gameTask);
+        platform.executeTask(() -> {
+            logger.info("Scheduling task {} for game {}", gameTask, game.getId());
+            List<@NotNull GameTask> tasks = pendingTasks.getOrDefault(game.getId(), new ArrayList<>());
+            tasks.add(gameTask);
+            pendingTasks.put(game.getId(), tasks);
+        });
     }
 
     /**
@@ -58,12 +73,23 @@ public class GameScheduler {
      * @param gameTask the task to execute
      */
     public void schedule(@NotNull Stage<?, ?, ?> stage, @NotNull GameTask gameTask) {
+        String taskName = gameTask.getClass().getSimpleName();
         GameTask wrapped = new GameTask() {
             @Override
             public void tick() {
                 if (stage.getGame().getCurrentStage() == stage) {
                     gameTask.tick();
                 }
+            }
+
+            @Override
+            public String toString() {
+                return taskName;
+            }
+
+            @Override
+            public boolean isMarkedForRemoval() {
+                return gameTask.isMarkedForRemoval() /* || stage.getGame().getCurrentStage() != stage*/;
             }
         };
 

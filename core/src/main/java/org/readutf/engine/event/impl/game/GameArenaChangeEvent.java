@@ -8,14 +8,20 @@ import org.readutf.engine.arena.Arena;
 import org.readutf.engine.event.GameEvent;
 
 @Getter
-public class GameArenaChangeEvent extends GameEvent {
+public class GameArenaChangeEvent implements GameEvent {
 
+    private final @NotNull Game<?, ?, ?> game;
     private final @NotNull Arena<?, ?> arena;
     private final @Nullable Arena<?, ?> previousArena;
 
     public GameArenaChangeEvent(@NotNull Game<?, ?, ?> game, @NotNull Arena<?, ?> arena, @Nullable Arena<?, ?> previousArena) {
-        super(game);
+        this.game = game;
         this.arena = arena;
         this.previousArena = previousArena;
+    }
+
+    @Override
+    public @NotNull Game<?, ?, ?> getGame() {
+        return game;
     }
 }

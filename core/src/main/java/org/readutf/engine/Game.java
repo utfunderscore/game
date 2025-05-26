@@ -1,5 +1,14 @@
 package org.readutf.engine;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
@@ -8,7 +17,11 @@ import org.readutf.engine.arena.Arena;
 import org.readutf.engine.event.GameEvent;
 import org.readutf.engine.event.GameEventManager;
 import org.readutf.engine.event.exceptions.EventDispatchException;
-import org.readutf.engine.event.impl.game.*;
+import org.readutf.engine.event.impl.game.GameArenaChangeEvent;
+import org.readutf.engine.event.impl.game.GameCrashEvent;
+import org.readutf.engine.event.impl.game.GameEndEvent;
+import org.readutf.engine.event.impl.game.GameJoinEvent;
+import org.readutf.engine.event.impl.game.GameLeaveEvent;
 import org.readutf.engine.event.impl.stage.StagePreChangeEvent;
 import org.readutf.engine.event.listener.ListenerData;
 import org.readutf.engine.event.listener.TypedGameListener;
@@ -25,9 +38,6 @@ import org.readutf.engine.team.TeamSelector;
 import org.readutf.engine.team.exception.TeamSelectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * Core game class that manages the game lifecycle, players, teams, stages, and events.
@@ -136,20 +146,12 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
             throw new GameStartException("Game is not in startup state");
         }
 
-        startNextStage();
-
         if (arena == null) {
             logger.error("No arena is active");
             throw new GameStartException("No arena is active");
         }
 
-        if (currentStage != null) {
-            try {
-                currentStage.onStart();
-            } catch (Exception e) {
-                throw new GameStartException("Failed to start stage", e);
-            }
-        }
+        startNextStage();
 
         gameState = GameState.ACTIVE;
     }
@@ -185,14 +187,12 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
         if (currentStage != null) {
             currentStage.unregisterListeners();
             try {
-                currentStage.onFinish();
+                currentStage.end();
             } catch (Exception e) {
                 throw new GameException("Failed to start next stage", e);
             }
 
             for (System system : currentStage.getSystems()) {
-                java.lang.System.out.println(
-                        "Shutting down feature " + system.getClass().getSimpleName());
                 system.shutdown();
             }
         }
@@ -207,7 +207,7 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
         callEvent(new StagePreChangeEvent(this, nextStage, previous));
 
         try {
-            nextStage.onStart();
+            nextStage.start();
 
             callEvent(new StagePreChangeEvent(this, nextStage, previous));
         } catch (Exception e) {
@@ -236,8 +236,6 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
         eventManager.shutdown(this);
 
         for (System system : systems) {
-            java.lang.System.out.println(
-                    "Shutting down feature " + system.getClass().getSimpleName());
             system.shutdown();
         }
         systems.clear();
@@ -277,7 +275,7 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
      * @return The added feature
      */
     @NotNull
-    public <T extends System> T addFeature(@NotNull T feature) throws EventDispatchException {
+    public <T extends System> T addSystem(@NotNull T feature) throws EventDispatchException {
         systems.add(feature);
 
         for (ListenerData<?> listener : feature.getListeners()) {

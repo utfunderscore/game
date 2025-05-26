@@ -4,9 +4,16 @@ import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 import org.readutf.engine.event.GameEvent;
 
-public class GameEndEvent extends GameEvent {
+public class GameEndEvent implements GameEvent {
+
+    private final @NotNull Game<?, ?, ?> game;
 
     public GameEndEvent(@NotNull Game<?, ?, ?> game) {
-        super(game);
+        this.game = game;
+    }
+
+    @Override
+    public @NotNull Game<?, ?, ?> getGame() {
+        return game;
     }
 }

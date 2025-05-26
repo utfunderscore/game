@@ -1,13 +1,9 @@
 package org.readutf.engine.event;
 
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 
-@Getter
-@RequiredArgsConstructor
-public class GameEvent {
+public interface GameEvent {
 
-    private @NotNull final Game<?, ?, ?> game;
+    @NotNull Game<?, ?, ?> getGame();
 }

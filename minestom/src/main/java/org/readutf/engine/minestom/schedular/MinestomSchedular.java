@@ -7,7 +7,12 @@ import org.readutf.engine.task.GameSchedulerPlatform;
 
 public class MinestomSchedular implements GameSchedulerPlatform {
     @Override
-    public void scheduleTask(@NotNull Runnable runnable) {
+    public void scheduleRepeatingTask(@NotNull Runnable runnable) {
         MinecraftServer.getSchedulerManager().scheduleTask(runnable, TaskSchedule.tick(1), TaskSchedule.tick(1));
+    }
+
+    @Override
+    public void executeTask(Runnable runnable) {
+        MinecraftServer.getSchedulerManager().scheduleNextTick(runnable);
     }
 }

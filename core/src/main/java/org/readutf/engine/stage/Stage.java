@@ -1,5 +1,9 @@
 package org.readutf.engine.stage;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -14,11 +18,6 @@ import org.readutf.engine.feature.System;
 import org.readutf.engine.task.GameTask;
 import org.readutf.engine.team.GameTeam;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Represents a stage or phase in a game's lifecycle.
  *
@@ -31,8 +30,13 @@ import java.util.Map;
 @Slf4j
 public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
 
-    @Getter protected final Game<WORLD, ARENA, TEAM> game;
-    @Getter protected final Stage<WORLD, ARENA, TEAM> previousStage;
+    @Getter
+    protected final Game<WORLD, ARENA, TEAM> game;
+
+    @Getter
+    protected final Stage<WORLD, ARENA, TEAM> previousStage;
+
+    private boolean active = false;
 
     protected final List<System> systems = new ArrayList<>();
     private final Map<Class<?>, List<GameListener>> registeredListeners = new LinkedHashMap<>();
@@ -48,12 +52,32 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
         this.previousStage = previousStage;
     }
 
+    public void start() throws GameException {
+        active = true;
+        try {
+            onStart();
+        } catch (Exception e) {
+            log.error("Failed to start stage: {}", e.getMessage(), e);
+            throw new GameException("Stage initialization failed", e);
+        }
+    }
+
+    public void end() throws Exception {
+        active = false;
+        try {
+            onFinish();
+        } catch (Exception e) {
+            log.error("Failed to finish stage: {}", e.getMessage(), e);
+            throw new GameException("Stage cleanup failed", e);
+        }
+    }
+
     /**
      * Called when the stage begins. Subclasses can override to provide startup logic.
      *
      * @throws Exception if initialization fails
      */
-    public void onStart() throws Exception {
+    protected void onStart() throws Exception {
         // Default no-op
     }
 
@@ -62,7 +86,7 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
      *
      * @throws Exception if cleanup fails
      */
-    public void onFinish() throws Exception {
+    protected void onFinish() throws Exception {
         // Default no-op
     }
 
@@ -73,7 +97,8 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
      * @param <T>     the feature type
      * @return the added feature
      */
-    public <T extends System> @NotNull T addFeature(@NotNull T feature) {
+    public <T extends System> @NotNull T addSystem(@NotNull T feature) {
+
         for (ListenerData<?> listener : feature.getListeners()) {
             try {
                 registerRawListener(listener.listener(), listener.type());
@@ -97,9 +122,7 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
      * @param type               the class of the event
      */
     public void registerRawListener(GameListener registeredListener, Class<?> type) throws EventDispatchException {
-        registeredListeners
-                .computeIfAbsent(type, k -> new ArrayList<>())
-                .add(registeredListener);
+        registeredListeners.computeIfAbsent(type, k -> new ArrayList<>()).add(registeredListener);
 
         game.getEventManager().registerListener(game, type, registeredListener);
     }
@@ -123,7 +146,8 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
      * @param <T>       the event type
      */
     @SafeVarargs
-    public final <T> void registerListeners(Class<T> clazz, TypedGameListener<T> @NotNull ... listeners) throws EventDispatchException {
+    public final <T> void registerListeners(Class<T> clazz, TypedGameListener<T> @NotNull ... listeners)
+            throws EventDispatchException {
         for (TypedGameListener<T> listener : listeners) {
             registerListener(listener, clazz);
         }
@@ -136,6 +160,7 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
      * @return the scheduled task
      */
     public GameTask schedule(GameTask task) {
+        if (!active) throw new RuntimeException("Cannot schedule a task when the stage is not active");
         game.getScheduler().schedule(this, task);
         return task;
     }
@@ -174,5 +199,4 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
     public @NotNull List<System> getSystems() {
         return systems;
     }
-
 }
