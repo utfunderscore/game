@@ -278,9 +278,10 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
     public <T extends System> T addSystem(@NotNull T feature) throws EventDispatchException {
         systems.add(feature);
 
-        for (ListenerData<?> listener : feature.getListeners()) {
-            eventManager.registerListener(this, listener.type(), listener.listener());
+        for (ListenerData listener : feature.getListeners()) {
+            eventManager.registerListener(this, listener.getType(), listener.getGameListener());
         }
+
 
         for (GameTask task : feature.getTasks()) {
             scheduler.schedule(this, task);
