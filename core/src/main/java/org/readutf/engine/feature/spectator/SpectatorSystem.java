@@ -8,8 +8,8 @@ import java.util.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.engine.Game;
+import org.readutf.engine.event.listener.ListenerData;
 import org.readutf.engine.feature.System;
-import org.readutf.engine.feature.spawning.SpawningSystem;
 import org.readutf.engine.task.GameTask;
 
 /**
@@ -21,11 +21,6 @@ public class SpectatorSystem implements System {
      * Reference to the game instance.
      */
     private final @NotNull Game<?, ?, ?> game;
-
-    /**
-     * Handler responsible for respawning players.
-     */
-    private final @NotNull SpawningSystem respawnHandler;
 
     /**
      * Platform-specific spectator logic.
@@ -41,15 +36,12 @@ public class SpectatorSystem implements System {
      * Constructs a new SpectatorSystem.
      *
      * @param game              the game instance (must not be null)
-     * @param respawnHandler    the respawn handler (must not be null)
      * @param spectatorPlatform the spectator platform logic (must not be null)
      */
     public SpectatorSystem(
             @NotNull Game<?, ?, ?> game,
-            @NotNull SpawningSystem respawnHandler,
             @NotNull SpectatorPlatform spectatorPlatform) {
         this.game = game;
-        this.respawnHandler = respawnHandler;
         this.spectatorPlatform = spectatorPlatform;
     }
 
@@ -63,6 +55,11 @@ public class SpectatorSystem implements System {
         return List.of(new SpectatorTask(this));
     }
 
+    @Override
+    public @NotNull List<ListenerData> getListeners() {
+        return spectatorPlatform.getListeners(this);
+    }
+
     /**
      * Sets a player as a spectator with the given data.
      *
@@ -73,10 +70,7 @@ public class SpectatorSystem implements System {
 
         game.callEvent(new GameSpectateEvent(game, spectatorData));
 
-
         spectatorPlatform.setSpectatorState(spectatorData);
-
-        spectators.put(spectatorData.getPlayerId(), spectatorData);
     }
 
     /**
@@ -89,7 +83,6 @@ public class SpectatorSystem implements System {
         if (data == null) return;
 
         try {
-            respawnHandler.spawn(data.getPlayerId());
             spectatorPlatform.setNormalState(data.getPlayerId());
             spectators.remove(spectatorData.getPlayerId());
         } catch (Exception e) {
@@ -165,5 +158,4 @@ public class SpectatorSystem implements System {
     public @Nullable SpectatorData getSpectatorData(@NotNull UUID playerId) {
         return spectators.get(playerId);
     }
-
 }
