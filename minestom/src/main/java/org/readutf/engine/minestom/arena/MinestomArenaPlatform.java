@@ -62,9 +62,10 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         this.schematicReader = new SpongeSchematicReader();
         this.cacheDirectory = cacheDirector;
         this.arenaCache = new HashMap<>();
+        MAPPER.addMixIn(Marker.class, MarkerMixin.class);
         for (File file : Optional.ofNullable(cacheDirectory.listFiles()).orElse(new File[0])) {
             try {
-                arenaCache.put(file.getName(), loadCachedArena(file));
+                arenaCache.put(getNameWithoutExtension(file), loadCachedArena(file));
             } catch (IOException e) {
                 logger.warn("Failed to load cached arena data", e);
             }
@@ -126,6 +127,15 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
     @Override
     public void freeArena(Arena<Instance, ?> arena) {
         MinecraftServer.getInstanceManager().unregisterInstance(arena.getWorld());
+    }
+
+    public String getNameWithoutExtension(@NotNull File file) {
+        String fileName = file.getName();
+        int dotIndex = fileName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            return fileName.substring(0, dotIndex);
+        }
+        return fileName;
     }
 
     private @NotNull CachedArenaData getArenaData(@NotNull BuildMeta buildMeta, @NotNull BuildSchematic buildData)

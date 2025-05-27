@@ -1,11 +1,8 @@
 package org.readutf.engine.minestom;
 
-import java.lang.ref.WeakReference;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
-import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.MinecraftServer;
