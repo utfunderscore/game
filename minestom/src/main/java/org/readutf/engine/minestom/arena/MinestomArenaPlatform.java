@@ -1,13 +1,15 @@
 package org.readutf.engine.minestom.arena;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.stream.Stream;
 import net.hollowcube.polar.PolarLoader;
 import net.hollowcube.polar.PolarReader;
@@ -45,38 +47,40 @@ import org.readutf.engine.minestom.PlatformUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
 public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
 
     private static final Logger logger = LoggerFactory.getLogger(MinestomArenaPlatform.class);
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private @NotNull final BuildSchematicStore buildSchematicStore;
     private @NotNull final SpongeSchematicReader schematicReader;
+    private final @NotNull File cacheDirectory;
     private final Map<String, CachedArenaData> arenaCache;
 
-    public MinestomArenaPlatform(@NotNull BuildSchematicStore buildSchematicStore) {
+    public MinestomArenaPlatform(@NotNull BuildSchematicStore buildSchematicStore, @NotNull File cacheDirector) {
         this.buildSchematicStore = buildSchematicStore;
         this.schematicReader = new SpongeSchematicReader();
+        this.cacheDirectory = cacheDirector;
         this.arenaCache = new HashMap<>();
+        for (File file : Optional.ofNullable(cacheDirectory.listFiles()).orElse(new File[0])) {
+            try {
+                arenaCache.put(file.getName(), loadCachedArena(file));
+            } catch (IOException e) {
+                logger.warn("Failed to load cached arena data", e);
+            }
+        }
     }
 
     @Override
     public @NotNull BuildPlacement<Instance> placeBuild(int buildId, @NotNull BuildMeta buildMeta) throws ArenaLoadException {
 
-        @Nullable CachedArenaData cachedArenaData = arenaCache.get(buildMeta.name());
+        @Nullable CachedArenaData cachedArenaData;
+        synchronized (arenaCache) {
+            cachedArenaData = arenaCache.get(buildMeta.name());
+        }
 
         if (cachedArenaData == null || cachedArenaData.version() != buildMeta.version()) {
-            logger.info("Download build data for {}", buildMeta.name());
-            long start = System.currentTimeMillis();
-            @NotNull BuildSchematic buildSchematic;
-            try {
-                buildSchematic = buildSchematicStore.load(buildMeta.name());
-            } catch (BuildFormatException e) {
-                throw new ArenaLoadException("Failed to load build data", e);
-            }
-            logger.info("Build data loaded in {} ms", System.currentTimeMillis() - start);
-            cachedArenaData = getArenaData(buildMeta, buildSchematic);
-            arenaCache.put(buildMeta.name(), cachedArenaData);
+            cachedArenaData = retrieveArenaData(buildMeta);
         }
 
         PolarWorld read = PolarReader.read(cachedArenaData.polarData());
@@ -86,16 +90,46 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         instance.setChunkLoader(polarLoader);
         instance.setChunkSupplier(LightingChunk::new);
 
-//        instances.put(buildId, instance);
-
         return new BuildPlacement<>(instance, Position.ZERO, cachedArenaData.markers());
+    }
+
+    private @NotNull CachedArenaData retrieveArenaData(@NotNull BuildMeta buildMeta) throws ArenaLoadException {
+        logger.info("Download build data for {}", buildMeta.name());
+        long start = System.currentTimeMillis();
+        @NotNull BuildSchematic buildSchematic;
+        try {
+            buildSchematic = buildSchematicStore.load(buildMeta.name());
+        } catch (BuildFormatException e) {
+            throw new ArenaLoadException("Failed to load build data", e);
+        }
+        logger.info("Build data loaded in {} ms", System.currentTimeMillis() - start);
+        CachedArenaData cachedArenaData = getArenaData(buildMeta, buildSchematic);
+        synchronized (arenaCache) {
+            arenaCache.put(buildMeta.name(), cachedArenaData);
+        }
+        try {
+            storeCachedArena(buildMeta.name(), cachedArenaData);
+        } catch (IOException e) {
+            logger.warn("Failed to store build data for {}", buildMeta.name(), e);
+        }
+        return cachedArenaData;
+    }
+
+    private void storeCachedArena(String name, CachedArenaData cachedArenaData) throws IOException {
+        MAPPER.writeValue(new File(cacheDirectory, name + ".json"), cachedArenaData);
+    }
+
+    private @NotNull CachedArenaData loadCachedArena(File file) throws IOException {
+        return MAPPER.readValue(file, CachedArenaData.class);
     }
 
     @Override
     public void freeArena(Arena<Instance, ?> arena) {
+        MinecraftServer.getInstanceManager().unregisterInstance(arena.getWorld());
     }
 
-    private @NotNull CachedArenaData getArenaData(@NotNull BuildMeta buildMeta, @NotNull BuildSchematic buildData) throws ArenaLoadException {
+    private @NotNull CachedArenaData getArenaData(@NotNull BuildMeta buildMeta, @NotNull BuildSchematic buildData)
+            throws ArenaLoadException {
 
         SpongeSchematic schematic;
         try {
@@ -104,11 +138,12 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
             throw new ArenaLoadException("Failed to read schematic", e);
         }
 
-        List<Marker> markers = extractMarkerPositions(schematic).stream().map(marker -> new Marker(
-                marker.name(),
-                marker.position().add(PlatformUtils.fromPoint(schematic.offset())),
-                marker.offset()
-        )).toList();
+        List<Marker> markers = extractMarkerPositions(schematic).stream()
+                .map(marker -> new Marker(
+                        marker.name(),
+                        marker.position().add(PlatformUtils.fromPoint(schematic.offset())),
+                        marker.offset()))
+                .toList();
 
         var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         instance.setChunkSupplier(LightingChunk::new);
@@ -125,7 +160,6 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
 
         int maxChunkX = max.blockX() >> 4;
         int maxChunkZ = max.blockZ() >> 4;
-
 
         List<Chunk> chunks = new ArrayList<>();
         for (int x = minChunkX; x <= maxChunkX; x++) {
@@ -149,20 +183,10 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         byte[] polarData = PolarWriter.write(polarWorld);
         MinecraftServer.getInstanceManager().unregisterInstance(instance);
 
-        return new CachedArenaData(
-                buildMeta.version(),
-                polarData,
-                markers
-        );
+        return new CachedArenaData(buildMeta.version(), polarData, markers);
     }
 
-    private record CachedArenaData(
-            int version,
-            byte[] polarData,
-            List<Marker> markers
-    ) {
-
-    }
+    private record CachedArenaData(int version, byte[] polarData, List<Marker> markers) {}
 
     private @NotNull List<Marker> extractMarkerPositions(@NotNull Schematic schematic) {
         List<Marker> markers = new ArrayList<>();

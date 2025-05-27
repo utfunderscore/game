@@ -48,8 +48,8 @@ public sealed class SpawningSystem<WORLD, ARENA extends Arena<WORLD, ?>, TEAM ex
         }
 
         @Override
-        public @NotNull List<ListenerData<?>> getListeners() {
-            return List.of(new ListenerData<>(StagePreChangeEvent.class, listener));
+        public @NotNull List<ListenerData> getListeners() {
+            return List.of(ListenerData.typed(StagePreChangeEvent.class, listener));
         }
 
         private final TypedGameListener<StagePreChangeEvent> listener =
@@ -63,8 +63,8 @@ public sealed class SpawningSystem<WORLD, ARENA extends Arena<WORLD, ?>, TEAM ex
         }
 
         @Override
-        public @NotNull List<ListenerData<?>> getListeners() {
-            return List.of(new ListenerData<>(ArenaChangeEvent.class, listener));
+        public @NotNull List<ListenerData> getListeners() {
+            return List.of(ListenerData.typed(ArenaChangeEvent.class, listener));
         }
 
         private final TypedGameListener<ArenaChangeEvent> listener =
@@ -78,8 +78,8 @@ public sealed class SpawningSystem<WORLD, ARENA extends Arena<WORLD, ?>, TEAM ex
         }
 
         @Override
-        public @NotNull List<ListenerData<?>> getListeners() {
-            return List.of(new ListenerData<>(GameJoinEvent.class, listener));
+        public @NotNull List<ListenerData> getListeners() {
+            return List.of(ListenerData.typed(GameJoinEvent.class, listener));
         }
 
         private final TypedGameListener<GameJoinEvent> listener =
