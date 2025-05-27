@@ -34,6 +34,7 @@ public class GameEventManager {
     public GameEventManager(@NotNull GameEventPlatform gameEventPlatform) {
         this.gameEventPlatform = gameEventPlatform;
         eventAdapters.put(GameEvent.class, new GameEventAdapter());
+        gameEventPlatform.registerAdapters(eventAdapters);
     }
 
     public <T> void registerEventAdapter(Class<T> type, TypedEventAdapter<T> adapter) {

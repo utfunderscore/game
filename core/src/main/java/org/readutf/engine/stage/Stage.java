@@ -99,9 +99,9 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
      */
     public <T extends System> @NotNull T addSystem(@NotNull T feature) {
 
-        for (ListenerData<?> listener : feature.getListeners()) {
+        for (ListenerData listener : feature.getListeners()) {
             try {
-                registerRawListener(listener.listener(), listener.type());
+                registerRawListener(listener.getGameListener(), listener.getType());
             } catch (EventDispatchException e) {
                 log.error("Failed to register listener: {}", e.getMessage());
             }
