@@ -177,7 +177,7 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
      *
      * @param stageCreator the factory that creates the next stage
      */
-    public void endStage(StageCreator<WORLD, ARENA, TEAM> stageCreator) throws Exception {
+    public void endStage(StageCreator<WORLD, ARENA, TEAM> stageCreator) throws GameException {
         game.startNextStage(stageCreator);
     }
 
