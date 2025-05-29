@@ -193,6 +193,10 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
         }
     }
 
+    public String getName() {
+        return getClass().getSimpleName();
+    }
+
     /**
      * @return the features associated with this stage
      */
