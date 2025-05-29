@@ -15,7 +15,7 @@ public class EntityEventAdapter implements TypedEventAdapter<EntityEvent> {
         var entity = event.getEntity();
 
         if (entity instanceof Player player) {
-            return GameManager.getGame(player.getUuid());
+            return GameManager.getGameByPlayer(player.getUuid());
         }
 
         var instance = entity.getInstance();
