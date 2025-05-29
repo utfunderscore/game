@@ -18,7 +18,6 @@ import org.readutf.engine.event.GameEvent;
 import org.readutf.engine.event.GameEventManager;
 import org.readutf.engine.event.exceptions.EventDispatchException;
 import org.readutf.engine.event.impl.game.GameArenaChangeEvent;
-import org.readutf.engine.event.impl.game.GameCrashEvent;
 import org.readutf.engine.event.impl.game.GameEndEvent;
 import org.readutf.engine.event.impl.game.GameJoinEvent;
 import org.readutf.engine.event.impl.game.GameLeaveEvent;
@@ -36,6 +35,7 @@ import org.readutf.engine.task.GameTask;
 import org.readutf.engine.team.GameTeam;
 import org.readutf.engine.team.TeamSelector;
 import org.readutf.engine.team.exception.TeamSelectException;
+import org.readutf.engine.utils.DisplayNameGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,6 +54,10 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
     // Game unique identifier
     @NotNull
     private final UUID id;
+
+    @Getter
+    @NotNull
+    private final String easyId;
 
     @NotNull
     @Getter
@@ -114,6 +118,7 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
         this.eventManager = eventManager;
         this.teamSelector = teamSelector;
         this.id = UUID.randomUUID();
+        this.easyId = DisplayNameGenerator.generateDisplayName();
     }
 
     /**
@@ -154,6 +159,7 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
         startNextStage();
 
         gameState = GameState.ACTIVE;
+        GameManager.register(this);
     }
 
     /**
@@ -181,7 +187,8 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
      * @throws GameException if stage creation or initialization fails
      */
     @NotNull
-    public Stage<WORLD, ARENA, TEAM> startNextStage(@NotNull StageCreator<WORLD, ARENA, TEAM> nextStageCreator) throws GameException {
+    public Stage<WORLD, ARENA, TEAM> startNextStage(@NotNull StageCreator<WORLD, ARENA, TEAM> nextStageCreator)
+            throws GameException {
         logger.info("Starting next stage...");
 
         if (currentStage != null) {
@@ -239,6 +246,8 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
             system.shutdown();
         }
         systems.clear();
+
+        GameManager.unregister(this);
     }
 
     /**
@@ -248,23 +257,6 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
      */
     public void schedule(@NotNull GameTask gameTask) {
         scheduler.schedule(this, gameTask);
-    }
-
-    /**
-     * Handles catastrophic game failure by cleaning up resources
-     *
-     * @param cause Optional cause of the crash
-     * @throws Exception always thrown after cleanup
-     */
-    public void crash(@Nullable Throwable cause) throws Exception {
-        callEvent(new GameCrashEvent(this));
-
-        // TODO: Free arena on crash
-
-        String reason = cause != null ? cause.toString() : "Unknown Reason";
-        logger.error("Game {} crashed: {}", id, reason);
-
-        throw new Exception("Game crashed");
     }
 
     /**
@@ -282,7 +274,6 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
             eventManager.registerListener(this, listener.getType(), listener.getGameListener());
         }
 
-
         for (GameTask task : feature.getTasks()) {
             scheduler.schedule(this, task);
         }
@@ -299,7 +290,7 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
      */
     @Nullable
     @SuppressWarnings("unchecked")
-    public <T extends System> T getFeature(@NotNull Class<? extends T> clazz) {
+    public <T extends System> T getSystem(@NotNull Class<? extends T> clazz) {
         // First check game features
         for (System system : systems) {
             if (system.getClass().equals(clazz)) {
