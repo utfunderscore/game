@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.readutf.engine.Game;
 import org.readutf.engine.stage.Stage;
@@ -18,8 +19,20 @@ import org.readutf.engine.task.impl.RepeatingGameTask;
 @Slf4j
 public abstract class CountdownTask extends RepeatingGameTask {
 
-    private final LocalDateTime start;
-    private final LocalDateTime endTime;
+    /**
+     * -- GETTER --
+     *  Gets the start time of this countdown.
+     *
+     * @return The LocalDateTime when this countdown started
+     */
+    @Getter private final LocalDateTime start;
+    /**
+     * -- GETTER --
+     *  Gets the end time of this countdown.
+     *
+     * @return The LocalDateTime when this countdown will expire
+     */
+    @Getter private final LocalDateTime endTime;
     private final List<Integer> remainingIntervals;
 
     /**
@@ -43,8 +56,8 @@ public abstract class CountdownTask extends RepeatingGameTask {
      *
      * @return The time left in milliseconds, or 0 if the countdown has expired
      */
-    public long getTimeLeftSeconds() {
-        return Duration.between(LocalDateTime.now(), endTime).toSeconds();
+    public long getTimeLeftMilliseconds() {
+        return Duration.between(LocalDateTime.now(), endTime).toMillis();
     }
 
     /**
@@ -67,34 +80,16 @@ public abstract class CountdownTask extends RepeatingGameTask {
         }
 
         // Check which intervals should be triggered based on remaining time
-        long timeLeft = getTimeLeftSeconds();
+        long timeLeft = getTimeLeftMilliseconds();
         // Create a copy to avoid concurrent modification during iteration
         List<Integer> intervalsToCheck = new ArrayList<>(remainingIntervals);
 
         for (Integer interval : intervalsToCheck) {
-            if (timeLeft <= interval) {
+            if (timeLeft <= (interval * 1000L)) {
                 handleInterval(interval); // Execute callback for this interval
                 remainingIntervals.remove(interval); // Remove interval so it doesn't trigger again
             }
         }
-    }
-
-    /**
-     * Gets the start time of this countdown.
-     *
-     * @return The LocalDateTime when this countdown started
-     */
-    public LocalDateTime getStart() {
-        return start;
-    }
-
-    /**
-     * Gets the end time of this countdown.
-     *
-     * @return The LocalDateTime when this countdown will expire
-     */
-    public LocalDateTime getEndTime() {
-        return endTime;
     }
 
     /**
