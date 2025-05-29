@@ -60,3 +60,11 @@ This project uses the Gradle build system. To build the project, run the followi
 
 The Engine module is intended to be used as a library and does not produce an executable jar.
 To start a demo game server, a minestom server is generated at /Server/build/libs/Server
+
+![YourKit](https://www.yourkit.com/images/yklogo.png)
+
+YourKit supports open source projects with innovative and intelligent tools
+for monitoring and profiling Java and .NET applications.
+YourKit is the creator of <a href="https://www.yourkit.com/java/profiler/">YourKit Java Profiler</a>,
+<a href="https://www.yourkit.com/dotnet-profiler/">YourKit .NET Profiler</a>,
+and <a href="https://www.yourkit.com/youmonitor/">YourKit YouMonitor</a>.
