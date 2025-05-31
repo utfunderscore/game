@@ -1,16 +1,17 @@
-package org.readutf.engine.minestom.feature.visbility;
+package org.readutf.engine.minestom.system.tablist;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
 import lombok.Getter;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.PlayerSkin;
 import net.minestom.server.event.EventListener;
+import net.minestom.server.event.player.PlayerPacketOutEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.network.packet.server.play.PlayerInfoUpdatePacket;
+import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 import org.readutf.engine.GameManager;
@@ -18,11 +19,9 @@ import org.readutf.engine.feature.System;
 
 public class TablistManager implements System {
 
-    private @NotNull final HashSet<PlayerInfoUpdatePacket> packets;
     private @Getter static final TablistManager tablistManager = new TablistManager();
 
     private TablistManager() {
-        this.packets = new HashSet<>();
         MinecraftServer.getGlobalEventHandler().addListener(playerSpawnEvent);
     }
 
@@ -33,6 +32,19 @@ public class TablistManager implements System {
                 }
             })
             .build();
+
+
+    @ApiStatus.Experimental
+    private final @NotNull EventListener<PlayerPacketOutEvent> tablistUpdate = EventListener.builder(PlayerPacketOutEvent.class)
+            .handler(packetOutEvent -> {
+                if(!(packetOutEvent.getPacket() instanceof PlayerInfoUpdatePacket infoUpdatePacket)) return;
+                EnumSet<PlayerInfoUpdatePacket.@NotNull Action> actions = infoUpdatePacket.actions();
+                if(actions.contains(PlayerInfoUpdatePacket.Action.UPDATE_LISTED) || actions.contains(PlayerInfoUpdatePacket.Action.UPDATE_LIST_ORDER)) {
+                    Player viewer = packetOutEvent.getPlayer();
+                    updateTablist(viewer);
+                }
+
+            }).build();
 
     public void updateTablist(Player viewer) {
 
@@ -68,11 +80,11 @@ public class TablistManager implements System {
         }
 
         if (viewerGame.equals(playerGame)) {
-            VisibilitySystem visibilitySystem = viewerGame.getSystem(VisibilitySystem.class);
-            if(visibilitySystem == null) {
+            TablistSystem tablistSystem = viewerGame.getSystem(TablistSystem.class);
+            if(tablistSystem == null) {
                 return true; // Default visibility if no visibility system is present
             } else {
-                return visibilitySystem.getVisibilityHandler().isVisibleToPlayer(viewer, player);
+                return tablistSystem.getVisibilityHandler().isVisibleToPlayer(viewer.getUuid(), player.getUuid());
             }
         }
 

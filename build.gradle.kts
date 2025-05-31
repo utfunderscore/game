@@ -1,6 +1,7 @@
 plugins {
     `maven-publish`
     `java-library`
+    id("com.diffplug.spotless") version "7.0.4"
 }
 
 group = "org.readutf.arena"
@@ -12,6 +13,21 @@ repositories {
 }
 
 dependencies {
+}
+
+spotless {
+    java {
+        target("src/**/*.java")
+        googleJavaFormat("1.17.0") // Or use other formatters like eclipse, prettier, etc.
+        trimTrailingWhitespace()
+        endWithNewline()
+    }
+
+    // Optional: format Gradle Kotlin scripts too
+    kotlinGradle {
+        target("**/*.gradle.kts")
+        ktlint()
+    }
 }
 
 subprojects {

@@ -124,7 +124,7 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
     public void registerRawListener(GameListener registeredListener, Class<?> type) throws EventDispatchException {
         registeredListeners.computeIfAbsent(type, k -> new ArrayList<>()).add(registeredListener);
 
-        game.getEventManager().registerListener(game, type, registeredListener);
+        game.getEventManager().registerListener(game, ListenerData.of(type, registeredListener));
     }
 
     /**

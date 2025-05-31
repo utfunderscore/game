@@ -17,6 +17,7 @@ import org.readutf.engine.event.adapter.impl.GameEventAdapter;
 import org.readutf.engine.event.exceptions.EventAdaptException;
 import org.readutf.engine.event.exceptions.EventDispatchException;
 import org.readutf.engine.event.listener.GameListener;
+import org.readutf.engine.event.listener.ListenerData;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +29,7 @@ public class GameEventManager {
     private final Map<Class<?>, EventGameAdapter> eventAdapters = new HashMap<>();
     private final Set<Class<?>> registeredTypes = new HashSet<>();
     private final Set<Class<?>> noAdapters = new HashSet<>();
-    private final Map<Game<?, ?, ?>, Map<Class<?>, List<GameListener>>> gameListeners = new LinkedHashMap<>();
+    private final Map<Game<?, ?, ?>, List<ListenerData>> gameListeners = new LinkedHashMap<>();
     private final Set<Class<?>> eventStackTraceEnabled = new HashSet<>();
 
     public GameEventManager(@NotNull GameEventPlatform gameEventPlatform) {
@@ -47,34 +48,36 @@ public class GameEventManager {
     public <T> @NotNull T callEvent(@NotNull T event, @NotNull Game<?, ?, ?> game) throws EventDispatchException {
         logger.debug("Calling event: {}", event.getClass().getSimpleName());
 
-        Map<Class<?>, List<GameListener>> gameListeners = this.gameListeners.get(game);
-        if (gameListeners == null) {
+        List<ListenerData> listeners = this.gameListeners.get(game);
+        if ((listeners == null || listeners.isEmpty())) {
             if (eventStackTraceEnabled.contains(event.getClass())) {
-                logger.info("No listeners found for game: {}", game);
+                logger.info(
+                        "No game listeners found for event: {}.",
+                        event.getClass().getSimpleName());
             }
             return event;
         }
 
-        List<GameListener> listeners = gameListeners.get(event.getClass());
-        if (listeners == null) {
+        List<ListenerData> applicableListeners = new ArrayList<>();
+        for (ListenerData listener : listeners) {
+            if(listener.getType().isAssignableFrom(event.getClass())) {
+                applicableListeners.add(listener);
+            }
+        }
+        if(applicableListeners.isEmpty()) {
             if (eventStackTraceEnabled.contains(event.getClass())) {
-                logger.info("No listeners found for event type: {}", event.getClass());
+                logger.info(
+                        "No applicable listeners found for event: {}.",
+                        event.getClass().getSimpleName());
             }
             return event;
         }
-
-        for (GameListener listener : new ArrayList<>(listeners)) {
-            try {
-                listener.onEvent(event);
-            } catch (Exception e) {
-                logger.error(
-                        "Error occurred while calling {} event listener",
-                        event.getClass().getSimpleName(),
-                        e);
-                throw new EventDispatchException("Error dispatching event", e);
-            }
+        if (eventStackTraceEnabled.contains(event.getClass())) {
+            logger.info("Dispatching event: {} to {} listeners", event.getClass().getSimpleName(), applicableListeners.size());
         }
-
+        for (ListenerData applicableListener : applicableListeners) {
+            applicableListener.getGameListener().onEvent(event);
+        }
         return event;
     }
 
@@ -92,7 +95,7 @@ public class GameEventManager {
         }
     }
 
-    public @Nullable Game<?,?,?> getGameFromEvent(@NotNull Object event) {
+    public @Nullable Game<?, ?, ?> getGameFromEvent(@NotNull Object event) {
         Class<?> eventType = event.getClass();
         @NotNull Collection<EventGameAdapter> adapters = findAdapters(event);
 
@@ -116,29 +119,23 @@ public class GameEventManager {
         return foundGame;
     }
 
-    public void registerListener(@NotNull Game<?, ?, ?> game, @NotNull Class<?> eventClass, GameListener listener)
-            throws EventDispatchException {
-        if (!registeredTypes.contains(eventClass)) {
-            registeredTypes.add(eventClass);
-            logger.info("Registering listener for event type: {}", eventClass);
-            gameEventPlatform.registerEventListener(game, eventClass, this::eventHandler);
+    public void registerListener(@NotNull Game<?, ?, ?> game, ListenerData listener) throws EventDispatchException {
+        if (!registeredTypes.contains(listener.getType())) {
+            registeredTypes.add(listener.getType());
+            logger.info("Registering listener for event type: {}", listener.getType());
+            gameEventPlatform.registerEventListener(game, listener.getType(), this::eventHandler);
         }
 
-        Map<Class<?>, List<GameListener>> gameMap = gameListeners.computeIfAbsent(game, k -> new LinkedHashMap<>());
-        List<GameListener> listeners = gameMap.computeIfAbsent(eventClass, k -> new ArrayList<>());
-
+        List<ListenerData> listeners = gameListeners.computeIfAbsent(game, k -> new ArrayList<>());
         listeners.add(listener);
+        gameListeners.put(game, listeners);
     }
 
-    public void unregisterListener(
-            @NotNull Game<?, ?, ?> game, @NotNull Class<?> eventClass, @NotNull GameListener listener) {
-        Map<Class<?>, List<GameListener>> map = gameListeners.get(game);
-        if (map == null) return;
+    public void unregisterListener(@NotNull Game<?, ?, ?> game, @NotNull Class<?> eventClass, @NotNull GameListener listener) {
+        List<ListenerData> listeners = gameListeners.get(game);
+        if (listeners == null) return;
 
-        List<GameListener> listeners = map.get(eventClass);
-        if (listeners != null && listeners.remove(listener)) {
-            logger.info("Unregistered listener for event type: {}", eventClass);
-        }
+        listeners.removeIf(listenerData -> listenerData.getGameListener() == listener);
     }
 
     public void registerAdapter(@NotNull Class<?> eventType, @NotNull GameEventAdapter adapter) {
