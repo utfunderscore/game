@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 import org.readutf.engine.Game;
 import org.readutf.engine.event.listener.ListenerData;
 import org.readutf.engine.feature.System;
+import org.readutf.engine.feature.visibility.VisibilitySystem;
 import org.readutf.engine.task.GameTask;
 
 /**
@@ -32,6 +33,8 @@ public class SpectatorSystem implements System {
      */
     private final @NotNull Map<UUID, SpectatorData> spectators = new HashMap<>();
 
+    private final @NotNull VisibilitySystem visibilitySystem;
+
     /**
      * Constructs a new SpectatorSystem.
      *
@@ -40,9 +43,14 @@ public class SpectatorSystem implements System {
      */
     public SpectatorSystem(
             @NotNull Game<?, ?, ?> game,
-            @NotNull SpectatorPlatform spectatorPlatform) {
+            @NotNull SpectatorPlatform spectatorPlatform,
+            @NotNull VisibilitySystem visibilitySystem
+            ) {
         this.game = game;
         this.spectatorPlatform = spectatorPlatform;
+        this.visibilitySystem = visibilitySystem;
+        this.visibilitySystem.addVisibilityLayer((viewer,target) -> isSpectator(viewer) || !isSpectator(target));
+        this.visibilitySystem.addUpdateTrigger(GameSpectateEvent.class);
     }
 
     /**

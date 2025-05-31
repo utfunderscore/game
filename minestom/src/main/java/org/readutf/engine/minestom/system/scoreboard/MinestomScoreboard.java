@@ -1,10 +1,13 @@
-package org.readutf.engine.minestom.feature.scoreboard;
+package org.readutf.engine.minestom.system.scoreboard;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.Player;
 import net.minestom.server.scoreboard.Sidebar;
-
-import java.util.*;
 import org.readutf.engine.feature.scoreboard.Scoreboard;
 import org.readutf.engine.feature.scoreboard.ScoreboardPlatform;
 import org.readutf.engine.minestom.MinestomPlatform;

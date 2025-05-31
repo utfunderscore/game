@@ -35,7 +35,7 @@ import org.readutf.engine.task.GameTask;
 import org.readutf.engine.team.GameTeam;
 import org.readutf.engine.team.TeamSelector;
 import org.readutf.engine.team.exception.TeamSelectException;
-import org.readutf.engine.utils.DisplayNameGenerator;
+import org.readutf.engine.utils.GameNameGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -118,7 +118,7 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
         this.eventManager = eventManager;
         this.teamSelector = teamSelector;
         this.id = UUID.randomUUID();
-        this.easyId = DisplayNameGenerator.generateDisplayName();
+        this.easyId = GameNameGenerator.generateDisplayName();
     }
 
     /**
@@ -271,7 +271,7 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
         systems.add(feature);
 
         for (ListenerData listener : feature.getListeners()) {
-            eventManager.registerListener(this, listener.getType(), listener.getGameListener());
+            eventManager.registerListener(this, listener);
         }
 
         for (GameTask task : feature.getTasks()) {
@@ -319,7 +319,7 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
      */
     public <T> void registerListener(@NotNull Class<T> eventClass, @NotNull TypedGameListener<T> typedGameListener)
             throws EventDispatchException {
-        eventManager.registerListener(this, eventClass, typedGameListener);
+        eventManager.registerListener(this, ListenerData.typed(eventClass, typedGameListener));
     }
 
     /**

@@ -1,4 +1,4 @@
-package org.readutf.engine.minestom.feature.actionbar;
+package org.readutf.engine.minestom.system.actionbar;
 
 import net.kyori.adventure.text.Component;
 import net.minestom.server.entity.Player;

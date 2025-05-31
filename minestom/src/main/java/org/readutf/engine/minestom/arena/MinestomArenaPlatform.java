@@ -31,6 +31,7 @@ import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.LightingChunk;
+import net.minestom.server.instance.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
@@ -181,9 +182,19 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
 
         LightingChunk.relight(instance, chunks);
         CompletableFuture<Void> pasteJob = new CompletableFuture<>();
-        schematic.createBatch().apply(instance, schematic.offset().mul(-1), () -> {
-            pasteJob.complete(null);
-        });
+        schematic.createBatch(block -> {
+                    if (block == null) return null;
+                    CompoundBinaryTag nbt = block.nbt();
+                    if(nbt == null) return block;
+                    System.out.println(nbt);
+                    boolean frontText = nbt.keySet().contains("front_text");
+                    if (!frontText) return block;
+
+                    return Block.AIR;
+                })
+                .apply(instance, schematic.offset().mul(-1), () -> {
+                    pasteJob.complete(null);
+                });
         pasteJob.join();
 
         instance.saveChunksToStorage().join();

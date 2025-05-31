@@ -1,4 +1,4 @@
-package org.readutf.engine.minestom.feature.actionbar;
+package org.readutf.engine.minestom.system.actionbar;
 
 import java.util.HashMap;
 import java.util.List;
