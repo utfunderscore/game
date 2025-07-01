@@ -1,15 +1,5 @@
 package org.readutf.engine;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -35,9 +25,11 @@ import org.readutf.engine.task.GameTask;
 import org.readutf.engine.team.GameTeam;
 import org.readutf.engine.team.TeamSelector;
 import org.readutf.engine.team.exception.TeamSelectException;
-import org.readutf.engine.utils.GameNameGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Core game class that manages the game lifecycle, players, teams, stages, and events.
@@ -52,20 +44,13 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     // Game unique identifier
-    @NotNull
     private final UUID id;
 
-    @Getter
     @NotNull
-    private final String easyId;
-
-    @NotNull
-    @Getter
     private final GamePlatform<WORLD> platform;
 
     // Game scheduler for managing timed tasks
     @NotNull
-    @Getter
     private final GameScheduler scheduler;
 
     // Event manager for handling game events
@@ -85,7 +70,6 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
     private Stage<WORLD, ARENA, TEAM> currentStage;
 
     // Current active arena
-    @Getter
     @Nullable
     private ARENA arena;
 
@@ -118,7 +102,6 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
         this.eventManager = eventManager;
         this.teamSelector = teamSelector;
         this.id = UUID.randomUUID();
-        this.easyId = GameNameGenerator.generateDisplayName();
     }
 
     /**
@@ -558,5 +541,25 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
      */
     public void setGameState(@NotNull GameState gameState) {
         this.gameState = gameState;
+    }
+
+    public @NotNull GamePlatform<WORLD> getPlatform() {
+        return platform;
+    }
+
+    public @NotNull GameScheduler getScheduler() {
+        return scheduler;
+    }
+
+    public @NotNull Deque<StageCreator<WORLD, ARENA, TEAM>> getStageCreators() {
+        return stageCreators;
+    }
+
+    public @Nullable ARENA getArena() {
+        return arena;
+    }
+
+    public @NotNull List<System> getSystems() {
+        return systems;
     }
 }

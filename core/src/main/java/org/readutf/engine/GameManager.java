@@ -1,14 +1,12 @@
 package org.readutf.engine;
 
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.UUID;
-import lombok.experimental.UtilityClass;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-@UtilityClass
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.UUID;
+
 public class GameManager {
 
     private @NotNull static final HashSet<Game<?, ?, ?>> gameTracker = new HashSet<>();
@@ -30,18 +28,6 @@ public class GameManager {
         return null;
     }
 
-    public static @Nullable Game<?, ?, ?> getGameByName(String name) {
-        return gameTracker.stream()
-                .filter(game -> game.getEasyId().equalsIgnoreCase(name))
-                .findFirst()
-                .orElse(null);
-    }
-
-    public static @NotNull List<String> getGameNames() {
-        return gameTracker.stream()
-                .map(Game::getEasyId)
-                .toList();
-    }
 
     public static @NotNull Collection<Game<?, ?, ?>> getGames() {
         return gameTracker;

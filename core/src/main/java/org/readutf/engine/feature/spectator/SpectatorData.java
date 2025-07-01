@@ -1,20 +1,17 @@
 package org.readutf.engine.feature.spectator;
 
-import java.time.LocalDateTime;
-import java.util.UUID;
-import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.markers.Position;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 /**
  * Represents the data of a spectator
  *
  * @since 1.0
  */
-@Getter
-@Setter
 public class SpectatorData {
     private @NotNull final UUID playerId;
     private @NotNull final LocalDateTime deathTime;
@@ -50,4 +47,23 @@ public class SpectatorData {
         return new SpectatorData(playerId, deathTime, respawnTime, true, spectatorPosition);
     }
 
+    public @NotNull UUID getPlayerId() {
+        return playerId;
+    }
+
+    public @NotNull LocalDateTime getDeathTime() {
+        return deathTime;
+    }
+
+    public @Nullable LocalDateTime getRespawnTime() {
+        return respawnTime;
+    }
+
+    public boolean isCanRespawn() {
+        return canRespawn;
+    }
+
+    public @NotNull Position getSpectatorPosition() {
+        return spectatorPosition;
+    }
 }

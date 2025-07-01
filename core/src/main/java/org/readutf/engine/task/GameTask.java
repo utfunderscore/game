@@ -1,14 +1,14 @@
 package org.readutf.engine.task;
 
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
 
-@Slf4j
 public abstract class GameTask {
+
+    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(GameTask.class);
 
     protected long startTime = System.currentTimeMillis();
 
-    @Getter private boolean markedForRemoval = false;
+    private boolean markedForRemoval = false;
 
     public abstract void tick();
 
@@ -20,9 +20,12 @@ public abstract class GameTask {
         markForRemoval();
     }
 
+    public boolean isMarkedForRemoval() {
+        return markedForRemoval;
+    }
+
     @Override
     public String toString() {
         return getClass().getSimpleName();
     }
-
 }

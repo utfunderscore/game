@@ -1,13 +1,11 @@
 package org.readutf.engine.event.impl.game;
 
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.engine.Game;
 import org.readutf.engine.arena.Arena;
 import org.readutf.engine.event.GameEvent;
 
-@Getter
 public class GameArenaChangeEvent implements GameEvent {
 
     private final @NotNull Game<?, ?, ?> game;

@@ -1,38 +1,39 @@
 package org.readutf.engine.minestom.schedular;
 
+import org.readutf.engine.Game;
+import org.readutf.engine.stage.Stage;
+import org.readutf.engine.task.impl.RepeatingGameTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
-import org.readutf.engine.Game;
-import org.readutf.engine.stage.Stage;
-import org.readutf.engine.task.impl.RepeatingGameTask;
 
 /**
  * CountdownTask is a repeating game task that executes callbacks at specific intervals
  * during a countdown period. It tracks the remaining time and triggers the provided
  * executor function when certain time thresholds are reached.
  */
-@Slf4j
 public abstract class CountdownTask extends RepeatingGameTask {
 
+    private static final Logger log = LoggerFactory.getLogger(CountdownTask.class);
     /**
      * -- GETTER --
      *  Gets the start time of this countdown.
      *
      * @return The LocalDateTime when this countdown started
      */
-    @Getter private final LocalDateTime start;
+    private final LocalDateTime start;
     /**
      * -- GETTER --
      *  Gets the end time of this countdown.
      *
      * @return The LocalDateTime when this countdown will expire
      */
-    @Getter private final LocalDateTime endTime;
+    private final LocalDateTime endTime;
     private final List<Integer> remainingIntervals;
 
     /**

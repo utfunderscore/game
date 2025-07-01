@@ -1,6 +1,5 @@
 package org.readutf.engine.minestom.system.tablist;
 
-import lombok.Getter;
 import net.minestom.server.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
@@ -13,7 +12,6 @@ public class TablistSystem implements System {
     private final @NotNull Game<?, ?, ?> game;
 
     @NotNull
-    @Getter
     private final VisibilityHandler visibilityHandler;
 
     public TablistSystem(@NotNull Game<?, ?, ?> game, @NotNull VisibilityHandler visibilityHandler) {
@@ -28,4 +26,7 @@ public class TablistSystem implements System {
         }
     }
 
+    public @NotNull VisibilityHandler getVisibilityHandler() {
+        return visibilityHandler;
+    }
 }

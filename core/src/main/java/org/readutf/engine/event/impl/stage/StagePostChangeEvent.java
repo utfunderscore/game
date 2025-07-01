@@ -1,12 +1,10 @@
 package org.readutf.engine.event.impl.stage;
 
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 import org.readutf.engine.event.GameEvent;
 import org.readutf.engine.stage.Stage;
 
-@Getter
 public class StagePostChangeEvent implements GameEvent {
 
     private final @NotNull Game<?, ?, ?> game;
@@ -23,5 +21,13 @@ public class StagePostChangeEvent implements GameEvent {
     @Override
     public @NotNull Game<?, ?, ?> getGame() {
         return game;
+    }
+
+    public @NotNull Stage<?, ?, ?> getPreviousStage() {
+        return previousStage;
+    }
+
+    public @NotNull Stage<?, ?, ?> getCurrentStage() {
+        return currentStage;
     }
 }
