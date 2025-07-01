@@ -1,8 +1,7 @@
 package org.readutf.engine.event.listener;
 
-import lombok.Getter;
 
-@Getter
+
 public class ListenerData {
 
     private final Class<?> type;
@@ -21,4 +20,11 @@ public class ListenerData {
         return of(type, gameListener);
     }
 
+    public Class<?> getType() {
+        return type;
+    }
+
+    public GameListener getGameListener() {
+        return gameListener;
+    }
 }

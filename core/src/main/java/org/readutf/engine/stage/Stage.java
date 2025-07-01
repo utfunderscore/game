@@ -1,11 +1,5 @@
 package org.readutf.engine.stage;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import lombok.Getter;
-import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 import org.readutf.engine.GameException;
@@ -17,6 +11,13 @@ import org.readutf.engine.event.listener.TypedGameListener;
 import org.readutf.engine.feature.System;
 import org.readutf.engine.task.GameTask;
 import org.readutf.engine.team.GameTeam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Represents a stage or phase in a game's lifecycle.
@@ -27,13 +28,12 @@ import org.readutf.engine.team.GameTeam;
  * @param <ARENA> the type of Arena used in the game
  * @param <TEAM>  the type of GameTeam participating in the game
  */
-@Slf4j
 public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
 
-    @Getter
+    private static final Logger logger = LoggerFactory.getLogger(Stage.class);
+
     protected final Game<WORLD, ARENA, TEAM> game;
 
-    @Getter
     protected final Stage<WORLD, ARENA, TEAM> previousStage;
 
     private boolean active = false;
@@ -57,7 +57,7 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
         try {
             onStart();
         } catch (Exception e) {
-            log.error("Failed to start stage: {}", e.getMessage(), e);
+            logger.error("Failed to start stage: {}", e.getMessage(), e);
             throw new GameException("Stage initialization failed", e);
         }
     }
@@ -67,7 +67,7 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
         try {
             onFinish();
         } catch (Exception e) {
-            log.error("Failed to finish stage: {}", e.getMessage(), e);
+            logger.error("Failed to finish stage: {}", e.getMessage(), e);
             throw new GameException("Stage cleanup failed", e);
         }
     }
@@ -103,7 +103,7 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
             try {
                 registerRawListener(listener.getGameListener(), listener.getType());
             } catch (EventDispatchException e) {
-                log.error("Failed to register listener: {}", e.getMessage());
+                logger.error("Failed to register listener: {}", e.getMessage());
             }
         }
 
@@ -202,5 +202,13 @@ public abstract class Stage<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends G
      */
     public @NotNull List<System> getSystems() {
         return systems;
+    }
+
+    public Game<WORLD, ARENA, TEAM> getGame() {
+        return game;
+    }
+
+    public Stage<WORLD, ARENA, TEAM> getPreviousStage() {
+        return previousStage;
     }
 }

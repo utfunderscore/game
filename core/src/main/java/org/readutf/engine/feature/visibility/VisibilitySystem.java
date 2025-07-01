@@ -1,18 +1,21 @@
 package org.readutf.engine.feature.visibility;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 import org.readutf.engine.event.impl.game.GameJoinEvent;
 import org.readutf.engine.event.listener.ListenerData;
 import org.readutf.engine.event.listener.TypedGameListener;
 import org.readutf.engine.feature.System;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@Slf4j
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
 public class VisibilitySystem implements System {
+
+    private static final Logger logger = LoggerFactory.getLogger(VisibilitySystem.class);
 
     private @NotNull final Game<?, ?, ?> game;
     private @NotNull final List<VisibilityHandler> visibilityLayers;
@@ -29,7 +32,9 @@ public class VisibilitySystem implements System {
         this.updateTriggers = new ArrayList<>();
         this.eventListener = event -> {
             if (updateTriggers.contains(event.getClass())) {
-                log.info("Refreshing visibility for all online players due to event: {}", event.getClass().getSimpleName());
+                logger.info(
+                        "Refreshing visibility for all online players due to event: {}",
+                        event.getClass().getSimpleName());
                 for (UUID onlinePlayer : game.getOnlinePlayers()) {
                     platform.setPlayerVisibility(onlinePlayer, getCombinedVisibilityHandler());
                 }
@@ -68,19 +73,18 @@ public class VisibilitySystem implements System {
         return List.of(
                 ListenerData.typed(GameJoinEvent.class, gameJoinListener),
                 ListenerData.typed(GameJoinEvent.class, gameLeaveListener),
-                ListenerData.typed(Object.class, eventListener)
-        );
+                ListenerData.typed(Object.class, eventListener));
     }
 
     private VisibilityHandler getCombinedVisibilityHandler() {
         return (viewer, target) -> {
             for (VisibilityHandler handler : visibilityLayers) {
                 if (!handler.isVisibleToPlayer(viewer, target)) {
-                    log.info("{} cannot see {}", viewer, target);
+                    logger.info("{} cannot see {}", viewer, target);
                     return false;
                 }
             }
-            log.info("{} can see {}", viewer, target);
+            logger.info("{} can see {}", viewer, target);
             return true;
         };
     }

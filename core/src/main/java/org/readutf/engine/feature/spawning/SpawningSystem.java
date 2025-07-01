@@ -1,9 +1,5 @@
 package org.readutf.engine.feature.spawning;
 
-import java.util.List;
-import java.util.UUID;
-import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.common.markers.Position;
 import org.readutf.engine.Game;
@@ -15,13 +11,24 @@ import org.readutf.engine.event.listener.ListenerData;
 import org.readutf.engine.event.listener.TypedGameListener;
 import org.readutf.engine.feature.System;
 import org.readutf.engine.team.GameTeam;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-@AllArgsConstructor
-@Slf4j
+import java.util.List;
+import java.util.UUID;
+
+
 public sealed class SpawningSystem<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> implements System {
+
+    private static final Logger log = LoggerFactory.getLogger(SpawningSystem.class);
 
     private final Game<WORLD, ARENA, TEAM> game;
     private final @NotNull SpawnFinder spawnFinder;
+
+    public SpawningSystem(Game<WORLD, ARENA, TEAM> game, @NotNull SpawnFinder spawnFinder) {
+        this.game = game;
+        this.spawnFinder = spawnFinder;
+    }
 
     public void spawn(UUID playerId) {
 

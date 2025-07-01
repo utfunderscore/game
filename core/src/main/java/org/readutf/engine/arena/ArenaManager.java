@@ -1,7 +1,5 @@
 package org.readutf.engine.arena;
 
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
@@ -14,6 +12,8 @@ import org.readutf.buildformat.common.meta.BuildMeta;
 import org.readutf.buildformat.common.meta.BuildMetaStore;
 import org.readutf.engine.arena.build.BuildPlacement;
 import org.readutf.engine.arena.exception.ArenaLoadException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,13 +32,19 @@ import java.util.concurrent.atomic.AtomicInteger;
  *
  * @param <WORLD> the type representing the world/environment where arenas are placed
  */
-@RequiredArgsConstructor
-@Slf4j
 public class ArenaManager<WORLD> {
+
+    private static final Logger logger = LoggerFactory.getLogger(ArenaManager.class);
 
     private @NotNull final BuildMetaStore buildMetaStore;
     private @NotNull final ArenaPlatform<WORLD> arenaPlatform;
     private @NotNull final AtomicInteger idTracker;
+
+    public ArenaManager(@NotNull ArenaPlatform<WORLD> arenaPlatform, @NotNull BuildMetaStore buildMetaStore) {
+        this.arenaPlatform = arenaPlatform;
+        this.buildMetaStore = buildMetaStore;
+        this.idTracker = new AtomicInteger(0);
+    }
 
     /**
      * Loads an arena by name and build format class.
@@ -102,7 +108,7 @@ public class ArenaManager<WORLD> {
             if (Arrays.equals(checksum.checksum(), targetChecksum)) {
                 builds.add(build);
             } else {
-                log.info("Invalid checksum received for {} {} != {}", build, Arrays.toString(checksum.checksum()), Arrays.toString(targetChecksum));
+                logger.info("Invalid checksum received for {} {} != {}", build, Arrays.toString(checksum.checksum()), Arrays.toString(targetChecksum));
             }
         }
 

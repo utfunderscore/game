@@ -1,11 +1,9 @@
 package org.readutf.engine.feature.spectator;
 
-import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 import org.readutf.engine.event.GameEvent;
 
-@Getter
 public class GameSpectateEvent implements GameEvent {
 
     private final @NotNull Game<?, ?, ?> game;
@@ -19,5 +17,9 @@ public class GameSpectateEvent implements GameEvent {
     @Override
     public @NotNull Game<?, ?, ?> getGame() {
         return game;
+    }
+
+    public @NotNull SpectatorData getSpectatorData() {
+        return spectatorData;
     }
 }

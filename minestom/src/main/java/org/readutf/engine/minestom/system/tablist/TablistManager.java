@@ -1,9 +1,5 @@
 package org.readutf.engine.minestom.system.tablist;
 
-import java.util.ArrayList;
-import java.util.EnumSet;
-import java.util.List;
-import lombok.Getter;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.PlayerSkin;
@@ -17,9 +13,17 @@ import org.readutf.engine.Game;
 import org.readutf.engine.GameManager;
 import org.readutf.engine.feature.System;
 
+import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.List;
+
 public class TablistManager implements System {
 
-    private @Getter static final TablistManager tablistManager = new TablistManager();
+    private static final TablistManager tablistManager = new TablistManager();
+
+    public static TablistManager getTablistManager() {
+        return tablistManager;
+    }
 
     private TablistManager() {
         MinecraftServer.getGlobalEventHandler().addListener(playerSpawnEvent);
@@ -27,24 +31,26 @@ public class TablistManager implements System {
 
     private final EventListener<PlayerSpawnEvent> playerSpawnEvent = EventListener.builder(PlayerSpawnEvent.class)
             .handler(event -> {
-                for (Player onlinePlayer : MinecraftServer.getConnectionManager().getOnlinePlayers()) {
+                for (Player onlinePlayer :
+                        MinecraftServer.getConnectionManager().getOnlinePlayers()) {
                     updateTablist(onlinePlayer);
                 }
             })
             .build();
 
-
     @ApiStatus.Experimental
-    private final @NotNull EventListener<PlayerPacketOutEvent> tablistUpdate = EventListener.builder(PlayerPacketOutEvent.class)
+    private final @NotNull EventListener<PlayerPacketOutEvent> tablistUpdate = EventListener.builder(
+                    PlayerPacketOutEvent.class)
             .handler(packetOutEvent -> {
-                if(!(packetOutEvent.getPacket() instanceof PlayerInfoUpdatePacket infoUpdatePacket)) return;
+                if (!(packetOutEvent.getPacket() instanceof PlayerInfoUpdatePacket infoUpdatePacket)) return;
                 EnumSet<PlayerInfoUpdatePacket.@NotNull Action> actions = infoUpdatePacket.actions();
-                if(actions.contains(PlayerInfoUpdatePacket.Action.UPDATE_LISTED) || actions.contains(PlayerInfoUpdatePacket.Action.UPDATE_LIST_ORDER)) {
+                if (actions.contains(PlayerInfoUpdatePacket.Action.UPDATE_LISTED)
+                        || actions.contains(PlayerInfoUpdatePacket.Action.UPDATE_LIST_ORDER)) {
                     Player viewer = packetOutEvent.getPlayer();
                     updateTablist(viewer);
                 }
-
-            }).build();
+            })
+            .build();
 
     public void updateTablist(Player viewer) {
 
@@ -53,20 +59,29 @@ public class TablistManager implements System {
             entries.add(getEntry(viewer, onlinePlayer));
         }
 
-        PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket(EnumSet.of(PlayerInfoUpdatePacket.Action.UPDATE_LISTED, PlayerInfoUpdatePacket.Action.UPDATE_LIST_ORDER), entries);
+        PlayerInfoUpdatePacket packet = new PlayerInfoUpdatePacket(
+                EnumSet.of(
+                        PlayerInfoUpdatePacket.Action.UPDATE_LISTED, PlayerInfoUpdatePacket.Action.UPDATE_LIST_ORDER),
+                entries);
         viewer.sendPacket(packet);
     }
 
     public PlayerInfoUpdatePacket.Entry getEntry(Player viewer, Player player) {
         final PlayerSkin skin = player.getSkin();
-        List<PlayerInfoUpdatePacket.Property> prop = skin != null ?
-                List.of(new PlayerInfoUpdatePacket.Property("textures", skin.textures(), skin.signature())) :
-                List.of();
+        List<PlayerInfoUpdatePacket.Property> prop = skin != null
+                ? List.of(new PlayerInfoUpdatePacket.Property("textures", skin.textures(), skin.signature()))
+                : List.of();
 
-
-
-        return new PlayerInfoUpdatePacket.Entry(player.getUuid(), player.getUsername(), prop,
-                getVisibility(viewer, player), player.getLatency(), player.getGameMode(), player.getDisplayName(), null, 0);
+        return new PlayerInfoUpdatePacket.Entry(
+                player.getUuid(),
+                player.getUsername(),
+                prop,
+                getVisibility(viewer, player),
+                player.getLatency(),
+                player.getGameMode(),
+                player.getDisplayName(),
+                null,
+                0);
     }
 
     public boolean getVisibility(Player viewer, Player player) {
@@ -81,7 +96,7 @@ public class TablistManager implements System {
 
         if (viewerGame.equals(playerGame)) {
             TablistSystem tablistSystem = viewerGame.getSystem(TablistSystem.class);
-            if(tablistSystem == null) {
+            if (tablistSystem == null) {
                 return true; // Default visibility if no visibility system is present
             } else {
                 return tablistSystem.getVisibilityHandler().isVisibleToPlayer(viewer.getUuid(), player.getUuid());
@@ -90,5 +105,4 @@ public class TablistManager implements System {
 
         return false; // Default visibility for players not in the same game
     }
-
 }
