@@ -8,27 +8,12 @@ group = "org.readutf.arena"
 version = "1.2.3"
 
 repositories {
-    mavenLocal()
     mavenCentral()
 }
 
 dependencies {
 }
 
-spotless {
-    java {
-        target("src/**/*.java")
-        googleJavaFormat("1.17.0") // Or use other formatters like eclipse, prettier, etc.
-        trimTrailingWhitespace()
-        endWithNewline()
-    }
-
-    // Optional: format Gradle Kotlin scripts too
-    kotlinGradle {
-        target("**/*.gradle.kts")
-        ktlint()
-    }
-}
 
 subprojects {
 
@@ -39,7 +24,6 @@ subprojects {
     version = rootProject.version
 
     java {
-//        withJavadocJar()
         withSourcesJar()
     }
 
@@ -52,6 +36,18 @@ subprojects {
 
                 from(components["java"])
             }
+        }
+
+        repositories {
+            maven {
+                name = "utfMvn"
+                url = uri("https://mvn.utf.lol/releases")
+                credentials {
+                    username = System.getenv("UTF_MVN_USER")
+                    password = System.getenv("UTF_MVN_PASS")
+                }
+            }
+
         }
     }
 }
