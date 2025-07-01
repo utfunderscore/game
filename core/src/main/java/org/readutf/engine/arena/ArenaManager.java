@@ -1,10 +1,5 @@
 package org.readutf.engine.arena;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -19,6 +14,12 @@ import org.readutf.buildformat.common.meta.BuildMeta;
 import org.readutf.buildformat.common.meta.BuildMetaStore;
 import org.readutf.engine.arena.build.BuildPlacement;
 import org.readutf.engine.arena.exception.ArenaLoadException;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Manages the loading and retrieval of arenas within the game engine.
@@ -62,9 +63,7 @@ public class ArenaManager<WORLD> {
             int id = idTracker.getAndIncrement();
             BuildPlacement<WORLD> placement = arenaPlatform.placeBuild(id, buildMeta);
 
-            FORMAT format;
-
-            format = BuildFormatManager.constructBuildFormat(placement.markers(), clazz);
+            FORMAT format = BuildFormatManager.constructBuildFormat(placement.markers(), clazz);
 
             return new Arena<>(
                     id,

@@ -1,16 +1,6 @@
 package org.readutf.engine.minestom.arena;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.stream.Stream;
 import net.hollowcube.polar.PolarLoader;
 import net.hollowcube.polar.PolarReader;
 import net.hollowcube.polar.PolarWorld;
@@ -44,9 +34,14 @@ import org.readutf.engine.arena.Arena;
 import org.readutf.engine.arena.ArenaPlatform;
 import org.readutf.engine.arena.build.BuildPlacement;
 import org.readutf.engine.arena.exception.ArenaLoadException;
-import org.readutf.engine.minestom.PlatformUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.stream.Stream;
 
 public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
 
@@ -118,7 +113,7 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
     }
 
     private void storeCachedArena(String name, CachedArenaData cachedArenaData) throws IOException {
-        MAPPER.writeValue(new File(cacheDirectory, name + ".json"), cachedArenaData);
+        MAPPER.writeValue(new File(cacheDirectory, name + ".bin"), cachedArenaData);
     }
 
     private @NotNull CachedArenaData loadCachedArena(File file) throws IOException {
@@ -152,7 +147,7 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         List<Marker> markers = extractMarkerPositions(schematic).stream()
                 .map(marker -> new Marker(
                         marker.name(),
-                        marker.position().add(PlatformUtils.fromPoint(schematic.offset())),
+                        marker.getTargetPosition(),
                         marker.offset()))
                 .toList();
 
@@ -182,8 +177,7 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
 
         LightingChunk.relight(instance, chunks);
         CompletableFuture<Void> pasteJob = new CompletableFuture<>();
-        schematic.createBatch(block -> {
-                    if (block == null) return null;
+        schematic.createBatch((point, block) -> {
                     CompoundBinaryTag nbt = block.nbt();
                     if(nbt == null) return block;
                     System.out.println(nbt);
