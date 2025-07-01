@@ -6,21 +6,19 @@ plugins {
 
 repositories {
     mavenCentral()
-    mavenLocal()
-    maven { url = uri("https://jitpack.io") }
     maven {
-        name = "utfRepoReleases"
+        name = "utfMvn"
         url = uri("https://mvn.utf.lol/releases")
     }
+    maven { url = uri("https://jitpack.io") }
+
 }
 
 dependencies {
 
     api("net.minestom:minestom-snapshots:1_21_5-69b9a5d844")
     api("org.readutf.arena:core:1.1.0")
-
-    compileOnly("io.github.togar2:minestompvp:1.0")
-
+    compileOnly("com.github.TogAr2:MinestomPvP:126a5a00be")
     api(project(":core"))
 
     api("dev.hollowcube:schem:2.0.0")
