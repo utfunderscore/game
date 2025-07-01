@@ -30,10 +30,6 @@ subprojects {
     publishing {
         publications {
             create<MavenPublication>("mavenJava") {
-                groupId = "org.readutf.arena"
-                version = rootProject.version.toString()
-                artifactId = project.name
-
                 from(components["java"])
             }
         }
