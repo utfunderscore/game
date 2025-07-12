@@ -39,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Stream;
@@ -59,6 +60,10 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         this.cacheDirectory = cacheDirector;
         this.arenaCache = new HashMap<>();
         MAPPER.addMixIn(Marker.class, MarkerMixin.class);
+        MAPPER.addMixIn(Position.class, PositionMixin.class);
+        if(!cacheDirectory.exists()) {
+            cacheDirectory.mkdirs();
+        }
         for (File file : Optional.ofNullable(cacheDirectory.listFiles()).orElse(new File[0])) {
             try {
                 arenaCache.put(getNameWithoutExtension(file), loadCachedArena(file));
@@ -76,7 +81,7 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
             cachedArenaData = arenaCache.get(buildMeta.name());
         }
 
-        if (cachedArenaData == null || cachedArenaData.version() != buildMeta.version()) {
+        if (cachedArenaData == null || cachedArenaData.meta().version() != buildMeta.version()) {
             cachedArenaData = retrieveArenaData(buildMeta);
         }
 
@@ -87,7 +92,7 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         instance.setChunkLoader(polarLoader);
         instance.setChunkSupplier(LightingChunk::new);
 
-        return new BuildPlacement<>(instance, Position.ZERO, cachedArenaData.markers());
+        return new BuildPlacement<>(instance, Position.ZERO, cachedArenaData.meta().markers());
     }
 
     private @NotNull CachedArenaData retrieveArenaData(@NotNull BuildMeta buildMeta) throws ArenaLoadException {
@@ -113,11 +118,34 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
     }
 
     private void storeCachedArena(String name, CachedArenaData cachedArenaData) throws IOException {
-        MAPPER.writeValue(new File(cacheDirectory, name + ".bin"), cachedArenaData);
+        logger.debug("Storing cached arena data for {}", name);
+        long start = System.currentTimeMillis();
+
+        File directory = new File(cacheDirectory, name);
+        if(!directory.exists()) directory.mkdirs();
+        File metaFile = new File(directory, "meta.json");
+        File polarFile = new File(directory, "build.polar");
+
+        metaFile.createNewFile();
+        polarFile.createNewFile();
+
+        MAPPER.writeValue(metaFile, cachedArenaData.meta());
+        Files.write(polarFile.toPath(), cachedArenaData.polarData());
+        logger.debug("Cached arena data for {} stored successfully in {}ms", name, System.currentTimeMillis() - start);
     }
 
-    private @NotNull CachedArenaData loadCachedArena(File file) throws IOException {
-        return MAPPER.readValue(file, CachedArenaData.class);
+    private @NotNull CachedArenaData loadCachedArena(File directory) throws IOException {
+        File metaFile = new File(directory, "meta.json");
+        File polarFile = new File(directory, "build.polar");
+
+        if (!metaFile.exists() || !polarFile.exists()) {
+            throw new IOException("Cached arena data is incomplete: " + directory.getName());
+        }
+
+        ArenaMeta metaData = MAPPER.readValue(metaFile, ArenaMeta.class);
+        byte[] polarData = Files.readAllBytes(polarFile.toPath());
+
+        return new CachedArenaData(metaData, polarData);
     }
 
     @Override
@@ -198,10 +226,8 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         byte[] polarData = PolarWriter.write(polarWorld);
         MinecraftServer.getInstanceManager().unregisterInstance(instance);
 
-        return new CachedArenaData(buildMeta.version(), polarData, markers);
+        return new CachedArenaData(new ArenaMeta(buildMeta.version(), markers), polarData);
     }
-
-    private record CachedArenaData(int version, byte[] polarData, List<Marker> markers) {}
 
     private @NotNull List<Marker> extractMarkerPositions(@NotNull Schematic schematic) {
         List<Marker> markers = new ArrayList<>();
@@ -268,4 +294,9 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         }
         return result;
     }
+
+    private record CachedArenaData(ArenaMeta meta, byte[] polarData) {}
+
+    public record ArenaMeta(int version, List<Marker> markers) {}
+
 }

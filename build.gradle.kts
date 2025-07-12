@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.readutf.arena"
-version = "1.2.5"
+version = "dev"
 
 repositories {
     mavenCentral()
@@ -30,6 +30,9 @@ subprojects {
     publishing {
         publications {
             create<MavenPublication>("mavenJava") {
+                groupId = project.group as String
+                artifactId = project.name
+                version = project.version as String
                 from(components["java"])
             }
         }
@@ -39,8 +42,8 @@ subprojects {
                 name = "utfMvn"
                 url = uri("https://mvn.utf.lol/releases")
                 credentials {
-                    username = System.getenv("UTF_MVN_USER")
-                    password = System.getenv("UTF_MVN_PASS")
+                    username = System.getenv("UTF_MVN_USER") ?: findProperty("utfMvnUser")?.toString() ?: ""
+                    password = System.getenv("UTF_MVN_PASS") ?: findProperty("utfMvnPass")?.toString() ?: ""
                 }
             }
 
