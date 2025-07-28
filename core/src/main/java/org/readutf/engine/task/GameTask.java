@@ -6,13 +6,23 @@ public abstract class GameTask {
 
     private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(GameTask.class);
 
-    protected long startTime = System.currentTimeMillis();
+    private final String taskName;
 
-    private boolean markedForRemoval = false;
+    public GameTask(String taskName) {
+        this.taskName = taskName;
+    }
+
+    public GameTask() {
+        this.taskName = getClass().getName() + '@' + Integer.toHexString(hashCode());
+    }
+
+    protected long startTime = System.currentTimeMillis();
+    protected boolean markedForRemoval = false;
 
     public abstract void tick();
 
     public void markForRemoval() {
+        LOGGER.info("Marking task {} for removal", taskName);
         markedForRemoval = true;
     }
 
@@ -26,6 +36,10 @@ public abstract class GameTask {
 
     @Override
     public String toString() {
-        return getClass().getSimpleName();
+        return "GameTask{" +
+                "taskName='" + taskName + '\'' +
+                ", startTime=" + startTime +
+                ", markedForRemoval=" + markedForRemoval +
+                '}';
     }
 }

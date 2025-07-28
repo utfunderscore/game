@@ -16,7 +16,7 @@ repositories {
 dependencies {
 
     compileOnly("net.minestom:minestom-snapshots:1_21_5-69b9a5d844")
-    compileOnly("com.github.TogAr2:MinestomPvP:126a5a00be")
+    compileOnly("com.github.TogAr2:MinestomPvP:56a831b41c")
     api(project(":core"))
     compileOnly("org.readutf.buildformat:common:1.0.18")
 
@@ -27,6 +27,10 @@ dependencies {
     api("net.bladehunt:kotstom:0.4.0-beta.0")
 }
 
+
+java.toolchain {
+    languageVersion.set(JavaLanguageVersion.of(21)) // Keep inline with the latest Minestom version
+}
 
 tasks.compileJava {
     options.compilerArgs.add("-parameters")
