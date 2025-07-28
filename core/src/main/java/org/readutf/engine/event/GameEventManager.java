@@ -1,13 +1,7 @@
 package org.readutf.engine.event;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.engine.Game;
@@ -29,7 +23,7 @@ public class GameEventManager {
     private final Map<Class<?>, EventGameAdapter> eventAdapters = new HashMap<>();
     private final Set<Class<?>> registeredTypes = new HashSet<>();
     private final Set<Class<?>> noAdapters = new HashSet<>();
-    private final Map<Game<?, ?, ?>, List<ListenerData>> gameListeners = new LinkedHashMap<>();
+    private final Map<UUID, List<ListenerData>> gameListeners = new LinkedHashMap<>();
     private final Set<Class<?>> eventStackTraceEnabled = new HashSet<>();
 
     public GameEventManager(@NotNull GameEventPlatform gameEventPlatform) {
@@ -48,7 +42,7 @@ public class GameEventManager {
     public <T> @NotNull T callEvent(@NotNull T event, @NotNull Game<?, ?, ?> game) throws EventDispatchException {
         logger.debug("Calling event: {}", event.getClass().getSimpleName());
 
-        List<ListenerData> listeners = this.gameListeners.get(game);
+        List<ListenerData> listeners = this.gameListeners.get(game.getId());
         if ((listeners == null || listeners.isEmpty())) {
             if (eventStackTraceEnabled.contains(event.getClass())) {
                 logger.info(
@@ -126,13 +120,13 @@ public class GameEventManager {
             gameEventPlatform.registerEventListener(game, listener.getType(), this::eventHandler);
         }
 
-        List<ListenerData> listeners = gameListeners.computeIfAbsent(game, k -> new ArrayList<>());
+        List<ListenerData> listeners = gameListeners.computeIfAbsent(game.getId(), k -> new ArrayList<>());
         listeners.add(listener);
-        gameListeners.put(game, listeners);
+        gameListeners.put(game.getId(), listeners);
     }
 
     public void unregisterListener(@NotNull Game<?, ?, ?> game, @NotNull Class<?> eventClass, @NotNull GameListener listener) {
-        List<ListenerData> listeners = gameListeners.get(game);
+        List<ListenerData> listeners = gameListeners.get(game.getId());
         if (listeners == null) return;
 
         listeners.removeIf(listenerData -> listenerData.getGameListener() == listener);
@@ -159,6 +153,6 @@ public class GameEventManager {
 
     public void shutdown(@NotNull Game<?, ?, ?> game) {
         gameEventPlatform.unregisterListeners(game);
-        gameListeners.remove(game);
+        gameListeners.remove(game.getId());
     }
 }

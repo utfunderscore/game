@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
 import org.readutf.engine.stage.Stage;
@@ -33,17 +34,27 @@ public class GameScheduler {
 
         Map<UUID, List<GameTask>> remaining = new HashMap<>();
         for (Map.Entry<UUID, List<GameTask>> entry : gameTasks.entrySet()) {
+            logger.debug("Ticking tasks for game {}", entry.getKey());
+
             List<GameTask> remainingTasks = new ArrayList<>();
             List<GameTask> startingTasks = entry.getValue();
             for (@NotNull GameTask task : startingTasks) {
-                task.tick();
+                try {
+                    task.tick();
+                } catch (Exception e) {
+                    logger.error("Error while executing task {} for game {}", task, entry.getKey(), e);
+                    continue; // Skip to the next task
+                }
                 if (!task.isMarkedForRemoval()) {
                     remainingTasks.add(task);
+                    logger.debug("Task {} for game {} is still active", task, entry.getKey());
                 } else {
-                    logger.info("Task {} for game {} is marked for removal", task, entry.getKey());
+                    logger.debug("Task {} for game {} is marked for removal", task, entry.getKey());
                 }
             }
-            remaining.put(entry.getKey(), remainingTasks);
+            if(!remainingTasks.isEmpty()) {
+                remaining.put(entry.getKey(), remainingTasks);
+            }
         }
         gameTasks.clear();
         for (Map.Entry<@NotNull UUID, @NotNull List<@NotNull GameTask>> uuidListEntry : remaining.entrySet()) {
@@ -73,7 +84,6 @@ public class GameScheduler {
      * @param gameTask the task to execute
      */
     public void schedule(@NotNull Stage<?, ?, ?> stage, @NotNull GameTask gameTask) {
-        String taskName = gameTask.getClass().getSimpleName();
         GameTask wrapped = new GameTask() {
             @Override
             public void tick() {
@@ -83,13 +93,16 @@ public class GameScheduler {
             }
 
             @Override
-            public String toString() {
-                return taskName;
+            public boolean isMarkedForRemoval() {
+                return gameTask.isMarkedForRemoval() || markedForRemoval /* || stage.getGame().getCurrentStage() != stage*/;
             }
 
             @Override
-            public boolean isMarkedForRemoval() {
-                return gameTask.isMarkedForRemoval() /* || stage.getGame().getCurrentStage() != stage*/;
+            public String toString() {
+                return "WrappedGameTask{" +
+                        "originalTask=" + gameTask +
+                        ", stage=" + stage.getGame().getCurrentStage() +
+                        '}';
             }
         };
 
