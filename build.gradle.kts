@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.readutf.arena"
-version = "dev"
+version = "1.2.6"
 
 repositories {
     mavenCentral()
