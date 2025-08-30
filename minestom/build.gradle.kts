@@ -5,10 +5,7 @@ plugins {
 
 repositories {
     mavenCentral()
-    maven {
-        name = "utfMvn"
-        url = uri("https://mvn.utf.lol/releases")
-    }
+    maven { url = uri("https://mvn.utf.lol/releases") }
     maven { url = uri("https://jitpack.io") }
     maven("https://repo.panda-lang.org/releases")
 }
@@ -18,7 +15,7 @@ dependencies {
     compileOnly("net.minestom:minestom-snapshots:1_21_5-69b9a5d844")
     compileOnly("com.github.TogAr2:MinestomPvP:56a831b41c")
     api(project(":core"))
-    compileOnly("org.readutf.buildformat:common:1.0.25")
+    compileOnly("org.readutf.buildformat:common:1.0.26")
 
     api("dev.hollowcube:schem:2.0.0")
     api("dev.hollowcube:polar:1.14.5")
