@@ -69,7 +69,7 @@ public class ArenaManager<WORLD> {
             int id = idTracker.getAndIncrement();
             BuildPlacement<WORLD> placement = arenaPlatform.placeBuild(id, buildMeta);
 
-            FORMAT format = BuildFormatManager.constructBuildFormat(placement.markers(), clazz);
+            FORMAT format = BuildFormatManager.build(placement.markers(), clazz);
 
             return new Arena<>(
                     id,
@@ -96,8 +96,7 @@ public class ArenaManager<WORLD> {
     public <T extends BuildFormat> @NotNull List<String> getByFormat(@NotNull String format, @NotNull Class<T> kClass) throws BuildFormatException {
         Map<String, BuildFormatChecksum> buildsByFormat = buildMetaStore.getBuildsByFormat(format);
 
-        List<RequirementData> requirements = BuildFormatManager.getValidators(kClass);
-        byte[] targetChecksum = BuildFormatManager.generateChecksum(requirements);
+        byte[] targetChecksum = BuildFormatManager.checksum(format, kClass);
 
         List<String> builds = new ArrayList<>();
 
