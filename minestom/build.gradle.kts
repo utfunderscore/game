@@ -17,7 +17,7 @@ dependencies {
     api(project(":core"))
     compileOnly("org.readutf.buildformat:common:1.0.26")
 
-    api("dev.hollowcube:schem:e2fd8df4a3")
+    api("dev.hollowcube:schem:1d3ecd1a62")
     api("dev.hollowcube:polar:1.14.5")
     api("org.slf4j:slf4j-api:2.0.16")
 
