@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "org.readutf.arena"
-version = "1.2.14"
+version = System.getenv("ARENA_VERSION") ?: "dev"
 
 repositories {
     mavenCentral()
