@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.engine.Game;
@@ -45,11 +46,11 @@ public class SpectatorSystem implements System {
             @NotNull Game<?, ?, ?> game,
             @NotNull SpectatorPlatform spectatorPlatform,
             @NotNull VisibilitySystem visibilitySystem
-            ) {
+    ) {
         this.game = game;
         this.spectatorPlatform = spectatorPlatform;
         this.visibilitySystem = visibilitySystem;
-        this.visibilitySystem.addVisibilityLayer((viewer,target) -> isSpectator(viewer) || !isSpectator(target));
+        this.visibilitySystem.addVisibilityLayer((viewer, target) -> isSpectator(viewer) || !isSpectator(target));
         this.visibilitySystem.addUpdateTrigger(GameSpectateEvent.class);
     }
 
@@ -78,6 +79,8 @@ public class SpectatorSystem implements System {
 
         game.callEvent(new GameSpectateEvent(game, spectatorData));
 
+        visibilitySystem.refresh();
+
         spectatorPlatform.setSpectatorState(spectatorData);
     }
 
@@ -86,16 +89,15 @@ public class SpectatorSystem implements System {
      *
      * @param spectatorData the spectator data (must not be null)
      */
-    public void respawnSpectator(@NotNull SpectatorData spectatorData) {
+    public void respawnSpectator(@NotNull SpectatorData spectatorData) throws Exception {
         SpectatorData data = spectators.get(spectatorData.getPlayerId());
         if (data == null) return;
 
-        try {
-            spectatorPlatform.setNormalState(data.getPlayerId());
-            spectators.remove(spectatorData.getPlayerId());
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+
+        spectatorPlatform.setNormalState(data.getPlayerId());
+        spectators.remove(spectatorData.getPlayerId());
+        visibilitySystem.refresh();
+
     }
 
     /**

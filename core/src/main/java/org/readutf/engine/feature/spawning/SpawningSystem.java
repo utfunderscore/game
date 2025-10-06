@@ -49,7 +49,7 @@ public sealed class SpawningSystem<WORLD, ARENA extends Arena<WORLD, ?>, TEAM ex
         game.getPlatform().teleport(playerId, position, arena.getWorld());
     }
 
-    public non-sealed class StageStart extends SpawningSystem {
+    public non-sealed static class StageStart extends SpawningSystem {
 
         public StageStart(Game<?, ?, ?> game, @NotNull SpawnFinder spawnFinder) {
             super(game, spawnFinder);

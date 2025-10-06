@@ -24,6 +24,7 @@ import net.minestom.server.instance.LightingChunk;
 import net.minestom.server.instance.block.Block;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 import org.readutf.buildformat.common.exception.BuildFormatException;
 import org.readutf.buildformat.common.markers.Marker;
 import org.readutf.buildformat.common.markers.Position;
@@ -172,12 +173,9 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
             throw new ArenaLoadException("Failed to read schematic", e);
         }
 
-        List<Marker> markers = extractMarkerPositions(schematic).stream()
-                .map(marker -> new Marker(
-                        marker.name(),
-                        marker.getTargetPosition(),
-                        marker.offset()))
-                .toList();
+        List<Marker> markers = extractMarkers(schematic);
+
+        System.out.println(markers);
 
         var instance = MinecraftServer.getInstanceManager().createInstanceContainer();
         instance.setChunkSupplier(LightingChunk::new);
@@ -229,66 +227,82 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         return new CachedArenaData(new ArenaMeta(buildMeta.version(), markers), polarData);
     }
 
-    private @NotNull List<Marker> extractMarkerPositions(@NotNull Schematic schematic) {
-        List<Marker> markers = new ArrayList<>();
+    private @NotNull @Unmodifiable List<Marker> extractMarkers(@NotNull Schematic schematic) {
+
+        HashMap<Point, Marker> markers = new HashMap<>();
 
         for (BlockEntityData entity : schematic.blockEntities()) {
             CompoundBinaryTag data = entity.data();
-            if (!"minecraft:sign".equals(data.getString("id"))) continue;
+            String id = data.getString("id");
+            if (!"minecraft:sign".equals(id)) continue;
 
             List<String> markerLines = extractMarkerLines(data);
-            Point point = entity.position().sub(schematic.offset());
-            String key = point.toString();
+            Point point = entity.position();
 
-            if (markerLines.isEmpty() || !"#marker".equalsIgnoreCase(markerLines.get(0))) {
-                // logger.debug("Sign at does not start with #marker lines: " + markerLines);
+            if (markerLines.isEmpty() || !markerLines.get(0).equalsIgnoreCase("#marker")) {
                 continue;
             }
-
-            // logger.info("Found marker at " + key);
 
             if (markerLines.size() < 2) continue;
             String markerName = markerLines.get(1);
-            if (markerName.isEmpty()) {
-                continue;
-            }
+            if (markerName.isEmpty()) continue;
 
-            List<Integer> offset = List.of(0, 0, 0);
+            int[] offset = new int[]{0, 0, 0};
             if (markerLines.size() > 2 && !markerLines.get(2).isEmpty()) {
-                offset = Stream.of(markerLines.get(2).split("[,\\- ]"))
-                        .map(s -> {
-                            try {
-                                return Integer.parseInt(s);
-                            } catch (NumberFormatException e) {
-                                return null;
-                            }
-                        })
-                        .filter(Objects::nonNull)
-                        .toList();
-            }
-            if (offset.size() != 3) {
-                // logger.info("Marker at " + key + " does not have a valid offset");
-                continue;
+                String[] parts = markerLines.get(2).split("[,\\- ]");
+                List<Integer> offsets = new ArrayList<>();
+                for (String part : parts) {
+                    try {
+                        offsets.add(Integer.parseInt(part));
+                    } catch (NumberFormatException ignored) {
+                    }
+                }
+                if (offsets.size() == 3) {
+                    offset = new int[]{offsets.get(0), offsets.get(1), offsets.get(2)};
+                } else {
+                    continue;
+                }
             }
 
-            markers.add(new Marker(
-                    markerName,
-                    new Position(point.x() + offset.get(0), point.y() + offset.get(1), point.z() + offset.get(2)),
-                    new Position(offset.get(0), offset.get(1), offset.get(2))));
+            markers.put(point, new Marker(markerName,
+                    new Position(point.x(), point.y(), point.z()),
+                    new Position(offset[0], offset[1], offset[2])
+            ));
         }
 
-        return markers;
+
+        System.out.println(markers.keySet());
+        schematic.forEachBlock((temp, block) -> {
+            Point point = temp.sub(schematic.offset());
+
+            for (Point point1 : markers.keySet()) {
+                if (point1.x() == point.x() &&
+                        point1.y() == point.y() &&
+                        point1.z() == point.z()) {
+                    System.out.println(block.properties());
+                    double yaw = Integer.parseInt(block.properties().get("rotation")) * 22.5;
+                    Marker marker = markers.get(point1);
+                    Position targetPosition = marker.origin();
+                    Position position = new Position(targetPosition.x(), targetPosition.y(), targetPosition.z(), (float) yaw, 0);
+                    markers.put(point1, new Marker(marker.name(), position, marker.offset()));
+                }
+            }
+        });
+
+        return markers.values().stream().toList();
     }
 
-    private List<String> extractMarkerLines(CompoundBinaryTag compoundBinaryTag) {
+    private @NotNull List<String> extractMarkerLines(@NotNull CompoundBinaryTag compoundBinaryTag) {
+
         CompoundBinaryTag frontText = compoundBinaryTag.getCompound("front_text");
         ListBinaryTag messages = frontText.getList("messages");
-        List<String> result = new ArrayList<>(messages.size());
+
+        List<String> result = new ArrayList<>();
         for (BinaryTag tag : messages) {
-            if (tag instanceof StringBinaryTag line) {
-                String value = line.value();
+            if (tag instanceof StringBinaryTag stringTag) {
+                String value = stringTag.value();
                 if (value.length() < 2) continue;
-                logger.debug("Extracted marker line: {}", value);
+                // logger.debug("Extracted marker line: {}", value);
                 result.add(value);
             }
         }

@@ -29,12 +29,6 @@ public class MinestomEventPlatform implements GameEventPlatform {
     private static final Logger log = LoggerFactory.getLogger(MinestomEventPlatform.class);
     private final Map<UUID, EventNode<Event>> listeners = new HashMap<>();
 
-    private final GameManager gameManager;
-
-    public MinestomEventPlatform(GameManager gameManager) {
-        this.gameManager = gameManager;
-    }
-
     @Override
     public <T> void registerEventListener(
             @NotNull Game<?, ?, ?> game, @NotNull Class<T> type, @NotNull Consumer<T> consumer) {
@@ -62,8 +56,8 @@ public class MinestomEventPlatform implements GameEventPlatform {
 
     @Override
     public void registerAdapters(Map<Class<?>, EventGameAdapter> eventAdapters) {
-        eventAdapters.put(InstanceEvent.class, new InstanceEventAdapter(gameManager));
-        eventAdapters.put(EntityEvent.class, new EntityEventAdapter(gameManager));
+        eventAdapters.put(InstanceEvent.class, new InstanceEventAdapter(GameManager.getInstance()));
+        eventAdapters.put(EntityEvent.class, new EntityEventAdapter(GameManager.getInstance()));
     }
 
     @Override
