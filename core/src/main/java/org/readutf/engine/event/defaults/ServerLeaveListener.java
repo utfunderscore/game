@@ -9,15 +9,8 @@ import java.util.UUID;
 
 public class ServerLeaveListener {
 
-    @NotNull
-    private final GameManager gameManager;
-
-    public ServerLeaveListener(@NotNull GameManager gameManager) {
-        this.gameManager = gameManager;
-    }
-
     public void onServerLeave(UUID playerId) {
-        Game<?, ?, ?> game = gameManager.getGameByPlayer(playerId);
+        Game<?, ?, ?> game = GameManager.getInstance().getGameByPlayer(playerId);
 
         if(game != null) {
             game.callEvent(new GameServerLeaveEvent(game));

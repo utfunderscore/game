@@ -15,6 +15,7 @@ import net.minestom.server.event.trait.EntityEvent;
 import net.minestom.server.event.trait.InstanceEvent;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
+import org.readutf.engine.GameManager;
 import org.readutf.engine.event.GameEventPlatform;
 import org.readutf.engine.event.adapter.EventGameAdapter;
 import org.readutf.engine.event.defaults.ServerJoinListener;
@@ -27,6 +28,12 @@ public class MinestomEventPlatform implements GameEventPlatform {
 
     private static final Logger log = LoggerFactory.getLogger(MinestomEventPlatform.class);
     private final Map<UUID, EventNode<Event>> listeners = new HashMap<>();
+
+    private final GameManager gameManager;
+
+    public MinestomEventPlatform(GameManager gameManager) {
+        this.gameManager = gameManager;
+    }
 
     @Override
     public <T> void registerEventListener(
@@ -55,8 +62,8 @@ public class MinestomEventPlatform implements GameEventPlatform {
 
     @Override
     public void registerAdapters(Map<Class<?>, EventGameAdapter> eventAdapters) {
-        eventAdapters.put(InstanceEvent.class, new InstanceEventAdapter());
-        eventAdapters.put(EntityEvent.class, new EntityEventAdapter());
+        eventAdapters.put(InstanceEvent.class, new InstanceEventAdapter(gameManager));
+        eventAdapters.put(EntityEvent.class, new EntityEventAdapter(gameManager));
     }
 
     @Override

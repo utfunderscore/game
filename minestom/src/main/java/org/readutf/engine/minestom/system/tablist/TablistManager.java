@@ -19,11 +19,9 @@ import java.util.List;
 
 public class TablistManager implements System {
 
-    @NotNull
-    private final GameManager gameManager;
+    private static final @NotNull TablistManager instance = new TablistManager();
 
-    public TablistManager(@NotNull GameManager gameManager) {
-        this.gameManager = gameManager;
+    private TablistManager() {
         MinecraftServer.getGlobalEventHandler().addListener(playerSpawnEvent);
     }
 
@@ -83,11 +81,11 @@ public class TablistManager implements System {
     }
 
     public boolean getVisibility(Player viewer, Player player) {
-        Game<?, ?, ?> viewerGame = gameManager.getGameByPlayer(viewer.getUuid());
+        Game<?, ?, ?> viewerGame = GameManager.getInstance().getGameByPlayer(viewer.getUuid());
         if (viewerGame == null) {
             return true; // If no game is found, assume visibility
         }
-        Game<?, ?, ?> playerGame = gameManager.getGameByPlayer(player.getUuid());
+        Game<?, ?, ?> playerGame = GameManager.getInstance().getGameByPlayer(player.getUuid());
         if (playerGame == null) {
             return false;
         }
@@ -103,4 +101,9 @@ public class TablistManager implements System {
 
         return false; // Default visibility for players not in the same game
     }
+
+    public static TablistManager getInstance() {
+        return instance;
+    }
+
 }

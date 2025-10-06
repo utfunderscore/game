@@ -17,12 +17,11 @@ public class TablistSystem implements System {
     public TablistSystem(@NotNull Game<?, ?, ?> game, @NotNull VisibilityHandler visibilityHandler) {
         this.game = game;
         this.visibilityHandler = visibilityHandler;
-        TablistManager.getTablistManager();
     }
 
     public void refresh() {
         for (Player onlinePlayer : MinestomPlatform.getOnlinePlayers(game)) {
-            TablistManager.getTablistManager().updateTablist(onlinePlayer);
+            TablistManager.getInstance().updateTablist(onlinePlayer);
         }
     }
 

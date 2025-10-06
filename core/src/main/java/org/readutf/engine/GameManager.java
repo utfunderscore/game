@@ -12,9 +12,12 @@ import java.util.UUID;
 
 public class GameManager {
 
-    private @NotNull final HashSet<Game<?, ?, ?>> gameTracker = new HashSet<>();
+    private @NotNull final HashSet<Game<?, ?, ?>> gameTracker;
 
-    public GameManager() {
+    private static final GameManager instance = new GameManager();
+
+    private GameManager() {
+        gameTracker = new HashSet<>();
     }
 
     public void start(@NotNull Game<?, ?, ?> game) throws GameException {
@@ -42,5 +45,9 @@ public class GameManager {
 
     public @NotNull Collection<Game<?, ?, ?>> getGames() {
         return gameTracker;
+    }
+
+    public static @NotNull GameManager getInstance() {
+        return instance;
     }
 }

@@ -1,33 +1,20 @@
 package org.readutf.engine.minestom;
 
-import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
-import net.minestom.server.instance.Instance;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.readutf.buildformat.common.markers.Position;
-import org.readutf.engine.Game;
-import org.readutf.engine.GameManager;
-import org.readutf.engine.arena.Arena;
 
 public class PlatformUtils {
 
-    public static @Nullable Game<?, ?, ?> getGame(Instance instance) {
-        for (Game<?, ?, ?> game : GameManager.getGames()) {
-            Arena<?, ?> arena = game.getArena();
-            if(arena != null && arena.getWorld() instanceof Instance targetInstance && targetInstance == instance) {
-                return game;
-            }
-        }
-        return null;
+    @Contract("_ -> new")
+    public static @NotNull Position fromPos(@NotNull Pos pos) {
+        return new Position(pos.x(), pos.y(), pos.z(), pos.yaw(), pos.pitch());
     }
 
-    public static @NotNull Position fromPoint(@NotNull Point point) {
-        return new Position(point.x(), point.y(), point.z());
-    }
-
-    public static @NotNull Pos fromPosition(@NotNull Position position) {
-        return new Pos(position.x(), position.y(), position.z());
+    @Contract("_ -> new")
+    public static @NotNull Pos toPos(@NotNull Position pos) {
+        return new Pos(pos.x(), pos.y(), pos.z(), pos.yaw(), pos.pitch());
     }
 
 }

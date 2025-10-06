@@ -19,7 +19,7 @@ public class MinestomSpectator implements SpectatorPlatform {
         Player player = MinestomPlatform.getPlayer(spectatorData.getPlayerId());
         if (player == null) return;
 
-        player.teleport(PlatformUtils.fromPosition(spectatorData.getSpectatorPosition()));
+        player.teleport(PlatformUtils.toPos(spectatorData.getSpectatorPosition()));
 
         player.setAllowFlying(true);
         player.setFlying(true);

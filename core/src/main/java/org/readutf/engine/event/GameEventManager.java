@@ -22,8 +22,6 @@ public class GameEventManager {
 
     private final Logger logger = LoggerFactory.getLogger(GameEventManager.class.getName());
 
-    @NotNull
-    private final GameManager gameManager;
     private final @NotNull GameEventPlatform gameEventPlatform;
     private final Map<Class<?>, EventGameAdapter> eventAdapters = new HashMap<>();
     private final Set<Class<?>> registeredTypes = new HashSet<>();
@@ -31,8 +29,7 @@ public class GameEventManager {
     private final Map<UUID, List<ListenerData>> gameListeners = new LinkedHashMap<>();
     private final Set<Class<?>> eventStackTraceEnabled = new HashSet<>();
 
-    public GameEventManager(@NotNull GameManager gameManager,  @NotNull GameEventPlatform gameEventPlatform) {
-        this.gameManager = gameManager;
+    public GameEventManager(@NotNull GameEventPlatform gameEventPlatform) {
         this.gameEventPlatform = gameEventPlatform;
         eventAdapters.put(GameEvent.class, new GameEventAdapter());
         gameEventPlatform.registerAdapters(eventAdapters);
@@ -40,8 +37,8 @@ public class GameEventManager {
     }
 
     public void registerDefaultListeners() {
-        gameEventPlatform.registerServerJoinListener(new ServerJoinListener(gameManager));
-        gameEventPlatform.registerServerLeaveListener(new ServerLeaveListener(gameManager));
+        gameEventPlatform.registerServerJoinListener(new ServerJoinListener());
+        gameEventPlatform.registerServerLeaveListener(new ServerLeaveListener());
     }
 
     public <T> void registerEventAdapter(Class<T> type, TypedEventAdapter<T> adapter) {
