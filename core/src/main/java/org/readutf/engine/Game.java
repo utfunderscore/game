@@ -6,10 +6,11 @@ import org.jetbrains.annotations.Nullable;
 import org.readutf.engine.arena.Arena;
 import org.readutf.engine.event.GameEvent;
 import org.readutf.engine.event.GameEventManager;
+import org.readutf.engine.event.defaults.ServerJoinListener;
+import org.readutf.engine.event.defaults.ServerLeaveListener;
 import org.readutf.engine.event.exceptions.EventDispatchException;
 import org.readutf.engine.event.impl.game.GameArenaChangeEvent;
 import org.readutf.engine.event.impl.game.GameEndEvent;
-import org.readutf.engine.event.impl.game.GameJoinEvent;
 import org.readutf.engine.event.impl.game.GameLeaveEvent;
 import org.readutf.engine.event.impl.stage.StagePreChangeEvent;
 import org.readutf.engine.event.listener.ListenerData;
@@ -126,7 +127,7 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
      *
      * @throws GameException if game is not in startup state or no arena is active
      */
-    public void start() throws GameException {
+    protected void start() throws GameException {
         logger.info("Starting game");
 
         if (gameState != GameState.STARTUP) {
@@ -142,7 +143,6 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
         startNextStage();
 
         gameState = GameState.ACTIVE;
-        GameManager.register(this);
     }
 
     /**
@@ -229,8 +229,6 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
             system.shutdown();
         }
         systems.clear();
-
-        GameManager.unregister(this);
     }
 
     /**
@@ -358,8 +356,6 @@ public class Game<WORLD, ARENA extends Arena<WORLD, ?>, TEAM extends GameTeam> {
 
         team.getPlayers().add(playerId);
         teams.put(team.getTeamName(), team);
-
-        callEvent(new GameJoinEvent(this, playerId));
     }
 
     /**

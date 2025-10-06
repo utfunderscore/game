@@ -5,7 +5,8 @@ import org.readutf.buildformat.common.markers.Position;
 import org.readutf.engine.Game;
 import org.readutf.engine.arena.Arena;
 import org.readutf.engine.event.impl.arena.ArenaChangeEvent;
-import org.readutf.engine.event.impl.game.GameJoinEvent;
+import org.readutf.engine.event.impl.game.GamePlayerAddEvent;
+import org.readutf.engine.event.impl.game.GameServerJoinEvent;
 import org.readutf.engine.event.impl.stage.StagePreChangeEvent;
 import org.readutf.engine.event.listener.ListenerData;
 import org.readutf.engine.event.listener.TypedGameListener;
@@ -48,7 +49,7 @@ public sealed class SpawningSystem<WORLD, ARENA extends Arena<WORLD, ?>, TEAM ex
         game.getPlatform().teleport(playerId, position, arena.getWorld());
     }
 
-    public non-sealed static class StageStart extends SpawningSystem {
+    public non-sealed class StageStart extends SpawningSystem {
 
         public StageStart(Game<?, ?, ?> game, @NotNull SpawnFinder spawnFinder) {
             super(game, spawnFinder);
@@ -78,18 +79,18 @@ public sealed class SpawningSystem<WORLD, ARENA extends Arena<WORLD, ?>, TEAM ex
                 event -> event.getGame().getPlayers().forEach(this::spawn);
     }
 
-    public non-sealed static class GameJoin extends SpawningSystem {
+    public non-sealed static class ServerJoin extends SpawningSystem {
 
-        public GameJoin(Game<?, ?, ?> game, @NotNull SpawnFinder spawnFinder) {
+        public ServerJoin(Game<?, ?, ?> game, @NotNull SpawnFinder spawnFinder) {
             super(game, spawnFinder);
         }
 
         @Override
         public @NotNull List<ListenerData> getListeners() {
-            return List.of(ListenerData.typed(GameJoinEvent.class, listener));
+            return List.of(ListenerData.typed(GameServerJoinEvent.class, listener));
         }
 
-        private final TypedGameListener<GameJoinEvent> listener =
+        private final TypedGameListener<GameServerJoinEvent> listener =
                 event -> event.getGame().getPlayers().forEach(this::spawn);
     }
 }

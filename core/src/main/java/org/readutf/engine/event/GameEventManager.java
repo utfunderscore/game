@@ -5,9 +5,12 @@ import java.util.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.readutf.engine.Game;
+import org.readutf.engine.GameManager;
 import org.readutf.engine.event.adapter.EventGameAdapter;
 import org.readutf.engine.event.adapter.TypedEventAdapter;
 import org.readutf.engine.event.adapter.impl.GameEventAdapter;
+import org.readutf.engine.event.defaults.ServerJoinListener;
+import org.readutf.engine.event.defaults.ServerLeaveListener;
 import org.readutf.engine.event.exceptions.EventAdaptException;
 import org.readutf.engine.event.exceptions.EventDispatchException;
 import org.readutf.engine.event.listener.GameListener;
@@ -19,6 +22,8 @@ public class GameEventManager {
 
     private final Logger logger = LoggerFactory.getLogger(GameEventManager.class.getName());
 
+    @NotNull
+    private final GameManager gameManager;
     private final @NotNull GameEventPlatform gameEventPlatform;
     private final Map<Class<?>, EventGameAdapter> eventAdapters = new HashMap<>();
     private final Set<Class<?>> registeredTypes = new HashSet<>();
@@ -26,10 +31,17 @@ public class GameEventManager {
     private final Map<UUID, List<ListenerData>> gameListeners = new LinkedHashMap<>();
     private final Set<Class<?>> eventStackTraceEnabled = new HashSet<>();
 
-    public GameEventManager(@NotNull GameEventPlatform gameEventPlatform) {
+    public GameEventManager(@NotNull GameManager gameManager,  @NotNull GameEventPlatform gameEventPlatform) {
+        this.gameManager = gameManager;
         this.gameEventPlatform = gameEventPlatform;
         eventAdapters.put(GameEvent.class, new GameEventAdapter());
         gameEventPlatform.registerAdapters(eventAdapters);
+        registerDefaultListeners();
+    }
+
+    public void registerDefaultListeners() {
+        gameEventPlatform.registerServerJoinListener(new ServerJoinListener(gameManager));
+        gameEventPlatform.registerServerLeaveListener(new ServerLeaveListener(gameManager));
     }
 
     public <T> void registerEventAdapter(Class<T> type, TypedEventAdapter<T> adapter) {
@@ -113,7 +125,7 @@ public class GameEventManager {
         return foundGame;
     }
 
-    public void registerListener(@NotNull Game<?, ?, ?> game, ListenerData listener) throws EventDispatchException {
+    public void registerListener(@NotNull Game<?, ?, ?> game, @NotNull ListenerData listener) throws EventDispatchException {
         if (!registeredTypes.contains(listener.getType())) {
             registeredTypes.add(listener.getType());
             logger.info("Registering listener for event type: {}", listener.getType());
@@ -154,5 +166,9 @@ public class GameEventManager {
     public void shutdown(@NotNull Game<?, ?, ?> game) {
         gameEventPlatform.unregisterListeners(game);
         gameListeners.remove(game.getId());
+    }
+
+    public @NotNull GameEventPlatform getPlatform() {
+        return gameEventPlatform;
     }
 }

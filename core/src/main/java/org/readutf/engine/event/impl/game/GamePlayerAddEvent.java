@@ -6,12 +6,15 @@ import org.readutf.engine.event.GameEvent;
 
 import java.util.UUID;
 
-public class GameJoinEvent implements GameEvent {
+/**
+ * Called when a player is added to the game
+ */
+public class GamePlayerAddEvent implements GameEvent {
 
     private final @NotNull Game<?, ?, ?> game;
     private final @NotNull UUID playerId;
 
-    public GameJoinEvent(@NotNull Game<?, ?, ?> game, @NotNull UUID playerId) {
+    public GamePlayerAddEvent(@NotNull Game<?, ?, ?> game, @NotNull UUID playerId) {
         this.game = game;
         this.playerId = playerId;
     }

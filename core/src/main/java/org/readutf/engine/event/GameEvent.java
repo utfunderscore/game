@@ -5,5 +5,6 @@ import org.readutf.engine.Game;
 
 public interface GameEvent {
 
-    @NotNull Game<?, ?, ?> getGame();
+    @NotNull
+    Game<?, ?, ?> getGame();
 }

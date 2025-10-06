@@ -2,7 +2,7 @@ package org.readutf.engine.feature.visibility;
 
 import org.jetbrains.annotations.NotNull;
 import org.readutf.engine.Game;
-import org.readutf.engine.event.impl.game.GameJoinEvent;
+import org.readutf.engine.event.impl.game.GamePlayerAddEvent;
 import org.readutf.engine.event.listener.ListenerData;
 import org.readutf.engine.event.listener.TypedGameListener;
 import org.readutf.engine.feature.System;
@@ -22,8 +22,8 @@ public class VisibilitySystem implements System {
     private @NotNull final VisibilityPlatform platform;
     private @NotNull final List<Class<?>> updateTriggers;
     private @NotNull final TypedGameListener<Object> eventListener;
-    private @NotNull final TypedGameListener<GameJoinEvent> gameJoinListener;
-    private @NotNull final TypedGameListener<GameJoinEvent> gameLeaveListener;
+    private @NotNull final TypedGameListener<GamePlayerAddEvent> gameJoinListener;
+    private @NotNull final TypedGameListener<GamePlayerAddEvent> gameLeaveListener;
 
     public VisibilitySystem(@NotNull Game<?, ?, ?> game, @NotNull VisibilityPlatform platform) {
         this.game = game;
@@ -71,8 +71,8 @@ public class VisibilitySystem implements System {
     @Override
     public @NotNull List<ListenerData> getListeners() {
         return List.of(
-                ListenerData.typed(GameJoinEvent.class, gameJoinListener),
-                ListenerData.typed(GameJoinEvent.class, gameLeaveListener),
+                ListenerData.typed(GamePlayerAddEvent.class, gameJoinListener),
+                ListenerData.typed(GamePlayerAddEvent.class, gameLeaveListener),
                 ListenerData.typed(Object.class, eventListener));
     }
 
