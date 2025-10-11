@@ -15,7 +15,7 @@ dependencies {
     compileOnly("net.minestom:minestom-snapshots:1_21_5-69b9a5d844")
     compileOnly("com.github.TogAr2:MinestomPvP:56a831b41c")
     api(project(":core"))
-    compileOnly("org.readutf.buildformat:common:1.0.26")
+    compileOnly("org.readutf.buildformat:common:1.0.27")
 
     api("dev.hollowcube:schem:1d3ecd1a62")
     api("dev.hollowcube:polar:1.14.5")
