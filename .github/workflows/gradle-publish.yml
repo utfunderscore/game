@@ -8,8 +8,6 @@ on:
 jobs:
   build-test-publish:
     runs-on: ubuntu-latest
-    env:
-      ARENA_VERSION: ${{ github.ref_name }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -43,5 +41,4 @@ jobs:
         env:
           UTF_MVN_USER: ${{ secrets.UTF_MVN_USER }}
           UTF_MVN_PASS: ${{ secrets.UTF_MVN_PASS }}
-          ARENA_VERSION: ${{ github.ref_name }}
         run: ./gradlew publishAllPublicationsToUtfMvnRepository

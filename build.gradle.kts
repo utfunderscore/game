@@ -4,8 +4,9 @@ plugins {
     id("com.diffplug.spotless") version "7.0.4"
 }
 
+
 group = "org.readutf.arena"
-version = System.getenv("ARENA_VERSION") ?: "dev"
+version = System.getenv("GITHUB_REF_NAME") ?: "dev"
 
 repositories {
     mavenCentral()
