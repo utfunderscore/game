@@ -11,7 +11,7 @@ import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.readutf.buildformat.common.markers.Position;
+import org.readutf.buildformat.types.Position;
 import org.readutf.engine.Game;
 import org.readutf.engine.GamePlatform;
 

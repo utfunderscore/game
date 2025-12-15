@@ -1,7 +1,7 @@
 package org.readutf.engine.feature.spawning;
 
 import org.jetbrains.annotations.NotNull;
-import org.readutf.buildformat.common.markers.Position;
+import org.readutf.buildformat.types.Position;
 import org.readutf.engine.Game;
 import org.readutf.engine.arena.Arena;
 import org.readutf.engine.event.impl.arena.ArenaChangeEvent;

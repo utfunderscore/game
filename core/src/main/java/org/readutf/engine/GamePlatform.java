@@ -4,7 +4,7 @@ import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import net.kyori.adventure.text.Component;
 import org.jetbrains.annotations.NotNull;
-import org.readutf.buildformat.common.markers.Position;
+import org.readutf.buildformat.types.Position;
 
 public interface GamePlatform<WORLD> {
 

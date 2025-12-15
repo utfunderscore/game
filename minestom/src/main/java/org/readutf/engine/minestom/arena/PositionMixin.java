@@ -1,7 +1,7 @@
 package org.readutf.engine.minestom.arena;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.readutf.buildformat.common.markers.Position;
+import org.readutf.buildformat.types.Position;
 
 public abstract class PositionMixin {
 

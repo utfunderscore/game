@@ -1,15 +1,12 @@
 package org.readutf.engine.arena;
 
+import org.jetbrains.annotations.Blocking;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.readutf.buildformat.common.exception.BuildFormatException;
-import org.readutf.buildformat.common.format.BuildFormat;
-import org.readutf.buildformat.common.format.BuildFormatChecksum;
-import org.readutf.buildformat.common.format.BuildFormatManager;
-import org.readutf.buildformat.common.format.requirements.RequirementData;
-import org.readutf.buildformat.common.markers.Marker;
-import org.readutf.buildformat.common.meta.BuildMeta;
-import org.readutf.buildformat.common.meta.BuildMetaStore;
+import org.readutf.buildformat.BuildFormatManager;
+import org.readutf.buildformat.BuildManager;
+import org.readutf.buildformat.BuildMeta;
+import org.readutf.buildformat.store.BuildMetaStore;
 import org.readutf.engine.arena.build.BuildPlacement;
 import org.readutf.engine.arena.exception.ArenaLoadException;
 import org.slf4j.Logger;
@@ -35,10 +32,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class ArenaManager<WORLD> {
 
     private static final Logger logger = LoggerFactory.getLogger(ArenaManager.class);
+    private static final BuildFormatManager buildFormatManager = BuildFormatManager.getInstance();
 
-    private @NotNull final BuildMetaStore buildMetaStore;
-    private @NotNull final ArenaPlatform<WORLD> arenaPlatform;
-    private @NotNull final AtomicInteger idTracker;
+    private @NotNull
+    final BuildMetaStore buildMetaStore;
+    private @NotNull
+    final ArenaPlatform<WORLD> arenaPlatform;
+    private @NotNull
+    final AtomicInteger idTracker;
 
     public ArenaManager(@NotNull ArenaPlatform<WORLD> arenaPlatform, @NotNull BuildMetaStore buildMetaStore) {
         this.arenaPlatform = arenaPlatform;
@@ -57,30 +58,23 @@ public class ArenaManager<WORLD> {
      * @return a new Arena instance or null if the build is not found
      * @throws ArenaLoadException if loading fails or the build format is invalid
      */
-    public @Nullable <FORMAT extends BuildFormat> Arena<WORLD, FORMAT> loadArena(String name, @NotNull Class<FORMAT> clazz) throws ArenaLoadException {
-        @Nullable BuildMeta buildMeta;
+    public @Nullable <FORMAT> Arena<WORLD, FORMAT> loadArena(@NotNull BuildMeta meta, @NotNull Class<FORMAT> clazz) throws ArenaLoadException {
         try {
-            buildMeta = buildMetaStore.getByName(name);
-
-            if (buildMeta == null) {
-                return null;
-            }
 
             int id = idTracker.getAndIncrement();
-            BuildPlacement<WORLD> placement = arenaPlatform.placeBuild(id, buildMeta);
+            BuildPlacement<WORLD> placement = arenaPlatform.placeBuild(id, meta);
 
-            FORMAT format = BuildFormatManager.build(placement.markers(), clazz);
+            FORMAT format = buildFormatManager.construct(clazz, meta.metadata().requirements());
 
             return new Arena<>(
                     id,
-                    buildMeta,
+                    meta,
                     placement.world(),
-                    format,
-                    placement.markers().stream().map(Marker::getTargetPosition).toList()
+                    format
             );
 
-        } catch (BuildFormatException e) {
-            throw new ArenaLoadException(e);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -91,27 +85,26 @@ public class ArenaManager<WORLD> {
      * @param kClass the class of the build format to validate against
      * @param <T>    the type of the build format
      * @return a list of build names matching the format and checksum
-     * @throws BuildFormatException if validation or checksum generation fails
+     * @throws Exception if validation or checksum generation fails
      */
-    public <T extends BuildFormat> @NotNull List<String> getByFormat(@NotNull String format, @NotNull Class<T> kClass) throws BuildFormatException {
-        Map<String, BuildFormatChecksum> buildsByFormat = buildMetaStore.getBuildsByFormat(format);
+    @Blocking
+    public <T> @NotNull List<BuildMeta> getByFormat(@NotNull String format, @NotNull Class<T> kClass) throws Exception {
+        Map<String, Integer> buildsByFormat = buildMetaStore.getBuildsByFormat(format);
 
-        byte[] targetChecksum = BuildFormatManager.checksum(format, kClass);
+        int targetChecksum = buildFormatManager.checksum(buildFormatManager.generateRequirements(kClass));
 
         List<String> builds = new ArrayList<>();
 
-        for (Map.Entry<String, BuildFormatChecksum> entry : buildsByFormat.entrySet()) {
-            String build = entry.getKey();
-            BuildFormatChecksum checksum = entry.getValue();
-
-            if (Arrays.equals(checksum.checksum(), targetChecksum)) {
-                builds.add(build);
-            } else {
-                logger.info("Invalid checksum received for {} {} != {}", build, Arrays.toString(checksum.checksum()), Arrays.toString(targetChecksum));
+        List<BuildMeta> buildMetas = new ArrayList<>(buildsByFormat.size());
+        for (Map.Entry<String, Integer> stringIntegerEntry : buildsByFormat.entrySet()) {
+            BuildMeta meta = buildMetaStore.getBuild(stringIntegerEntry.getKey(), stringIntegerEntry.getValue());
+            if (meta == null) continue;
+            if (meta.checksum() == targetChecksum) {
+                buildMetas.add(meta);
             }
         }
 
-        return builds;
+        return buildMetas;
     }
 
 

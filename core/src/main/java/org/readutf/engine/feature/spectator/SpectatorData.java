@@ -2,7 +2,7 @@ package org.readutf.engine.feature.spectator;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.readutf.buildformat.common.markers.Position;
+import org.readutf.buildformat.types.Position;
 
 import java.time.LocalDateTime;
 import java.util.UUID;

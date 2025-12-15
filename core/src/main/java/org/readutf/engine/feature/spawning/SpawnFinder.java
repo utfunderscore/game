@@ -2,7 +2,7 @@ package org.readutf.engine.feature.spawning;
 
 import java.util.UUID;
 import org.jetbrains.annotations.Nullable;
-import org.readutf.buildformat.common.markers.Position;
+import org.readutf.buildformat.types.Position;
 
 @FunctionalInterface
 public interface SpawnFinder {

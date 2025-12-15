@@ -3,7 +3,7 @@ package org.readutf.engine.minestom;
 import net.minestom.server.coordinate.Pos;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
-import org.readutf.buildformat.common.markers.Position;
+import org.readutf.buildformat.types.Position;
 
 public class PlatformUtils {
 

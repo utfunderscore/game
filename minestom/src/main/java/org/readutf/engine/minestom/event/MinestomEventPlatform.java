@@ -63,7 +63,11 @@ public class MinestomEventPlatform implements GameEventPlatform {
     @Override
     public void registerServerJoinListener(ServerJoinListener serverJoinListener) {
         MinecraftServer.getGlobalEventHandler().addListener(PlayerSpawnEvent.class, e -> {
+            log.info("PlayerSpawnEvent: isFirstSpawn = {}", e.isFirstSpawn());
+
             if (!e.isFirstSpawn()) return;
+
+            log.info("First spawn detected for player: {}", e.getPlayer().getUsername());
 
             serverJoinListener.onJoin(e.getPlayer().getUuid());
         });

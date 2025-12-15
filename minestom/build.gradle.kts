@@ -15,7 +15,7 @@ dependencies {
     compileOnly("net.minestom:minestom-snapshots:1_21_5-69b9a5d844")
     compileOnly("com.github.TogAr2:MinestomPvP:56a831b41c")
     api(project(":core"))
-    compileOnly("org.readutf.buildformat:common:1.0.27")
+    compileOnly("org.readutf.buildformat:common:v2.0.10")
 
     api("dev.hollowcube:schem:1d3ecd1a62")
     api("dev.hollowcube:polar:1.14.5")
@@ -26,7 +26,7 @@ dependencies {
 
 
 java.toolchain {
-    languageVersion.set(JavaLanguageVersion.of(21)) // Keep inline with the latest Minestom version
+    languageVersion.set(JavaLanguageVersion.of(25)) // Keep inline with the latest Minestom version
 }
 
 tasks.compileJava {
