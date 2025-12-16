@@ -12,14 +12,15 @@ repositories {
 
 dependencies {
 
-    compileOnly("net.minestom:minestom-snapshots:1_21_5-69b9a5d844")
+    compileOnly("net.minestom:minestom:2025.10.31-1.21.10")
     compileOnly("com.github.TogAr2:MinestomPvP:56a831b41c")
     api(project(":core"))
     compileOnly("org.readutf.buildformat:common:v2.0.10")
 
     api("dev.hollowcube:schem:1d3ecd1a62")
-    api("dev.hollowcube:polar:1.14.5")
+    api("dev.hollowcube:polar:1.15.0")
     api("org.slf4j:slf4j-api:2.0.16")
+    api("it.unimi.dsi:fastutil:8.5.18")
 
     api("net.bladehunt:kotstom:0.4.0-beta.0")
 }

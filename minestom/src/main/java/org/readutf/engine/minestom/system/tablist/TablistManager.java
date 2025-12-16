@@ -77,7 +77,7 @@ public class TablistManager implements System {
                 player.getGameMode(),
                 player.getDisplayName(),
                 null,
-                0);
+                0, false);
     }
 
     public boolean getVisibility(Player viewer, Player player) {

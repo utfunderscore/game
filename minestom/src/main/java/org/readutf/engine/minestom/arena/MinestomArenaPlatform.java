@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import net.hollowcube.polar.PolarLoader;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.world.DimensionType;
 import org.jetbrains.annotations.NotNull;
 import org.readutf.buildformat.BuildData;
 import org.readutf.buildformat.BuildMeta;
@@ -37,7 +38,9 @@ public class MinestomArenaPlatform implements ArenaPlatform<Instance> {
         BuildData buildData = buildDataStore.get(buildMeta.name(), buildMeta.version());
         if (buildData == null) throw new ArenaLoadException("Build not found: " + buildMeta.name());
 
-        Instance instance = MinecraftServer.getInstanceManager().createInstanceContainer(new PolarLoader(new ByteArrayInputStream(buildData.polarData())));
+        Instance instance = MinecraftServer.getInstanceManager().createInstanceContainer(
+                DimensionType.OVERWORLD,
+                new PolarLoader(new ByteArrayInputStream(buildData.polarData())));
 
         return new BuildPlacement<>(instance);
     }
