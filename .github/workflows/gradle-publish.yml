@@ -1,7 +1,11 @@
-name: Build, Test, and Publish
-
+# Build, Test, and Publish
+#
+# - Runs on any push (any branch) and on pushed tags matching v*
+# - The publish step only runs when the ref is a tag that starts with "v"
 on:
   push:
+    branches:
+      - '**'
     tags:
       - 'v*'
 
@@ -11,12 +15,14 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      - name: Set up JDK 21
+      - name: Set up JDK 25
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '21'
+          java-version: '25'
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
@@ -38,6 +44,7 @@ jobs:
         run: ./gradlew test
 
       - name: Publish to UTF MVN Repository
+        if: ${{ startsWith(github.ref, 'refs/tags/v') }}
         env:
           UTF_MVN_USER: ${{ secrets.UTF_MVN_USER }}
           UTF_MVN_PASS: ${{ secrets.UTF_MVN_PASS }}

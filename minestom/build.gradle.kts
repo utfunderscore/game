@@ -6,14 +6,13 @@ plugins {
 repositories {
     mavenCentral()
     maven { url = uri("https://mvn.utf.lol/releases") }
-    maven { url = uri("https://jitpack.io") }
     maven("https://repo.panda-lang.org/releases")
 }
 
 dependencies {
 
     compileOnly("net.minestom:minestom:2025.10.31-1.21.10")
-    compileOnly("com.github.TogAr2:MinestomPvP:56a831b41c")
+    compileOnly("io.github.togar2:MinestomPvP:60152fa5eb")
     api(project(":core"))
     compileOnly("org.readutf.buildformat:common:v2.0.10")
 
