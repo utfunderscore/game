@@ -52,7 +52,6 @@ public class ArenaManager<WORLD> {
      * Retrieves the build, assigns a unique ID, places it in the world,
      * constructs the format, and returns a new Arena instance.
      *
-     * @param name     the name of the build to load
      * @param clazz    the class of the build format
      * @param <FORMAT> the type of the build format
      * @return a new Arena instance or null if the build is not found
