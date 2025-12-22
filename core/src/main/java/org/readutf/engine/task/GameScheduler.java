@@ -19,10 +19,10 @@ public class GameScheduler {
     private final GameSchedulerPlatform platform;
     private final Map<UUID, List<GameTask>> pendingTasks = new HashMap<>();
     private final Map<@NotNull UUID, @NotNull List<@NotNull GameTask>> gameTasks = new HashMap<>();
+    private boolean scheduled = false;
 
-    public GameScheduler(GameSchedulerPlatform platform) {
+    public GameScheduler(@NotNull GameSchedulerPlatform platform) {
         this.platform = platform;
-        platform.scheduleRepeatingTask(this::tick);
     }
 
     public void tick() {
@@ -69,6 +69,8 @@ public class GameScheduler {
      * @param gameTask the task to schedule
      */
     public void schedule(@NotNull Game<?, ?, ?> game, @NotNull GameTask gameTask) {
+        if(!scheduled) platform.scheduleRepeatingTask(this::tick);
+
         platform.executeTask(() -> {
             logger.info("Scheduling task {} for game {}", gameTask, game.getId());
             List<@NotNull GameTask> tasks = pendingTasks.getOrDefault(game.getId(), new ArrayList<>());
@@ -84,6 +86,8 @@ public class GameScheduler {
      * @param gameTask the task to execute
      */
     public void schedule(@NotNull Stage<?, ?, ?> stage, @NotNull GameTask gameTask) {
+        if(!scheduled) platform.scheduleRepeatingTask(this::tick);
+
         GameTask wrapped = new GameTask() {
             @Override
             public void tick() {
