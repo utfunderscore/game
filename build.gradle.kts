@@ -28,10 +28,26 @@ subprojects {
     version = rootProject.version
     group = rootProject.group
 
+    val sourceSets = extensions.getByType(org.gradle.api.tasks.SourceSetContainer::class)
+
+    val sourcesJar by tasks.registering(org.gradle.api.tasks.bundling.Jar::class) {
+        archiveClassifier.set("sources")
+        from(sourceSets.getByName("main").allSource)
+    }
+
+    val javadocTask = tasks.named("javadoc", org.gradle.api.tasks.javadoc.Javadoc::class)
+    val javadocJar by tasks.registering(org.gradle.api.tasks.bundling.Jar::class) {
+        archiveClassifier.set("javadoc")
+        from(javadocTask.map { it.destinationDir })
+        dependsOn(javadocTask)
+    }
+
     publishing {
         publications {
             create<MavenPublication>("mavenJava") {
                 from(components["java"])
+                artifact(sourcesJar.get())
+                artifact(javadocJar.get())
             }
         }
 
